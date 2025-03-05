@@ -175,6 +175,22 @@ public class Aggregate extends BaseEvent implements IoConstants, IStreamData<Agg
                             }
                         }
                         break;
+                    case TYPE_WIRE_DATA:
+                        WireData wireData = new WireData(data.getSlice(size));
+                        wireData.setTimestamp(timestamp);
+                        wireData.setHeader(partHeader);
+                        log.debug("Wire header: {}", wireData.getHeader());
+                        parts.add(wireData);
+                        //log.trace("Hex: {}", data.getHexDump());
+                        // ensure 4 bytes left to read an int
+                        if (data.position() < data.limit() - 4) {
+                            backPointer = data.getInt();
+                            //log.trace("Back pointer: {}", backPointer);
+                            if (backPointer != (size + 11)) {
+                                log.debug("Data size ({}) and back pointer ({}) did not match", size, backPointer);
+                            }
+                        }
+                        break;
                     default:
                         log.debug("Non-A/V subtype: {}", subType);
                         Unknown unk = new Unknown(subType, data.getSlice(size));

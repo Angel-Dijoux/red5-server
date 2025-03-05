@@ -267,6 +267,28 @@ TLSFactory.setTruststorePath(jarTruststorePath);
 
 Using ffplay to test playback, issue the following, but make sure to update the command for your server IP and stream name: `ffplay rtmps://localhost:8443/live/stream1` (this assumes a stream named `stream1` is being published already).
 
+Here are two common ways to test TLS connections:
+
+Using netcat (nc):
+
+```bash
+nc -zv hostname 8443
+```
+
+Using OpenSSL:
+
+```bash
+openssl s_client -connect hostname:8443
+```
+
+For more detailed TLS information with OpenSSL:
+
+```bash
+openssl s_client -connect hostname:8443 -showcerts
+```
+
+Replace "hostname" with your target domain/IP.
+
 ### Useful System Properties
 
 * To enable SSL debugging, add the following system property to the JVM: `-Djavax.net.debug=SSL`

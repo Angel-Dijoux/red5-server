@@ -130,6 +130,16 @@ public class AMF3 {
     public static final byte TYPE_DICTIONARY = 0x11;
 
     /**
+     * JSON marker
+     */
+    public static final byte TYPE_JSON = 0x12;
+
+    /**
+     * KLV marker
+     */
+    public static final byte TYPE_KLV = 0x13;
+
+    /**
      * Property list encoding.
      *
      * The remaining integer-data represents the number of class members that exist. The property names are read as string-data. The values are then read as AMF3-data.

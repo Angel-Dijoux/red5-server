@@ -74,6 +74,8 @@ public interface Constants {
 
     // Unknown: 0x0A ...  0x0E
 
+    public static final byte TYPE_WIRE_DATA = 0x0A; // co-opting unknown type for wire data
+
     /**
      * AMF3 stream send
      */
