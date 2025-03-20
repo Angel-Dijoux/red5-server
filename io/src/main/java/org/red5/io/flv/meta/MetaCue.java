@@ -35,71 +35,72 @@ import java.util.Map;
  */
 public class MetaCue<K, V> extends HashMap<String, Object> implements IMetaCue {
 
-  private static final long serialVersionUID = -1769771340654996861L;
+    private static final long serialVersionUID = -1769771340654996861L;
 
-  /** CuePoint constructor */
-  public MetaCue() {}
-
-  /** {@inheritDoc} */
-  @Override
-  public void setName(String name) {
-    this.put("name", name);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public String getName() {
-    return (String) this.get("name");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void setType(String type) {
-    this.put("type", type);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public String getType() {
-    return (String) this.get("type");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void setTime(double d) {
-    this.put("time", d);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public double getTime() {
-    return (Double) this.get("time");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public int compareTo(Object arg0) {
-    MetaCue<?, ?> cp = (MetaCue<?, ?>) arg0;
-    double cpTime = cp.getTime();
-    double thisTime = this.getTime();
-    if (cpTime > thisTime) {
-      return -1;
-    } else if (cpTime < thisTime) {
-      return 1;
+    /** CuePoint constructor */
+    public MetaCue() {
     }
-    return 0;
-  }
 
-  /** {@inheritDoc} */
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("MetaCue{");
-    for (Map.Entry<String, Object> entry : entrySet()) {
-      sb.append(entry.getKey().toLowerCase());
-      sb.append('=');
-      sb.append(entry.getValue());
+    /** {@inheritDoc} */
+    @Override
+    public void setName(String name) {
+        this.put("name", name);
     }
-    sb.append('}');
-    return sb.toString();
-  }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getName() {
+        return (String) this.get("name");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setType(String type) {
+        this.put("type", type);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getType() {
+        return (String) this.get("type");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setTime(double d) {
+        this.put("time", d);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public double getTime() {
+        return (Double) this.get("time");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int compareTo(Object arg0) {
+        MetaCue<?, ?> cp = (MetaCue<?, ?>) arg0;
+        double cpTime = cp.getTime();
+        double thisTime = this.getTime();
+        if (cpTime > thisTime) {
+            return -1;
+        } else if (cpTime < thisTime) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("MetaCue{");
+        for (Map.Entry<String, Object> entry : entrySet()) {
+            sb.append(entry.getKey().toLowerCase());
+            sb.append('=');
+            sb.append(entry.getValue());
+        }
+        sb.append('}');
+        return sb.toString();
+    }
 }

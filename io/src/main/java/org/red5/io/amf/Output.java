@@ -44,578 +44,571 @@ import org.w3c.dom.Document;
  */
 public class Output extends BaseOutput implements org.red5.io.object.Output {
 
-  protected static Logger log = LoggerFactory.getLogger(Output.class);
+    protected static Logger log = LoggerFactory.getLogger(Output.class);
 
-  private static Cache stringCache;
+    private static Cache stringCache;
 
-  private static Cache serializeCache;
+    private static Cache serializeCache;
 
-  private static Cache fieldCache;
+    private static Cache fieldCache;
 
-  private static Cache getterCache;
+    private static Cache getterCache;
 
-  private static CacheManager cacheManager;
+    private static CacheManager cacheManager;
 
-  private static CacheManager getCacheManager() {
-    if (cacheManager == null) {
-      if (System.getProperty("red5.root") != null) {
-        try {
-          cacheManager =
-              new CacheManager(
-                  Paths.get(System.getProperty("red5.root"), "conf", "ehcache.xml").toString());
-        } catch (CacheException e) {
-          cacheManager = constructDefault();
-        }
-      } else {
-        // not a server, maybe running tests?
-        cacheManager = constructDefault();
-      }
-    }
-    return cacheManager;
-  }
-
-  private static CacheManager constructDefault() {
-    CacheManager manager = CacheManager.getInstance();
-    manager.addCacheIfAbsent("org.red5.io.amf.Output.stringCache");
-    manager.addCacheIfAbsent("org.red5.io.amf.Output.getterCache");
-    manager.addCacheIfAbsent("org.red5.io.amf.Output.fieldCache");
-    manager.addCacheIfAbsent("org.red5.io.amf.Output.serializeCache");
-    return manager;
-  }
-
-  /** Output buffer */
-  protected IoBuffer buf;
-
-  /**
-   * Creates output with given byte buffer
-   *
-   * @param buf Byte buffer
-   */
-  public Output(IoBuffer buf) {
-    super();
-    this.buf = buf;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean isCustom(Object custom) {
-    return false;
-  }
-
-  protected boolean checkWriteReference(Object obj) {
-    if (hasReference(obj)) {
-      writeReference(obj);
-      return true;
-    }
-    return false;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeArray(Collection<?> array) {
-    log.debug("writeArray - (collection source) array: {}", array);
-    if (!checkWriteReference(array)) {
-      storeReference(array);
-      buf.put(AMF.TYPE_ARRAY);
-      buf.putInt(array.size());
-      for (Object item : array) {
-        Serializer.serialize(this, item);
-      }
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeArray(Object[] array) {
-    log.debug("writeArray - (array source) array: {}", Arrays.asList(array));
-    if (array != null) {
-      if (!checkWriteReference(array)) {
-        storeReference(array);
-        buf.put(AMF.TYPE_ARRAY);
-        buf.putInt(array.length);
-        for (Object item : array) {
-          Serializer.serialize(this, item);
-        }
-      }
-    } else {
-      writeNull();
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeArray(Object array) {
-    log.debug("writeArray - (object source) array: {}", array);
-    if (array != null) {
-      if (!checkWriteReference(array)) {
-        storeReference(array);
-        buf.put(AMF.TYPE_ARRAY);
-        final int length = Array.getLength(array);
-        buf.putInt(length);
-        for (int i = 0; i < length; i++) {
-          Serializer.serialize(this, Array.get(array, i));
-        }
-      }
-    } else {
-      writeNull();
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeMap(Map<Object, Object> map) {
-    // log.info("writeMap: {}", map);
-    if (!checkWriteReference(map)) {
-      storeReference(map);
-      buf.put(AMF.TYPE_MIXED_ARRAY);
-      int maxInt = -1;
-      for (int i = 0; i < map.size(); i++) {
-        try {
-          if (!map.containsKey(i)) {
-            break;
-          }
-        } catch (ClassCastException err) {
-          // map has non-number keys
-          break;
-        }
-        maxInt = i;
-      }
-      buf.putInt(maxInt + 1);
-      // TODO: Need to support an incoming key named length
-      for (Map.Entry<Object, Object> entry : map.entrySet()) {
-        final String key = entry.getKey().toString();
-        // log.info("key: {} item: {}", key, entry.getValue());
-        if ("length".equals(key)) {
-          continue;
-        }
-        putString(key);
-        Serializer.serialize(this, entry.getValue());
-      }
-      if (maxInt >= 0) {
-        putString("length");
-        Serializer.serialize(this, maxInt + 1);
-      }
-      buf.put(AMF.END_OF_OBJECT_SEQUENCE);
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeMap(Collection<?> array) {
-    if (!checkWriteReference(array)) {
-      storeReference(array);
-      buf.put(AMF.TYPE_MIXED_ARRAY);
-      buf.putInt(array.size() + 1);
-      int idx = 0;
-      for (Object item : array) {
-        if (item != null) {
-          putString(String.valueOf(idx++));
-          Serializer.serialize(this, item);
-        } else {
-          idx++;
-        }
-      }
-      putString("length");
-      Serializer.serialize(this, array.size() + 1);
-      buf.put(AMF.END_OF_OBJECT_SEQUENCE);
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeRecordSet(RecordSet recordset) {
-    if (!checkWriteReference(recordset)) {
-      storeReference(recordset);
-      // Write out start of object marker
-      buf.put(AMF.TYPE_CLASS_OBJECT);
-      putString("RecordSet");
-      // Serialize
-      Map<String, Object> info = recordset.serialize();
-      // Write out serverInfo key
-      putString("serverInfo");
-      // Serialize
-      Serializer.serialize(this, info);
-      // Write out end of object marker
-      buf.put(AMF.END_OF_OBJECT_SEQUENCE);
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeBoolean(Boolean bol) {
-    buf.put(AMF.TYPE_BOOLEAN);
-    buf.put(bol ? AMF.VALUE_TRUE : AMF.VALUE_FALSE);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeCustom(Object custom) {}
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeDate(Date date) {
-    buf.put(AMF.TYPE_DATE);
-    buf.putDouble(date.getTime());
-    buf.putShort((short) (TimeZone.getDefault().getRawOffset() / 60 / 1000));
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeNull() {
-    // System.err.println("Write null");
-    buf.put(AMF.TYPE_NULL);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeNumber(Number num) {
-    buf.put(AMF.TYPE_NUMBER);
-    buf.putDouble(num.doubleValue());
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeReference(Object obj) {
-    log.debug("Write reference");
-    buf.put(AMF.TYPE_REFERENCE);
-    buf.putShort(getReferenceId(obj));
-  }
-
-  /** {@inheritDoc} */
-  @SuppressWarnings({"rawtypes"})
-  @Override
-  public void writeObject(Object object) {
-    if (!checkWriteReference(object)) {
-      storeReference(object);
-      // create new map out of bean properties
-      BeanMap beanMap = new BeanMap(object);
-      // set of bean attributes
-      Set attrs = beanMap.keySet();
-      log.trace("Bean map keys: {}", attrs);
-      if (attrs.size() == 0 || (attrs.size() == 1 && beanMap.containsKey("class"))) {
-        // beanMap is empty or can only access "class" attribute, skip it
-        writeArbitraryObject(object);
-        return;
-      }
-      // write out either start of object marker for class name or "empty" start of object marker
-      Class<?> objectClass = object.getClass();
-      if (!objectClass.isAnnotationPresent(Anonymous.class)) {
-        buf.put(AMF.TYPE_CLASS_OBJECT);
-        putString(buf, Serializer.getClassName(objectClass));
-      } else {
-        buf.put(AMF.TYPE_OBJECT);
-      }
-      // if (object instanceof ICustomSerializable) {
-      //     ((ICustomSerializable) object).serialize(this);
-      //     buf.put(AMF.END_OF_OBJECT_SEQUENCE);
-      //     return;
-      // }
-      // Iterate thru entries and write out property names with separators
-      for (Object key : attrs) {
-        String fieldName = key.toString();
-        log.debug("Field name: {} class: {}", fieldName, objectClass);
-        Field field = getField(objectClass, fieldName);
-        Method getter = getGetter(objectClass, beanMap, fieldName);
-        // Check if the Field corresponding to the getter/setter pair is transient
-        if (!serializeField(objectClass, fieldName, field, getter)) {
-          continue;
-        }
-        putString(buf, fieldName);
-        Serializer.serialize(this, field, getter, object, beanMap.get(key));
-      }
-      // write out end of object mark
-      buf.put(AMF.END_OF_OBJECT_SEQUENCE);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  protected boolean serializeField(
-      Class<?> objectClass, String keyName, Field field, Method getter) {
-    // to prevent, NullPointerExceptions, get the element first and check if it's null
-    Element element = getSerializeCache().get(objectClass);
-    Map<String, Boolean> serializeMap =
-        (element == null ? null : (Map<String, Boolean>) element.getObjectValue());
-    if (serializeMap == null) {
-      serializeMap = new HashMap<>();
-      getSerializeCache().put(new Element(objectClass, serializeMap));
-    }
-    boolean serialize;
-    if (getSerializeCache().isKeyInCache(keyName)) {
-      serialize = serializeMap.get(keyName);
-    } else {
-      serialize = Serializer.serializeField(keyName, field, getter);
-      serializeMap.put(keyName, serialize);
-    }
-    return serialize;
-  }
-
-  @SuppressWarnings("unchecked")
-  protected Field getField(Class<?> objectClass, String keyName) {
-    // again, to prevent null pointers, check if the element exists first.
-    Element element = getFieldCache().get(objectClass);
-    Map<String, Field> fieldMap =
-        (element == null ? null : (Map<String, Field>) element.getObjectValue());
-    if (fieldMap == null) {
-      fieldMap = new HashMap<String, Field>();
-      getFieldCache().put(new Element(objectClass, fieldMap));
-    }
-    Field field = null;
-    if (fieldMap.containsKey(keyName)) {
-      field = fieldMap.get(keyName);
-    } else {
-      for (Class<?> clazz = objectClass;
-          !clazz.equals(Object.class);
-          clazz = clazz.getSuperclass()) {
-        Field[] fields = clazz.getDeclaredFields();
-        if (fields.length > 0) {
-          for (Field fld : fields) {
-            if (fld.getName().equals(keyName)) {
-              field = fld;
-              break;
+    private static CacheManager getCacheManager() {
+        if (cacheManager == null) {
+            if (System.getProperty("red5.root") != null) {
+                try {
+                    cacheManager = new CacheManager(Paths.get(System.getProperty("red5.root"), "conf", "ehcache.xml").toString());
+                } catch (CacheException e) {
+                    cacheManager = constructDefault();
+                }
+            } else {
+                // not a server, maybe running tests?
+                cacheManager = constructDefault();
             }
-          }
         }
-      }
-      fieldMap.put(keyName, field);
+        return cacheManager;
     }
-    return field;
-  }
 
-  @SuppressWarnings("unchecked")
-  protected Method getGetter(Class<?> objectClass, BeanMap beanMap, String keyName) {
-    // check element to prevent null pointer
-    Element element = getGetterCache().get(objectClass);
-    Map<String, Method> getterMap =
-        (element == null ? null : (Map<String, Method>) element.getObjectValue());
-    if (getterMap == null) {
-      getterMap = new HashMap<String, Method>();
-      getGetterCache().put(new Element(objectClass, getterMap));
+    private static CacheManager constructDefault() {
+        CacheManager manager = CacheManager.getInstance();
+        manager.addCacheIfAbsent("org.red5.io.amf.Output.stringCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.Output.getterCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.Output.fieldCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.Output.serializeCache");
+        return manager;
     }
-    Method getter;
-    if (getterMap.containsKey(keyName)) {
-      getter = getterMap.get(keyName);
-    } else {
-      getter = beanMap.getReadMethod(keyName);
-      getterMap.put(keyName, getter);
-    }
-    return getter;
-  }
 
-  /** {@inheritDoc} */
-  @Override
-  public void writeObject(Map<Object, Object> map) {
-    if (!checkWriteReference(map)) {
-      storeReference(map);
-      buf.put(AMF.TYPE_OBJECT);
-      boolean isBeanMap = (map instanceof BeanMap);
-      for (Map.Entry<Object, Object> entry : map.entrySet()) {
-        log.debug("Key: {} item: {}", entry.getKey(), entry.getValue());
-        if (isBeanMap && "class".equals(entry.getKey())) {
-          continue;
+    /** Output buffer */
+    protected IoBuffer buf;
+
+    /**
+     * Creates output with given byte buffer
+     *
+     * @param buf Byte buffer
+     */
+    public Output(IoBuffer buf) {
+        super();
+        this.buf = buf;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isCustom(Object custom) {
+        return false;
+    }
+
+    protected boolean checkWriteReference(Object obj) {
+        if (hasReference(obj)) {
+            writeReference(obj);
+            return true;
         }
-        putString(entry.getKey().toString());
-        Serializer.serialize(this, entry.getValue());
-      }
-      buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        return false;
     }
-  }
 
-  /**
-   * Writes an arbitrary object to the output.
-   *
-   * @param object Object to write
-   */
-  protected void writeArbitraryObject(Object object) {
-    log.debug("writeObject");
-    // If we need to serialize class information...
-    Class<?> objectClass = object.getClass();
-    if (!objectClass.isAnnotationPresent(Anonymous.class)) {
-      // Write out start object marker for class name
-      buf.put(AMF.TYPE_CLASS_OBJECT);
-      putString(buf, Serializer.getClassName(objectClass));
-    } else {
-      // Write out start object marker without class name
-      buf.put(AMF.TYPE_OBJECT);
+    /** {@inheritDoc} */
+    @Override
+    public void writeArray(Collection<?> array) {
+        log.debug("writeArray - (collection source) array: {}", array);
+        if (!checkWriteReference(array)) {
+            storeReference(array);
+            buf.put(AMF.TYPE_ARRAY);
+            buf.putInt(array.size());
+            for (Object item : array) {
+                Serializer.serialize(this, item);
+            }
+        }
     }
-    // Iterate thru fields of an object to build "name-value" map from it
-    for (Field field : objectClass.getFields()) {
-      String fieldName = field.getName();
-      log.debug("Field: {} class: {}", field, objectClass);
-      // Check if the Field corresponding to the getter/setter pair is transient
-      if (!serializeField(objectClass, fieldName, field, null)) {
-        continue;
-      }
-      Object value;
-      try {
-        // Get field value
-        value = field.get(object);
-      } catch (IllegalAccessException err) {
-        // Swallow on private and protected properties access exception
-        continue;
-      }
-      // Write out prop name
-      putString(buf, fieldName);
-      // Write out
-      Serializer.serialize(this, field, null, object, value);
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeArray(Object[] array) {
+        log.debug("writeArray - (array source) array: {}", Arrays.asList(array));
+        if (array != null) {
+            if (!checkWriteReference(array)) {
+                storeReference(array);
+                buf.put(AMF.TYPE_ARRAY);
+                buf.putInt(array.length);
+                for (Object item : array) {
+                    Serializer.serialize(this, item);
+                }
+            }
+        } else {
+            writeNull();
+        }
     }
-    // write out end of object marker
-    buf.put(AMF.END_OF_OBJECT_SEQUENCE);
-  }
 
-  /** {@inheritDoc} */
-  @Override
-  public void writeString(String string) {
-    final byte[] encoded = encodeString(string);
-    final int len = encoded.length;
-    if (len < AMF.LONG_STRING_LENGTH) {
-      buf.put(AMF.TYPE_STRING);
-      // write unsigned short
-      buf.put((byte) ((len >> 8) & 0xff));
-      buf.put((byte) (len & 0xff));
-    } else {
-      buf.put(AMF.TYPE_LONG_STRING);
-      buf.putInt(len);
+    /** {@inheritDoc} */
+    @Override
+    public void writeArray(Object array) {
+        log.debug("writeArray - (object source) array: {}", array);
+        if (array != null) {
+            if (!checkWriteReference(array)) {
+                storeReference(array);
+                buf.put(AMF.TYPE_ARRAY);
+                final int length = Array.getLength(array);
+                buf.putInt(length);
+                for (int i = 0; i < length; i++) {
+                    Serializer.serialize(this, Array.get(array, i));
+                }
+            }
+        } else {
+            writeNull();
+        }
     }
-    buf.put(encoded);
-  }
 
-  /** {@inheritDoc} */
-  @Override
-  public void writeByteArray(ByteArray array) {
-    throw new RuntimeException("ByteArray objects not supported with AMF0");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeVectorInt(Vector<Integer> vector) {
-    throw new RuntimeException("Vector objects not supported with AMF0");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeVectorUInt(Vector<Long> vector) {
-    throw new RuntimeException("Vector objects not supported with AMF0");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeVectorNumber(Vector<Double> vector) {
-    throw new RuntimeException("Vector objects not supported with AMF0");
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeVectorObject(Vector<Object> vector) {
-    throw new RuntimeException("Vector objects not supported with AMF0");
-  }
-
-  /**
-   * Encode string.
-   *
-   * @param string string to encode
-   * @return encoded string
-   */
-  protected static byte[] encodeString(String string) {
-    Element element = getStringCache().get(string);
-    byte[] encoded = (element == null ? null : (byte[]) element.getObjectValue());
-    if (encoded == null) {
-      ByteBuffer buf = AMF.CHARSET.encode(string);
-      encoded = new byte[buf.remaining()];
-      buf.get(encoded);
-      getStringCache().put(new Element(string, encoded));
+    /** {@inheritDoc} */
+    @Override
+    public void writeMap(Map<Object, Object> map) {
+        // log.info("writeMap: {}", map);
+        if (!checkWriteReference(map)) {
+            storeReference(map);
+            buf.put(AMF.TYPE_MIXED_ARRAY);
+            int maxInt = -1;
+            for (int i = 0; i < map.size(); i++) {
+                try {
+                    if (!map.containsKey(i)) {
+                        break;
+                    }
+                } catch (ClassCastException err) {
+                    // map has non-number keys
+                    break;
+                }
+                maxInt = i;
+            }
+            buf.putInt(maxInt + 1);
+            // TODO: Need to support an incoming key named length
+            for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                final String key = entry.getKey().toString();
+                // log.info("key: {} item: {}", key, entry.getValue());
+                if ("length".equals(key)) {
+                    continue;
+                }
+                putString(key);
+                Serializer.serialize(this, entry.getValue());
+            }
+            if (maxInt >= 0) {
+                putString("length");
+                Serializer.serialize(this, maxInt + 1);
+            }
+            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        }
     }
-    return encoded;
-  }
 
-  /**
-   * Write out string
-   *
-   * @param buf Byte buffer to write to
-   * @param string String to write
-   */
-  public static void putString(IoBuffer buf, String string) {
-    final byte[] encoded = encodeString(string);
-    if (encoded.length < AMF.LONG_STRING_LENGTH) {
-      // write unsigned short
-      buf.put((byte) ((encoded.length >> 8) & 0xff));
-      buf.put((byte) (encoded.length & 0xff));
-    } else {
-      buf.putInt(encoded.length);
+    /** {@inheritDoc} */
+    @Override
+    public void writeMap(Collection<?> array) {
+        if (!checkWriteReference(array)) {
+            storeReference(array);
+            buf.put(AMF.TYPE_MIXED_ARRAY);
+            buf.putInt(array.size() + 1);
+            int idx = 0;
+            for (Object item : array) {
+                if (item != null) {
+                    putString(String.valueOf(idx++));
+                    Serializer.serialize(this, item);
+                } else {
+                    idx++;
+                }
+            }
+            putString("length");
+            Serializer.serialize(this, array.size() + 1);
+            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        }
     }
-    buf.put(encoded);
-  }
 
-  /** {@inheritDoc} */
-  @Override
-  public void putString(String string) {
-    putString(buf, string);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void writeXML(Document xml) {
-    buf.put(AMF.TYPE_XML);
-    putString(XMLUtils.docToString(xml));
-  }
-
-  /**
-   * Convenience method to allow XML text to be used, instead of requiring an XML Document.
-   *
-   * @param xml xml to write
-   */
-  public void writeXML(String xml) {
-    buf.put(AMF.TYPE_XML);
-    putString(xml);
-  }
-
-  /**
-   * Return buffer of this Output object
-   *
-   * @return Byte buffer of this Output object
-   */
-  public IoBuffer buf() {
-    return this.buf;
-  }
-
-  public void reset() {
-    clearReferences();
-  }
-
-  protected static Cache getStringCache() {
-    if (stringCache == null) {
-      stringCache = getCacheManager().getCache("org.red5.io.amf.Output.stringCache");
+    /** {@inheritDoc} */
+    @Override
+    public void writeRecordSet(RecordSet recordset) {
+        if (!checkWriteReference(recordset)) {
+            storeReference(recordset);
+            // Write out start of object marker
+            buf.put(AMF.TYPE_CLASS_OBJECT);
+            putString("RecordSet");
+            // Serialize
+            Map<String, Object> info = recordset.serialize();
+            // Write out serverInfo key
+            putString("serverInfo");
+            // Serialize
+            Serializer.serialize(this, info);
+            // Write out end of object marker
+            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        }
     }
-    return stringCache;
-  }
 
-  protected static Cache getSerializeCache() {
-    if (serializeCache == null) {
-      serializeCache = getCacheManager().getCache("org.red5.io.amf.Output.serializeCache");
+    /** {@inheritDoc} */
+    @Override
+    public void writeBoolean(Boolean bol) {
+        buf.put(AMF.TYPE_BOOLEAN);
+        buf.put(bol ? AMF.VALUE_TRUE : AMF.VALUE_FALSE);
     }
-    return serializeCache;
-  }
 
-  protected static Cache getFieldCache() {
-    if (fieldCache == null) {
-      fieldCache = getCacheManager().getCache("org.red5.io.amf.Output.fieldCache");
+    /** {@inheritDoc} */
+    @Override
+    public void writeCustom(Object custom) {
     }
-    return fieldCache;
-  }
 
-  protected static Cache getGetterCache() {
-    if (getterCache == null) {
-      getterCache = getCacheManager().getCache("org.red5.io.amf.Output.getterCache");
+    /** {@inheritDoc} */
+    @Override
+    public void writeDate(Date date) {
+        buf.put(AMF.TYPE_DATE);
+        buf.putDouble(date.getTime());
+        buf.putShort((short) (TimeZone.getDefault().getRawOffset() / 60 / 1000));
     }
-    return getterCache;
-  }
 
-  public static void destroyCache() {
-    if (cacheManager != null) {
-      cacheManager.shutdown();
-      fieldCache = null;
-      getterCache = null;
-      serializeCache = null;
-      stringCache = null;
+    /** {@inheritDoc} */
+    @Override
+    public void writeNull() {
+        // System.err.println("Write null");
+        buf.put(AMF.TYPE_NULL);
     }
-  }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeNumber(Number num) {
+        buf.put(AMF.TYPE_NUMBER);
+        buf.putDouble(num.doubleValue());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeReference(Object obj) {
+        log.debug("Write reference");
+        buf.put(AMF.TYPE_REFERENCE);
+        buf.putShort(getReferenceId(obj));
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings({ "rawtypes" })
+    @Override
+    public void writeObject(Object object) {
+        if (!checkWriteReference(object)) {
+            storeReference(object);
+            // create new map out of bean properties
+            BeanMap beanMap = new BeanMap(object);
+            // set of bean attributes
+            Set attrs = beanMap.keySet();
+            log.trace("Bean map keys: {}", attrs);
+            if (attrs.size() == 0 || (attrs.size() == 1 && beanMap.containsKey("class"))) {
+                // beanMap is empty or can only access "class" attribute, skip it
+                writeArbitraryObject(object);
+                return;
+            }
+            // write out either start of object marker for class name or "empty" start of object marker
+            Class<?> objectClass = object.getClass();
+            if (!objectClass.isAnnotationPresent(Anonymous.class)) {
+                buf.put(AMF.TYPE_CLASS_OBJECT);
+                putString(buf, Serializer.getClassName(objectClass));
+            } else {
+                buf.put(AMF.TYPE_OBJECT);
+            }
+            // if (object instanceof ICustomSerializable) {
+            //     ((ICustomSerializable) object).serialize(this);
+            //     buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            //     return;
+            // }
+            // Iterate thru entries and write out property names with separators
+            for (Object key : attrs) {
+                String fieldName = key.toString();
+                log.debug("Field name: {} class: {}", fieldName, objectClass);
+                Field field = getField(objectClass, fieldName);
+                Method getter = getGetter(objectClass, beanMap, fieldName);
+                // Check if the Field corresponding to the getter/setter pair is transient
+                if (!serializeField(objectClass, fieldName, field, getter)) {
+                    continue;
+                }
+                putString(buf, fieldName);
+                Serializer.serialize(this, field, getter, object, beanMap.get(key));
+            }
+            // write out end of object mark
+            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected boolean serializeField(Class<?> objectClass, String keyName, Field field, Method getter) {
+        // to prevent, NullPointerExceptions, get the element first and check if it's null
+        Element element = getSerializeCache().get(objectClass);
+        Map<String, Boolean> serializeMap = (element == null ? null : (Map<String, Boolean>) element.getObjectValue());
+        if (serializeMap == null) {
+            serializeMap = new HashMap<>();
+            getSerializeCache().put(new Element(objectClass, serializeMap));
+        }
+        boolean serialize;
+        if (getSerializeCache().isKeyInCache(keyName)) {
+            serialize = serializeMap.get(keyName);
+        } else {
+            serialize = Serializer.serializeField(keyName, field, getter);
+            serializeMap.put(keyName, serialize);
+        }
+        return serialize;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Field getField(Class<?> objectClass, String keyName) {
+        // again, to prevent null pointers, check if the element exists first.
+        Element element = getFieldCache().get(objectClass);
+        Map<String, Field> fieldMap = (element == null ? null : (Map<String, Field>) element.getObjectValue());
+        if (fieldMap == null) {
+            fieldMap = new HashMap<String, Field>();
+            getFieldCache().put(new Element(objectClass, fieldMap));
+        }
+        Field field = null;
+        if (fieldMap.containsKey(keyName)) {
+            field = fieldMap.get(keyName);
+        } else {
+            for (Class<?> clazz = objectClass; !clazz.equals(Object.class); clazz = clazz.getSuperclass()) {
+                Field[] fields = clazz.getDeclaredFields();
+                if (fields.length > 0) {
+                    for (Field fld : fields) {
+                        if (fld.getName().equals(keyName)) {
+                            field = fld;
+                            break;
+                        }
+                    }
+                }
+            }
+            fieldMap.put(keyName, field);
+        }
+        return field;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Method getGetter(Class<?> objectClass, BeanMap beanMap, String keyName) {
+        // check element to prevent null pointer
+        Element element = getGetterCache().get(objectClass);
+        Map<String, Method> getterMap = (element == null ? null : (Map<String, Method>) element.getObjectValue());
+        if (getterMap == null) {
+            getterMap = new HashMap<String, Method>();
+            getGetterCache().put(new Element(objectClass, getterMap));
+        }
+        Method getter;
+        if (getterMap.containsKey(keyName)) {
+            getter = getterMap.get(keyName);
+        } else {
+            getter = beanMap.getReadMethod(keyName);
+            getterMap.put(keyName, getter);
+        }
+        return getter;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeObject(Map<Object, Object> map) {
+        if (!checkWriteReference(map)) {
+            storeReference(map);
+            buf.put(AMF.TYPE_OBJECT);
+            boolean isBeanMap = (map instanceof BeanMap);
+            for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                log.debug("Key: {} item: {}", entry.getKey(), entry.getValue());
+                if (isBeanMap && "class".equals(entry.getKey())) {
+                    continue;
+                }
+                putString(entry.getKey().toString());
+                Serializer.serialize(this, entry.getValue());
+            }
+            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        }
+    }
+
+    /**
+     * Writes an arbitrary object to the output.
+     *
+     * @param object Object to write
+     */
+    protected void writeArbitraryObject(Object object) {
+        log.debug("writeObject");
+        // If we need to serialize class information...
+        Class<?> objectClass = object.getClass();
+        if (!objectClass.isAnnotationPresent(Anonymous.class)) {
+            // Write out start object marker for class name
+            buf.put(AMF.TYPE_CLASS_OBJECT);
+            putString(buf, Serializer.getClassName(objectClass));
+        } else {
+            // Write out start object marker without class name
+            buf.put(AMF.TYPE_OBJECT);
+        }
+        // Iterate thru fields of an object to build "name-value" map from it
+        for (Field field : objectClass.getFields()) {
+            String fieldName = field.getName();
+            log.debug("Field: {} class: {}", field, objectClass);
+            // Check if the Field corresponding to the getter/setter pair is transient
+            if (!serializeField(objectClass, fieldName, field, null)) {
+                continue;
+            }
+            Object value;
+            try {
+                // Get field value
+                value = field.get(object);
+            } catch (IllegalAccessException err) {
+                // Swallow on private and protected properties access exception
+                continue;
+            }
+            // Write out prop name
+            putString(buf, fieldName);
+            // Write out
+            Serializer.serialize(this, field, null, object, value);
+        }
+        // write out end of object marker
+        buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeString(String string) {
+        final byte[] encoded = encodeString(string);
+        final int len = encoded.length;
+        if (len < AMF.LONG_STRING_LENGTH) {
+            buf.put(AMF.TYPE_STRING);
+            // write unsigned short
+            buf.put((byte) ((len >> 8) & 0xff));
+            buf.put((byte) (len & 0xff));
+        } else {
+            buf.put(AMF.TYPE_LONG_STRING);
+            buf.putInt(len);
+        }
+        buf.put(encoded);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeByteArray(ByteArray array) {
+        throw new RuntimeException("ByteArray objects not supported with AMF0");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeVectorInt(Vector<Integer> vector) {
+        throw new RuntimeException("Vector objects not supported with AMF0");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeVectorUInt(Vector<Long> vector) {
+        throw new RuntimeException("Vector objects not supported with AMF0");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeVectorNumber(Vector<Double> vector) {
+        throw new RuntimeException("Vector objects not supported with AMF0");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeVectorObject(Vector<Object> vector) {
+        throw new RuntimeException("Vector objects not supported with AMF0");
+    }
+
+    /**
+     * Encode string.
+     *
+     * @param string string to encode
+     * @return encoded string
+     */
+    protected static byte[] encodeString(String string) {
+        Element element = getStringCache().get(string);
+        byte[] encoded = (element == null ? null : (byte[]) element.getObjectValue());
+        if (encoded == null) {
+            ByteBuffer buf = AMF.CHARSET.encode(string);
+            encoded = new byte[buf.remaining()];
+            buf.get(encoded);
+            getStringCache().put(new Element(string, encoded));
+        }
+        return encoded;
+    }
+
+    /**
+     * Write out string
+     *
+     * @param buf Byte buffer to write to
+     * @param string String to write
+     */
+    public static void putString(IoBuffer buf, String string) {
+        final byte[] encoded = encodeString(string);
+        if (encoded.length < AMF.LONG_STRING_LENGTH) {
+            // write unsigned short
+            buf.put((byte) ((encoded.length >> 8) & 0xff));
+            buf.put((byte) (encoded.length & 0xff));
+        } else {
+            buf.putInt(encoded.length);
+        }
+        buf.put(encoded);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void putString(String string) {
+        putString(buf, string);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void writeXML(Document xml) {
+        buf.put(AMF.TYPE_XML);
+        putString(XMLUtils.docToString(xml));
+    }
+
+    /**
+     * Convenience method to allow XML text to be used, instead of requiring an XML Document.
+     *
+     * @param xml xml to write
+     */
+    public void writeXML(String xml) {
+        buf.put(AMF.TYPE_XML);
+        putString(xml);
+    }
+
+    /**
+     * Return buffer of this Output object
+     *
+     * @return Byte buffer of this Output object
+     */
+    public IoBuffer buf() {
+        return this.buf;
+    }
+
+    public void reset() {
+        clearReferences();
+    }
+
+    protected static Cache getStringCache() {
+        if (stringCache == null) {
+            stringCache = getCacheManager().getCache("org.red5.io.amf.Output.stringCache");
+        }
+        return stringCache;
+    }
+
+    protected static Cache getSerializeCache() {
+        if (serializeCache == null) {
+            serializeCache = getCacheManager().getCache("org.red5.io.amf.Output.serializeCache");
+        }
+        return serializeCache;
+    }
+
+    protected static Cache getFieldCache() {
+        if (fieldCache == null) {
+            fieldCache = getCacheManager().getCache("org.red5.io.amf.Output.fieldCache");
+        }
+        return fieldCache;
+    }
+
+    protected static Cache getGetterCache() {
+        if (getterCache == null) {
+            getterCache = getCacheManager().getCache("org.red5.io.amf.Output.getterCache");
+        }
+        return getterCache;
+    }
+
+    public static void destroyCache() {
+        if (cacheManager != null) {
+            cacheManager.shutdown();
+            fieldCache = null;
+            getterCache = null;
+            serializeCache = null;
+            stringCache = null;
+        }
+    }
 }

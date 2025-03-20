@@ -15,58 +15,58 @@ import org.red5.io.sctp.SctpException;
  */
 public final class SctpHeader {
 
-  private int sourcePort;
+    private int sourcePort;
 
-  private int destinationPort;
+    private int destinationPort;
 
-  private int verificationTag;
+    private int verificationTag;
 
-  private int checksum;
+    private int checksum;
 
-  // sourcePort(2 byte) + destinationPort(2 byte) + verificationTag(4 byte) + checksum(4 byte)
-  private static final int HEADER_SIZE = 12;
+    // sourcePort(2 byte) + destinationPort(2 byte) + verificationTag(4 byte) + checksum(4 byte)
+    private static final int HEADER_SIZE = 12;
 
-  public SctpHeader(int sourcePort, int destinationPort, int verificationTag, int checksum) {
-    this.sourcePort = sourcePort;
-    this.destinationPort = destinationPort;
-    this.verificationTag = verificationTag;
-    this.checksum = checksum;
-  }
-
-  public SctpHeader(final byte[] data, int offset, int length) throws SctpException {
-    if (length < HEADER_SIZE) {
-      throw new SctpException("not enough data for parsing Sctp header : " + data);
+    public SctpHeader(int sourcePort, int destinationPort, int verificationTag, int checksum) {
+        this.sourcePort = sourcePort;
+        this.destinationPort = destinationPort;
+        this.verificationTag = verificationTag;
+        this.checksum = checksum;
     }
-    ByteBuffer byteBuffer = ByteBuffer.wrap(data, offset, HEADER_SIZE);
-    sourcePort = byteBuffer.getShort() & 0xffff;
-    destinationPort = byteBuffer.getShort() & 0xffff;
-    verificationTag = byteBuffer.getInt();
-    checksum = byteBuffer.getInt();
-  }
 
-  public int getSize() {
-    return HEADER_SIZE;
-  }
+    public SctpHeader(final byte[] data, int offset, int length) throws SctpException {
+        if (length < HEADER_SIZE) {
+            throw new SctpException("not enough data for parsing Sctp header : " + data);
+        }
+        ByteBuffer byteBuffer = ByteBuffer.wrap(data, offset, HEADER_SIZE);
+        sourcePort = byteBuffer.getShort() & 0xffff;
+        destinationPort = byteBuffer.getShort() & 0xffff;
+        verificationTag = byteBuffer.getInt();
+        checksum = byteBuffer.getInt();
+    }
 
-  public byte[] getBytes() {
-    ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
-    byteBuffer.putShort((short) getSourcePort());
-    byteBuffer.putShort((short) getDestinationPort());
-    byteBuffer.putInt(getVerificationTag());
-    byteBuffer.putInt(checksum);
+    public int getSize() {
+        return HEADER_SIZE;
+    }
 
-    return byteBuffer.array();
-  }
+    public byte[] getBytes() {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(HEADER_SIZE);
+        byteBuffer.putShort((short) getSourcePort());
+        byteBuffer.putShort((short) getDestinationPort());
+        byteBuffer.putInt(getVerificationTag());
+        byteBuffer.putInt(checksum);
 
-  public int getSourcePort() {
-    return sourcePort;
-  }
+        return byteBuffer.array();
+    }
 
-  public int getDestinationPort() {
-    return destinationPort;
-  }
+    public int getSourcePort() {
+        return sourcePort;
+    }
 
-  public int getVerificationTag() {
-    return verificationTag;
-  }
+    public int getDestinationPort() {
+        return destinationPort;
+    }
+
+    public int getVerificationTag() {
+        return verificationTag;
+    }
 }

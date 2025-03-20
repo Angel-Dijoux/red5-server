@@ -15,4 +15,5 @@ import java.io.Serializable;
  * @author The Red5 Project
  * @author daccattato(daccattato@gmail.com)
  */
-public interface IMeta extends Serializable {}
+public interface IMeta extends Serializable {
+}

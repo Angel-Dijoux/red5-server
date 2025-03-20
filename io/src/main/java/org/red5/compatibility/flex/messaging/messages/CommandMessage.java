@@ -27,90 +27,90 @@ import org.slf4j.LoggerFactory;
  */
 public class CommandMessage extends AsyncMessage {
 
-  private static final long serialVersionUID = 8805045741686625945L;
+    private static final long serialVersionUID = 8805045741686625945L;
 
-  protected static byte OPERATION_FLAG = 1;
+    protected static byte OPERATION_FLAG = 1;
 
-  public String messageRefType;
+    public String messageRefType;
 
-  /** Command id to execute. */
-  public int operation = Constants.UNKNOWN_OPERATION;
+    /** Command id to execute. */
+    public int operation = Constants.UNKNOWN_OPERATION;
 
-  public CommandMessage() {
-    this.messageId = UUID.randomUUID().toString();
-    this.timestamp = System.currentTimeMillis();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void addParameters(StringBuilder result) {
-    super.addParameters(result);
-    result.append(",messageRefType=");
-    result.append(messageRefType);
-    result.append(",operation=");
-    result.append(operation);
-  }
-
-  public int getOperation() {
-    return operation;
-  }
-
-  public void setOperation(int operation) {
-    this.operation = operation;
-  }
-
-  static Logger log = LoggerFactory.getLogger(CommandMessage.class);
-
-  @Override
-  public void readExternal(IDataInput in) {
-    log.debug("CommandMessage - Read external");
-    super.readExternal(in);
-    short[] flagsArray = readFlags(in);
-    for (int i = 0; i < flagsArray.length; ++i) {
-      short flags = flagsArray[i];
-      log.debug("Unsigned byte: {}", flags);
-      short reservedPosition = 0;
-      if (i == 0) {
-        if ((flags & OPERATION_FLAG) != 0) {
-          Integer obj = (Integer) in.readObject();
-          log.debug("Operation object: {} name: {}", obj, obj.getClass().getName());
-          this.operation = obj.intValue();
-        }
-        reservedPosition = 1;
-      }
-      if (flags >> reservedPosition == 0) {
-        continue;
-      }
-      for (short j = reservedPosition; j < 6; j = (short) (j + 1)) {
-        if ((flags >> j & 0x1) == 0) {
-          continue;
-        }
-        Object obj = in.readObject();
-        log.debug("Object2: {} name: {}", obj, obj.getClass().getName());
-        if (obj instanceof ByteArray) {
-          ByteArray ba = (ByteArray) obj;
-          byte[] arr = new byte[ba.length()];
-          ba.readBytes(arr);
-          log.debug("Array length: {} Data: {}", arr.length, RandomGUID.fromByteArray(arr));
-        }
-      }
+    public CommandMessage() {
+        this.messageId = UUID.randomUUID().toString();
+        this.timestamp = System.currentTimeMillis();
     }
-    log.debug("Operation: {}", operation);
-  }
 
-  @Override
-  public void writeExternal(IDataOutput out) {
-    super.writeExternal(out);
-
-    short flags = 0;
-
-    if (this.operation != Constants.UNKNOWN_OPERATION) {
-      flags = (short) (flags | OPERATION_FLAG);
+    /** {@inheritDoc} */
+    @Override
+    protected void addParameters(StringBuilder result) {
+        super.addParameters(result);
+        result.append(",messageRefType=");
+        result.append(messageRefType);
+        result.append(",operation=");
+        result.append(operation);
     }
-    out.writeByte((byte) flags);
 
-    if (this.operation != Constants.UNKNOWN_OPERATION) {
-      out.writeObject(Integer.valueOf(this.operation));
+    public int getOperation() {
+        return operation;
     }
-  }
+
+    public void setOperation(int operation) {
+        this.operation = operation;
+    }
+
+    static Logger log = LoggerFactory.getLogger(CommandMessage.class);
+
+    @Override
+    public void readExternal(IDataInput in) {
+        log.debug("CommandMessage - Read external");
+        super.readExternal(in);
+        short[] flagsArray = readFlags(in);
+        for (int i = 0; i < flagsArray.length; ++i) {
+            short flags = flagsArray[i];
+            log.debug("Unsigned byte: {}", flags);
+            short reservedPosition = 0;
+            if (i == 0) {
+                if ((flags & OPERATION_FLAG) != 0) {
+                    Integer obj = (Integer) in.readObject();
+                    log.debug("Operation object: {} name: {}", obj, obj.getClass().getName());
+                    this.operation = obj.intValue();
+                }
+                reservedPosition = 1;
+            }
+            if (flags >> reservedPosition == 0) {
+                continue;
+            }
+            for (short j = reservedPosition; j < 6; j = (short) (j + 1)) {
+                if ((flags >> j & 0x1) == 0) {
+                    continue;
+                }
+                Object obj = in.readObject();
+                log.debug("Object2: {} name: {}", obj, obj.getClass().getName());
+                if (obj instanceof ByteArray) {
+                    ByteArray ba = (ByteArray) obj;
+                    byte[] arr = new byte[ba.length()];
+                    ba.readBytes(arr);
+                    log.debug("Array length: {} Data: {}", arr.length, RandomGUID.fromByteArray(arr));
+                }
+            }
+        }
+        log.debug("Operation: {}", operation);
+    }
+
+    @Override
+    public void writeExternal(IDataOutput out) {
+        super.writeExternal(out);
+
+        short flags = 0;
+
+        if (this.operation != Constants.UNKNOWN_OPERATION) {
+            flags = (short) (flags | OPERATION_FLAG);
+        }
+        out.writeByte((byte) flags);
+
+        if (this.operation != Constants.UNKNOWN_OPERATION) {
+            out.writeObject(Integer.valueOf(this.operation));
+        }
+    }
 }

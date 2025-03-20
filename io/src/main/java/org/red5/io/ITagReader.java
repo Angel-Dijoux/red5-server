@@ -9,74 +9,74 @@ package org.red5.io;
 
 public interface ITagReader {
 
-  /** Closes the reader and free any allocated memory. */
-  void close();
+    /** Closes the reader and free any allocated memory. */
+    void close();
 
-  /** Decode the header of the stream; */
-  default void decodeHeader() {
-    // no-op
-  }
+    /** Decode the header of the stream; */
+    default void decodeHeader() {
+        // no-op
+    }
 
-  /**
-   * Returns the amount of bytes read
-   *
-   * @return long
-   */
-  long getBytesRead();
+    /**
+     * Returns the amount of bytes read
+     *
+     * @return long
+     */
+    long getBytesRead();
 
-  /**
-   * Return length in seconds
-   *
-   * @return length in seconds
-   */
-  long getDuration();
+    /**
+     * Return length in seconds
+     *
+     * @return length in seconds
+     */
+    long getDuration();
 
-  /**
-   * Return the file that is loaded.
-   *
-   * @return the file to be loaded
-   */
-  IStreamableFile getFile();
+    /**
+     * Return the file that is loaded.
+     *
+     * @return the file to be loaded
+     */
+    IStreamableFile getFile();
 
-  /**
-   * Returns the offet length
-   *
-   * @return int
-   */
-  int getOffset();
+    /**
+     * Returns the offet length
+     *
+     * @return int
+     */
+    int getOffset();
 
-  /**
-   * Get the total readable bytes in a file or ByteBuffer
-   *
-   * @return Total readable bytes
-   */
-  long getTotalBytes();
+    /**
+     * Get the total readable bytes in a file or ByteBuffer
+     *
+     * @return Total readable bytes
+     */
+    long getTotalBytes();
 
-  /**
-   * Returns a boolean stating whether the FLV has more tags
-   *
-   * @return boolean
-   */
-  boolean hasMoreTags();
+    /**
+     * Returns a boolean stating whether the FLV has more tags
+     *
+     * @return boolean
+     */
+    boolean hasMoreTags();
 
-  /**
-   * Check if the reader also has video tags.
-   *
-   * @return has video
-   */
-  boolean hasVideo();
+    /**
+     * Check if the reader also has video tags.
+     *
+     * @return has video
+     */
+    boolean hasVideo();
 
-  /**
-   * Move the reader pointer to given position in file.
-   *
-   * @param pos File position to move to
-   */
-  void position(long pos);
+    /**
+     * Move the reader pointer to given position in file.
+     *
+     * @param pos File position to move to
+     */
+    void position(long pos);
 
-  /**
-   * Returns a Tag object
-   *
-   * @return Tag
-   */
-  ITag readTag();
+    /**
+     * Returns a Tag object
+     *
+     * @return Tag
+     */
+    ITag readTag();
 }

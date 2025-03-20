@@ -13,28 +13,28 @@ package org.red5.io.model;
  */
 public class CircularRefBean extends SimpleJavaBean {
 
-  private CircularRefBean refToSelf;
+    private CircularRefBean refToSelf;
 
-  /** Constructs a new CircularRefBean. */
-  public CircularRefBean() {
-    super();
-  }
+    /** Constructs a new CircularRefBean. */
+    public CircularRefBean() {
+        super();
+    }
 
-  /**
-   * Getter for property 'refToSelf'.
-   *
-   * @return Value for property 'refToSelf'.
-   */
-  public CircularRefBean getRefToSelf() {
-    return refToSelf;
-  }
+    /**
+     * Getter for property 'refToSelf'.
+     *
+     * @return Value for property 'refToSelf'.
+     */
+    public CircularRefBean getRefToSelf() {
+        return refToSelf;
+    }
 
-  /**
-   * Setter for property 'refToSelf'.
-   *
-   * @param refToSelf Value to set for property 'refToSelf'.
-   */
-  public void setRefToSelf(CircularRefBean refToSelf) {
-    this.refToSelf = refToSelf;
-  }
+    /**
+     * Setter for property 'refToSelf'.
+     *
+     * @param refToSelf Value to set for property 'refToSelf'.
+     */
+    public void setRefToSelf(CircularRefBean refToSelf) {
+        this.refToSelf = refToSelf;
+    }
 }

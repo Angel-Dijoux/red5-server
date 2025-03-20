@@ -21,76 +21,76 @@ import org.slf4j.LoggerFactory;
 
 public class SorensonVideoTest {
 
-  private static Logger log = LoggerFactory.getLogger(SorensonVideoTest.class);
+    private static Logger log = LoggerFactory.getLogger(SorensonVideoTest.class);
 
-  private static byte keyFrameType = (byte) 0x12;
+    private static byte keyFrameType = (byte) 0x12;
 
-  private static byte interFrameType = (byte) 0x22;
+    private static byte interFrameType = (byte) 0x22;
 
-  @SuppressWarnings("unused")
-  private static byte disposableFrameType = (byte) 0x32;
+    @SuppressWarnings("unused")
+    private static byte disposableFrameType = (byte) 0x32;
 
-  @Test
-  public void testRealisticFlow() {
-    log.info("testRealisticFlow");
+    @Test
+    public void testRealisticFlow() {
+        log.info("testRealisticFlow");
 
-    IoBuffer data = IoBuffer.allocate(128);
-    data.put((byte) keyFrameType);
-    data.put(RandomStringUtils.random(24).getBytes());
-    data.flip();
+        IoBuffer data = IoBuffer.allocate(128);
+        data.put((byte) keyFrameType);
+        data.put(RandomStringUtils.random(24).getBytes());
+        data.flip();
 
-    SorensonVideo video = new SorensonVideo();
-    assertTrue(video.canHandleData(data));
-    assertTrue(video.addData(data));
-    for (int i = 0; i < 10; i++) {
-      // interframe
-      IoBuffer inter = IoBuffer.allocate(128);
-      inter.put((byte) interFrameType);
-      inter.putInt(i); // store our counter for testing
-      inter.put(RandomStringUtils.random(24).getBytes());
-      inter.flip();
-      // add it
-      assertTrue(video.addData(inter));
+        SorensonVideo video = new SorensonVideo();
+        assertTrue(video.canHandleData(data));
+        assertTrue(video.addData(data));
+        for (int i = 0; i < 10; i++) {
+            // interframe
+            IoBuffer inter = IoBuffer.allocate(128);
+            inter.put((byte) interFrameType);
+            inter.putInt(i); // store our counter for testing
+            inter.put(RandomStringUtils.random(24).getBytes());
+            inter.flip();
+            // add it
+            assertTrue(video.addData(inter));
+        }
+        // there is no interframe at 0
+        FrameData fd = null;
+        assertNull(fd);
+        // verify
+        for (int i = 0; i < 10; i++) {
+            // read them out to verify
+            fd = video.getInterframe(i);
+            assertNotNull(fd);
+            IoBuffer buf = fd.getFrame();
+            buf.skip(1);
+            assertEquals(buf.getInt(), i);
+        }
+        // non-existent
+        fd = video.getInterframe(10);
+        assertNull(fd);
+        // re-add the key
+        assertTrue(video.addData(data));
+        for (int i = 0; i < 4; i++) {
+            // interframe
+            IoBuffer inter = IoBuffer.allocate(128);
+            inter.put((byte) interFrameType);
+            inter.putInt(i + 10); // store our counter for testing
+            inter.put(RandomStringUtils.random(24).getBytes());
+            inter.flip();
+            // add it
+            assertTrue(video.addData(inter));
+        }
+        // verify
+        for (int i = 0; i < 4; i++) {
+            // read them out to verify
+            fd = video.getInterframe(i);
+            assertNotNull(fd);
+            IoBuffer buf = fd.getFrame();
+            buf.skip(1);
+            assertEquals(buf.getInt(), i + 10);
+        }
+        // non-existent
+        fd = video.getInterframe(4);
+        assertNull(fd);
+        log.info("testRealisticFlow end\n");
     }
-    // there is no interframe at 0
-    FrameData fd = null;
-    assertNull(fd);
-    // verify
-    for (int i = 0; i < 10; i++) {
-      // read them out to verify
-      fd = video.getInterframe(i);
-      assertNotNull(fd);
-      IoBuffer buf = fd.getFrame();
-      buf.skip(1);
-      assertEquals(buf.getInt(), i);
-    }
-    // non-existent
-    fd = video.getInterframe(10);
-    assertNull(fd);
-    // re-add the key
-    assertTrue(video.addData(data));
-    for (int i = 0; i < 4; i++) {
-      // interframe
-      IoBuffer inter = IoBuffer.allocate(128);
-      inter.put((byte) interFrameType);
-      inter.putInt(i + 10); // store our counter for testing
-      inter.put(RandomStringUtils.random(24).getBytes());
-      inter.flip();
-      // add it
-      assertTrue(video.addData(inter));
-    }
-    // verify
-    for (int i = 0; i < 4; i++) {
-      // read them out to verify
-      fd = video.getInterframe(i);
-      assertNotNull(fd);
-      IoBuffer buf = fd.getFrame();
-      buf.skip(1);
-      assertEquals(buf.getInt(), i + 10);
-    }
-    // non-existent
-    fd = video.getInterframe(4);
-    assertNull(fd);
-    log.info("testRealisticFlow end\n");
-  }
 }

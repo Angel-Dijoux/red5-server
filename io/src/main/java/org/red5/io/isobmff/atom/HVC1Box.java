@@ -5,7 +5,7 @@ import org.jcodec.containers.mp4.boxes.VideoSampleEntry;
 
 public class HVC1Box extends VideoSampleEntry {
 
-  public HVC1Box() {
-    super(new Header("hvc1"));
-  }
+    public HVC1Box() {
+        super(new Header("hvc1"));
+    }
 }

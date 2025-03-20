@@ -14,10 +14,10 @@ package org.red5.media.processor;
  */
 public interface IPreProcessor extends Runnable {
 
-  /**
-   * Initialize processor with given objects.
-   *
-   * @param objs Objects for processing
-   */
-  void init(Object... objs);
+    /**
+     * Initialize processor with given objects.
+     *
+     * @param objs Objects for processing
+     */
+    void init(Object... objs);
 }

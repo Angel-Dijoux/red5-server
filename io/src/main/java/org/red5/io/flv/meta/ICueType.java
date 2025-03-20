@@ -15,12 +15,12 @@ package org.red5.io.flv.meta;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public interface ICueType {
-  /** Cue point type of event */
-  String EVENT = "event";
+    /** Cue point type of event */
+    String EVENT = "event";
 
-  /** Cue point type of navigation */
-  String NAVIGATION = "navigation";
+    /** Cue point type of navigation */
+    String NAVIGATION = "navigation";
 
-  /** Cue point type of orientation */
-  String ORIENTATION = "orientation";
+    /** Cue point type of orientation */
+    String ORIENTATION = "orientation";
 }

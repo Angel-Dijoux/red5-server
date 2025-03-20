@@ -18,10 +18,10 @@ package org.red5.io.object;
  */
 public interface ICustomSerializable {
 
-  /**
-   * Serialize this object to the given output stream.
-   *
-   * @param output output
-   */
-  public void serialize(Output output);
+    /**
+     * Serialize this object to the given output stream.
+     *
+     * @param output output
+     */
+    public void serialize(Output output);
 }
