@@ -363,14 +363,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
                                                     /*
                                                     "tag": "stsd",
                                                     "boxes": [
+                                                    {
+                                                    "tag": "mp4a | ac-3 | mp4v | avc1 | hvc1",
+                                                    "boxes": [
                                                         {
-                                                        "tag": "mp4a | ac-3 | mp4v | avc1 | hvc1",
-                                                        "boxes": [
-                                                            {
-                                                            "tag": "esds"
-                                                            }
-                                                        ]
+                                                        "tag": "esds"
                                                         }
+                                                    ]
+                                                    }
                                                     ]
                                                     */
                                                   }
@@ -543,12 +543,12 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
                                         if (isAudio.get()) {
                                             List<SampleDependencyTypeBox.Entry> recs = sdtp.getEntries();
                                             for (SampleDependencyTypeBox.Entry rec : recs) {
-                                                log.debug("{}", rec);
+                                        log.debug("{}", rec);
                                             }
                                         } else if (isVideo.get()) {
                                             List<SampleDependencyTypeBox.Entry> recs = sdtp.getEntries();
                                             for (SampleDependencyTypeBox.Entry rec : recs) {
-                                                log.debug("{}", rec);
+                                        log.debug("{}", rec);
                                             }
                                         }
                                         */

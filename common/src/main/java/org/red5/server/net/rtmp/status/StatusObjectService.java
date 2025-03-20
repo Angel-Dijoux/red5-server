@@ -128,21 +128,21 @@ public class StatusObjectService implements StatusCodes, InitializingBean {
     IoBuffer out = IoBuffer.allocate(256);
     out.setAutoExpand(true);
     for (String s : statusObjects.keySet()) {
-        statusCode = s;
-        StatusObject statusObject = statusObjects.get(statusCode);
-        if (RuntimeStatusObject.class.isAssignableFrom(statusObject.getClass())) {
-            log.debug("Skip caching runtime status object: {}", statusCode);
-            continue;
-        }
-        serializeStatusObject(out, statusObject);
-        out.flip();
-        if (log.isTraceEnabled()) {
-            log.trace(HexDump.formatHexDump(out.getHexDump()));
-        }
-        byte[] cachedBytes = new byte[out.remaining()];
-        out.get(cachedBytes);
-        out.clear();
-        cachedStatusObjects.put(statusCode, cachedBytes);
+    statusCode = s;
+    StatusObject statusObject = statusObjects.get(statusCode);
+    if (RuntimeStatusObject.class.isAssignableFrom(statusObject.getClass())) {
+        log.debug("Skip caching runtime status object: {}", statusCode);
+        continue;
+    }
+    serializeStatusObject(out, statusObject);
+    out.flip();
+    if (log.isTraceEnabled()) {
+        log.trace(HexDump.formatHexDump(out.getHexDump()));
+    }
+    byte[] cachedBytes = new byte[out.remaining()];
+    out.get(cachedBytes);
+    out.clear();
+    cachedStatusObjects.put(statusCode, cachedBytes);
     }
     out.free();
     out = null;

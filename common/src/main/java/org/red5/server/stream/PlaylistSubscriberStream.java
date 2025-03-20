@@ -765,7 +765,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream
     int lastMessageTs = engine.getLastMessageTimestamp();
     /* XXX(paul) I think this is incorrect
     if (lastMessageTs >= 0) {
-        return 0;
+    return 0;
     }
     return lastMessageTs;
     */

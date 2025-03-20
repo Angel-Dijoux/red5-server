@@ -387,9 +387,8 @@ public class RTMPMinaConnection extends RTMPConnection implements RTMPMinaConnec
                 encoderLock.availablePermits());
           }
           String exMsg =
-              e
-                  .getMessage(); // if the exception cause is null break out of here to prevent
-                                 // looping until closed
+              e.getMessage(); // if the exception cause is null break out of here to prevent
+          // looping until closed
           if (exMsg == null || exMsg.indexOf("null") >= 0) {
             log.debug("Exception writing to connection: {}", this);
             break;
