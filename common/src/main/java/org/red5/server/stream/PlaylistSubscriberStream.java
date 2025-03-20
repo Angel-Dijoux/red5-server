@@ -763,13 +763,6 @@ public class PlaylistSubscriberStream extends AbstractClientStream
   /** {@inheritDoc} */
   public int getCurrentTimestamp() {
     int lastMessageTs = engine.getLastMessageTimestamp();
-    /* XXX(paul) I think this is incorrect
-    if (lastMessageTs >= 0) {
-    return 0;
-    }
-    return lastMessageTs;
-    */
-    // XXX(paul) this seems to be what the correct logic would be
     if (lastMessageTs >= 0) {
       return lastMessageTs;
     }
