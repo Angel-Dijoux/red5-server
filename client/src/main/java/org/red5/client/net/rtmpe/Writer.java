@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedList;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.client.net.rtmp.IClientListener;
 import org.red5.io.ITag;
@@ -32,112 +31,111 @@ import org.slf4j.LoggerFactory;
  */
 public class Writer implements IClientListener {
 
-    private static final Logger log = LoggerFactory.getLogger(Writer.class);
+  private static final Logger log = LoggerFactory.getLogger(Writer.class);
 
-    private ITagWriter writer;
+  private ITagWriter writer;
 
-    /**
-     * Instantiates a writer for the given path.
-     *
-     * @param filePath
-     */
-    public Writer(String filePath) {
-        File file = new File(filePath);
-        try {
-            file.createNewFile();
-            writer = new FLVWriter(file, false);
-        } catch (IOException e) {
-            log.error("Output file for the writer creation failed", e);
-        }
+  /**
+   * Instantiates a writer for the given path.
+   *
+   * @param filePath
+   */
+  public Writer(String filePath) {
+    File file = new File(filePath);
+    try {
+      file.createNewFile();
+      writer = new FLVWriter(file, false);
+    } catch (IOException e) {
+      log.error("Output file for the writer creation failed", e);
     }
+  }
 
-    /**
-     * Instantiates a writer for the given path.
-     *
-     * @param filePath
-     */
-    public Writer(Path filePath) {
-        File file = filePath.toFile();
-        try {
-            file.createNewFile();
-            writer = new FLVWriter(file, false);
-        } catch (IOException e) {
-            log.error("Output file for the writer creation failed", e);
-        }
+  /**
+   * Instantiates a writer for the given path.
+   *
+   * @param filePath
+   */
+  public Writer(Path filePath) {
+    File file = filePath.toFile();
+    try {
+      file.createNewFile();
+      writer = new FLVWriter(file, false);
+    } catch (IOException e) {
+      log.error("Output file for the writer creation failed", e);
     }
+  }
 
-    /** {@inheritDoc} */
-    @SuppressWarnings("rawtypes")
-    public void onClientListenerEvent(IRTMPEvent event) {
-        log.debug("onClientListenerEvent: {}", event);
-        if (event instanceof IStreamData) {
-            if (event.getHeader().getSize() > 0 && writer != null) {
-                synchronized (writer) {
-                    ITag tag = new Tag();
-                    byte dataType = event.getDataType();
-                    switch (dataType) {
-                        case Constants.TYPE_AGGREGATE:
-                            Aggregate aggregate = (Aggregate) event;
-                            int aggTimestamp = event.getTimestamp();
-                            log.debug("Timestamp (aggregate): {}", aggTimestamp);
-                            LinkedList<IRTMPEvent> parts = aggregate.getParts();
-                            for (IRTMPEvent part : parts) {
-                                tag.setDataType(part.getDataType());
-                                tag.setTimestamp(part.getTimestamp());
-                                IoBuffer data = ((IStreamData) part).getData();
-                                tag.setBodySize(data.limit());
-                                tag.setBody(data);
-                                log.debug("Data: {}", data);
-                                try {
-                                    if (writer.writeTag(tag)) {
-                                        log.trace("Tag was written {}", tag);
-                                    }
-                                } catch (Exception e) {
-                                    log.error("Exception writing to file", e);
-                                } finally {
-                                    data.free();
-                                }
-                            }
-                            parts.clear();
-                            break;
-                        case Constants.TYPE_AUDIO_DATA:
-                        case Constants.TYPE_VIDEO_DATA:
-                            tag.setDataType(dataType);
-                            tag.setTimestamp(event.getTimestamp());
-                            IoBuffer data = ((IStreamData) event).getData();
-                            tag.setBodySize(data.limit());
-                            tag.setBody(data);
-                            log.debug("Data: {}", data);
-                            try {
-                                if (writer.writeTag(tag)) {
-                                    log.trace("Tag was written {}", tag);
-                                }
-                            } catch (Exception e) {
-                                log.error("Exception writing to file", e);
-                            } finally {
-                                data.free();
-                            }
-                            break;
-                        default:
-                            log.debug("Non A/V data detected, it will not be written: {}", dataType);
-                    }
+  /** {@inheritDoc} */
+  @SuppressWarnings("rawtypes")
+  public void onClientListenerEvent(IRTMPEvent event) {
+    log.debug("onClientListenerEvent: {}", event);
+    if (event instanceof IStreamData) {
+      if (event.getHeader().getSize() > 0 && writer != null) {
+        synchronized (writer) {
+          ITag tag = new Tag();
+          byte dataType = event.getDataType();
+          switch (dataType) {
+            case Constants.TYPE_AGGREGATE:
+              Aggregate aggregate = (Aggregate) event;
+              int aggTimestamp = event.getTimestamp();
+              log.debug("Timestamp (aggregate): {}", aggTimestamp);
+              LinkedList<IRTMPEvent> parts = aggregate.getParts();
+              for (IRTMPEvent part : parts) {
+                tag.setDataType(part.getDataType());
+                tag.setTimestamp(part.getTimestamp());
+                IoBuffer data = ((IStreamData) part).getData();
+                tag.setBodySize(data.limit());
+                tag.setBody(data);
+                log.debug("Data: {}", data);
+                try {
+                  if (writer.writeTag(tag)) {
+                    log.trace("Tag was written {}", tag);
+                  }
+                } catch (Exception e) {
+                  log.error("Exception writing to file", e);
+                } finally {
+                  data.free();
                 }
-            } else {
-                log.debug("Skipping event where header size <= 0");
-            }
-        } else {
-            log.debug("Skipping non stream data");
+              }
+              parts.clear();
+              break;
+            case Constants.TYPE_AUDIO_DATA:
+            case Constants.TYPE_VIDEO_DATA:
+              tag.setDataType(dataType);
+              tag.setTimestamp(event.getTimestamp());
+              IoBuffer data = ((IStreamData) event).getData();
+              tag.setBodySize(data.limit());
+              tag.setBody(data);
+              log.debug("Data: {}", data);
+              try {
+                if (writer.writeTag(tag)) {
+                  log.trace("Tag was written {}", tag);
+                }
+              } catch (Exception e) {
+                log.error("Exception writing to file", e);
+              } finally {
+                data.free();
+              }
+              break;
+            default:
+              log.debug("Non A/V data detected, it will not be written: {}", dataType);
+          }
         }
+      } else {
+        log.debug("Skipping event where header size <= 0");
+      }
+    } else {
+      log.debug("Skipping non stream data");
     }
+  }
 
-    /** {@inheritDoc} */
-    public void stopListening() {
-        log.debug("stopListening, client is finished providing data");
-        if (writer != null) {
-            writer.close();
-            log.debug("Bytes written: {}", writer.getBytesWritten());
-            writer = null;
-        }
+  /** {@inheritDoc} */
+  public void stopListening() {
+    log.debug("stopListening, client is finished providing data");
+    if (writer != null) {
+      writer.close();
+      log.debug("Bytes written: {}", writer.getBytesWritten());
+      writer = null;
     }
-
+  }
 }

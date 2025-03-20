@@ -7,14 +7,9 @@
 
 package org.red5.server.exception;
 
-/**
- * Base for all shared object-related exceptions
- */
+/** Base for all shared object-related exceptions */
 public class SharedObjectException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 4152370716169030341L;
-
+  /** */
+  private static final long serialVersionUID = 4152370716169030341L;
 }

@@ -9,9 +9,7 @@ package org.red5.server;
 
 import java.beans.ConstructorProperties;
 import java.io.IOException;
-
 import javax.management.openmbean.CompositeData;
-
 import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IMappingStrategy;
@@ -33,434 +31,379 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.Resource;
 
-/**
- * <p>
- * This is basic context implementation used by Red5.
- * </p>
- */
+/** This is basic context implementation used by Red5. */
 public class Context implements IContext, ApplicationContextAware, ContextMXBean {
 
-    public static final Logger logger = LoggerFactory.getLogger(Context.class);
+  public static final Logger logger = LoggerFactory.getLogger(Context.class);
 
-    /**
-     * Spring application context
-     */
-    private ApplicationContext applicationContext;
+  /** Spring application context */
+  private ApplicationContext applicationContext;
 
-    /**
-     * Core context
-     */
-    private BeanFactory coreContext;
+  /** Core context */
+  private BeanFactory coreContext;
 
-    /**
-     * Context path
-     */
-    private String contextPath = "";
+  /** Context path */
+  private String contextPath = "";
 
-    /**
-     * Scope resolver collaborator
-     */
-    private IScopeResolver scopeResolver;
+  /** Scope resolver collaborator */
+  private IScopeResolver scopeResolver;
 
-    /**
-     * Client registry
-     */
-    private IClientRegistry clientRegistry;
+  /** Client registry */
+  private IClientRegistry clientRegistry;
 
-    /**
-     * Service invoker collaborator
-     */
-    private IServiceInvoker serviceInvoker;
+  /** Service invoker collaborator */
+  private IServiceInvoker serviceInvoker;
 
-    /**
-     * Mapping strategy collaborator
-     */
-    private IMappingStrategy mappingStrategy;
+  /** Mapping strategy collaborator */
+  private IMappingStrategy mappingStrategy;
 
-    /**
-     * Persistence store
-     */
-    private IPersistenceStore persistanceStore;
+  /** Persistence store */
+  private IPersistenceStore persistanceStore;
 
-    /**
-     * Initializes core context bean factory using red5.core bean factory from red5.xml context
-     */
-    @ConstructorProperties(value = { "" })
-    public Context() {
+  /** Initializes core context bean factory using red5.core bean factory from red5.xml context */
+  @ConstructorProperties(value = {""})
+  public Context() {}
+
+  /**
+   * Initializes app context and context path from given parameters
+   *
+   * @param context Application context
+   * @param contextPath Context path
+   */
+  @ConstructorProperties({"context", "contextPath"})
+  public Context(ApplicationContext context, String contextPath) {
+    setApplicationContext(context);
+    this.contextPath = contextPath;
+  }
+
+  /**
+   * Return global scope
+   *
+   * @return Global scope
+   */
+  public IGlobalScope getGlobalScope() {
+    IGlobalScope gs = scopeResolver.getGlobalScope();
+    logger.trace("Global scope: {}", gs);
+    return gs;
+  }
+
+  /**
+   * Return scope resolver
+   *
+   * @return scope resolver
+   */
+  public IScopeResolver getScopeResolver() {
+    return scopeResolver;
+  }
+
+  /**
+   * Resolves scope using scope resolver collaborator
+   *
+   * @param path Path to resolve
+   * @return Scope resolution result
+   */
+  public IScope resolveScope(String path) {
+    return scopeResolver.resolveScope(path);
+  }
+
+  /**
+   * Resolves scope from given root using scope resolver.
+   *
+   * @param root Scope to start from.
+   * @param path Path to resolve.
+   * @return Scope resolution result.
+   */
+  public IScope resolveScope(IScope root, String path) {
+    return scopeResolver.resolveScope(root, path);
+  }
+
+  /**
+   * Setter for client registry
+   *
+   * @param clientRegistry Client registry
+   */
+  public void setClientRegistry(IClientRegistry clientRegistry) {
+    this.clientRegistry = clientRegistry;
+  }
+
+  /**
+   * Setter for mapping strategy
+   *
+   * @param mappingStrategy Mapping strategy
+   */
+  public void setMappingStrategy(IMappingStrategy mappingStrategy) {
+    this.mappingStrategy = mappingStrategy;
+  }
+
+  /**
+   * Setter for scope resolver
+   *
+   * @param scopeResolver Scope resolver used to resolve scopes
+   */
+  public void setScopeResolver(IScopeResolver scopeResolver) {
+    this.scopeResolver = scopeResolver;
+  }
+
+  /**
+   * Setter for service invoker
+   *
+   * @param serviceInvoker Service invoker object
+   */
+  public void setServiceInvoker(IServiceInvoker serviceInvoker) {
+    this.serviceInvoker = serviceInvoker;
+    logger.debug("Service invoker: {}", serviceInvoker);
+  }
+
+  /**
+   * Return persistence store
+   *
+   * @return Persistence store
+   */
+  public IPersistenceStore getPersistanceStore() {
+    return persistanceStore;
+  }
+
+  /**
+   * Setter for persistence store
+   *
+   * @param persistanceStore Persistence store
+   */
+  public void setPersistanceStore(IPersistenceStore persistanceStore) {
+    this.persistanceStore = persistanceStore;
+  }
+
+  /**
+   * Setter for application context
+   *
+   * @param context App context
+   */
+  @SuppressWarnings({"resource", "null"})
+  public void setApplicationContext(ApplicationContext context) {
+    this.applicationContext = context;
+    String deploymentType = System.getProperty("red5.deployment.type");
+    logger.debug("Deployment type: {}", deploymentType);
+    if (deploymentType == null) {
+      // standalone core context
+      String config = System.getProperty("red5.conf_file");
+      if (config == null) {
+        config = "red5.xml";
+      }
+      coreContext = (BeanFactory) new ClassPathXmlApplicationContext(config).getBean("red5.core");
+    } else {
+      logger.info("Setting parent bean factory as core");
+      coreContext = applicationContext.getParentBeanFactory();
     }
+  }
 
-    /**
-     * Initializes app context and context path from given parameters
-     *
-     * @param context
-     *            Application context
-     * @param contextPath
-     *            Context path
-     */
-    @ConstructorProperties({ "context", "contextPath" })
-    public Context(ApplicationContext context, String contextPath) {
-        setApplicationContext(context);
-        this.contextPath = contextPath;
+  /**
+   * Return application context
+   *
+   * @return App context
+   */
+  public ApplicationContext getApplicationContext() {
+    return applicationContext;
+  }
+
+  /**
+   * Setter for context path. Adds a slash at the end of path if there isn't one
+   *
+   * @param contextPath Context path
+   */
+  public void setContextPath(String contextPath) {
+    if (!contextPath.endsWith("/")) {
+      contextPath += '/';
     }
+    this.contextPath = contextPath;
+  }
 
-    /**
-     * Return global scope
-     *
-     * @return Global scope
-     */
-    public IGlobalScope getGlobalScope() {
-        IGlobalScope gs = scopeResolver.getGlobalScope();
-        logger.trace("Global scope: {}", gs);
-        return gs;
+  /**
+   * Return client registry
+   *
+   * @return Client registry
+   */
+  public IClientRegistry getClientRegistry() {
+    return clientRegistry;
+  }
+
+  /**
+   * Return scope
+   *
+   * @return null
+   */
+  public IScope getScope() {
+    return null;
+  }
+
+  /**
+   * Return service invoker
+   *
+   * @return Service invoker
+   */
+  public IServiceInvoker getServiceInvoker() {
+    return serviceInvoker;
+  }
+
+  /**
+   * Look up service by name
+   *
+   * @param serviceName Service name
+   * @return Service object
+   * @throws ServiceNotFoundException When service found but null
+   * @throws NoSuchBeanDefinitionException When bean with given name doesn't exist
+   */
+  @SuppressWarnings("null")
+  public Object lookupService(String serviceName) {
+    serviceName = getMappingStrategy().mapServiceName(serviceName);
+    try {
+      return applicationContext.getBean(serviceName);
+    } catch (NoSuchBeanDefinitionException err) {
+      throw new ServiceNotFoundException(serviceName);
     }
+  }
 
-    /**
-     * Return scope resolver
-     *
-     * @return scope resolver
-     */
-    public IScopeResolver getScopeResolver() {
-        return scopeResolver;
+  /**
+   * Look up scope handler for context path
+   *
+   * @param contextPath Context path
+   * @return Scope handler
+   * @throws ScopeHandlerNotFoundException If there's no handler for given context path
+   */
+  public IScopeHandler lookupScopeHandler(String contextPath) {
+    IScopeHandler scopeHandler = null;
+    // Get target scope handler name
+    String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(contextPath);
+    // Check if scope handler name is null
+    if (scopeHandlerName == null) {
+      throw new ScopeHandlerNotFoundException(contextPath);
     }
-
-    /**
-     * Resolves scope using scope resolver collaborator
-     *
-     * @param path
-     *            Path to resolve
-     * @return Scope resolution result
-     */
-    public IScope resolveScope(String path) {
-        return scopeResolver.resolveScope(path);
+    // Get bean from bean factory
+    Object bean = applicationContext.getBean(scopeHandlerName);
+    if (bean instanceof IScopeHandler) {
+      scopeHandler = (IScopeHandler) bean;
+    } else {
+      throw new ScopeHandlerNotFoundException(scopeHandlerName);
     }
+    return scopeHandler;
+  }
 
-    /**
-     * Resolves scope from given root using scope resolver.
-     *
-     * @param root
-     *            Scope to start from.
-     * @param path
-     *            Path to resolve.
-     * @return Scope resolution result.
-     */
-    public IScope resolveScope(IScope root, String path) {
-        return scopeResolver.resolveScope(root, path);
+  /**
+   * Return mapping strategy used by this context. Mapping strategy define naming rules (prefixes,
+   * postfixes, default application name, etc) for all named objects in context.
+   *
+   * @return Mapping strategy
+   */
+  public IMappingStrategy getMappingStrategy() {
+    return mappingStrategy;
+  }
+
+  /**
+   * Return array or resource that match given pattern
+   *
+   * @param pattern Pattern to check against
+   * @return Array of Resource objects
+   * @throws IOException On I/O exception
+   * @see org.springframework.core.io.Resource
+   */
+  @SuppressWarnings("null")
+  public Resource[] getResources(String pattern) throws IOException {
+    return applicationContext.getResources(contextPath + pattern);
+  }
+
+  /**
+   * Return resource by path
+   *
+   * @param path Resource path
+   * @return Resource
+   * @see org.springframework.core.io.Resource
+   */
+  @SuppressWarnings("null")
+  public Resource getResource(String path) {
+    return applicationContext.getResource(contextPath + path);
+  }
+
+  /**
+   * Resolve scope from host and path
+   *
+   * @param host Host
+   * @param path Path
+   * @return Scope
+   * @see org.red5.server.api.scope.IScope
+   * @see org.red5.server.scope.Scope
+   */
+  public IScope resolveScope(String host, String path) {
+    return scopeResolver.resolveScope(path);
+  }
+
+  /** {@inheritDoc} */
+  @SuppressWarnings("null")
+  public boolean hasBean(String beanId) {
+    return applicationContext.containsBean(beanId);
+  }
+
+  /**
+   * Return bean instantiated by bean factory
+   *
+   * @param beanId Bean name
+   * @return Instantiated bean
+   * @see org.springframework.beans.factory.BeanFactory
+   */
+  @SuppressWarnings("null")
+  public Object getBean(String beanId) {
+    // for war applications the "application" beans are not stored in the
+    // sub-contexts, so look in the application context first and the core
+    // context second
+    Object bean = null;
+    try {
+      bean = applicationContext.getBean(beanId);
+    } catch (NoSuchBeanDefinitionException e) {
+      logger.warn("Bean lookup failed for {} in the application context", beanId, e);
     }
-
-    /**
-     * Setter for client registry
-     *
-     * @param clientRegistry
-     *            Client registry
-     */
-    public void setClientRegistry(IClientRegistry clientRegistry) {
-        this.clientRegistry = clientRegistry;
+    if (bean == null) {
+      bean = getCoreService(beanId);
     }
+    return bean;
+  }
 
-    /**
-     * Setter for mapping strategy
-     *
-     * @param mappingStrategy
-     *            Mapping strategy
-     */
-    public void setMappingStrategy(IMappingStrategy mappingStrategy) {
-        this.mappingStrategy = mappingStrategy;
+  /**
+   * Return core Red5 service instantiated by core context bean factory
+   *
+   * @param beanId Bean name
+   * @return Core Red5 service instantiated
+   * @see org.springframework.beans.factory.BeanFactory
+   */
+  @SuppressWarnings("null")
+  public Object getCoreService(String beanId) {
+    return coreContext.getBean(beanId);
+  }
+
+  public void setCoreBeanFactory(BeanFactory core) {
+    coreContext = core;
+  }
+
+  /**
+   * Return current thread's context classloader
+   *
+   * @return Classloder context of current thread
+   */
+  public ClassLoader getClassLoader() {
+    return applicationContext.getClassLoader();
+  }
+
+  /**
+   * Allows for reconstruction via CompositeData.
+   *
+   * @param cd composite data
+   * @return Context class instance
+   */
+  public static Context from(CompositeData cd) {
+    Context instance = new Context();
+    if (cd.containsKey("context") && cd.containsKey("contextPath")) {
+      Object context = cd.get("context");
+      Object contextPath = cd.get("contextPath");
+      if (context != null && contextPath != null) {
+        instance = new Context((ApplicationContext) context, (String) contextPath);
+      }
     }
-
-    /**
-     * Setter for scope resolver
-     *
-     * @param scopeResolver
-     *            Scope resolver used to resolve scopes
-     */
-    public void setScopeResolver(IScopeResolver scopeResolver) {
-        this.scopeResolver = scopeResolver;
-    }
-
-    /**
-     * Setter for service invoker
-     *
-     * @param serviceInvoker
-     *            Service invoker object
-     */
-    public void setServiceInvoker(IServiceInvoker serviceInvoker) {
-        this.serviceInvoker = serviceInvoker;
-        logger.debug("Service invoker: {}", serviceInvoker);
-    }
-
-    /**
-     * Return persistence store
-     *
-     * @return Persistence store
-     */
-    public IPersistenceStore getPersistanceStore() {
-        return persistanceStore;
-    }
-
-    /**
-     * Setter for persistence store
-     *
-     * @param persistanceStore
-     *            Persistence store
-     */
-    public void setPersistanceStore(IPersistenceStore persistanceStore) {
-        this.persistanceStore = persistanceStore;
-    }
-
-    /**
-     * Setter for application context
-     *
-     * @param context
-     *            App context
-     */
-    @SuppressWarnings({ "resource", "null" })
-    public void setApplicationContext(ApplicationContext context) {
-        this.applicationContext = context;
-        String deploymentType = System.getProperty("red5.deployment.type");
-        logger.debug("Deployment type: {}", deploymentType);
-        if (deploymentType == null) {
-            // standalone core context
-            String config = System.getProperty("red5.conf_file");
-            if (config == null) {
-                config = "red5.xml";
-            }
-            coreContext = (BeanFactory) new ClassPathXmlApplicationContext(config).getBean("red5.core");
-        } else {
-            logger.info("Setting parent bean factory as core");
-            coreContext = applicationContext.getParentBeanFactory();
-        }
-    }
-
-    /**
-     * Return application context
-     *
-     * @return App context
-     */
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    /**
-     * Setter for context path. Adds a slash at the end of path if there isn't one
-     *
-     * @param contextPath
-     *            Context path
-     */
-    public void setContextPath(String contextPath) {
-        if (!contextPath.endsWith("/")) {
-            contextPath += '/';
-        }
-        this.contextPath = contextPath;
-    }
-
-    /**
-     * Return client registry
-     *
-     * @return Client registry
-     */
-    public IClientRegistry getClientRegistry() {
-        return clientRegistry;
-    }
-
-    /**
-     * Return scope
-     *
-     * @return null
-     */
-    public IScope getScope() {
-        return null;
-    }
-
-    /**
-     * Return service invoker
-     *
-     * @return Service invoker
-     */
-    public IServiceInvoker getServiceInvoker() {
-        return serviceInvoker;
-    }
-
-    /**
-     * Look up service by name
-     *
-     * @param serviceName
-     *            Service name
-     * @return Service object
-     * @throws ServiceNotFoundException
-     *             When service found but null
-     * @throws NoSuchBeanDefinitionException
-     *             When bean with given name doesn't exist
-     */
-    @SuppressWarnings("null")
-    public Object lookupService(String serviceName) {
-        serviceName = getMappingStrategy().mapServiceName(serviceName);
-        try {
-            return applicationContext.getBean(serviceName);
-        } catch (NoSuchBeanDefinitionException err) {
-            throw new ServiceNotFoundException(serviceName);
-        }
-    }
-
-    /**
-     * Look up scope handler for context path
-     *
-     * @param contextPath
-     *            Context path
-     * @return Scope handler
-     * @throws ScopeHandlerNotFoundException
-     *             If there's no handler for given context path
-     */
-    public IScopeHandler lookupScopeHandler(String contextPath) {
-        IScopeHandler scopeHandler = null;
-        // Get target scope handler name
-        String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(contextPath);
-        // Check if scope handler name is null
-        if (scopeHandlerName == null) {
-            throw new ScopeHandlerNotFoundException(contextPath);
-        }
-        // Get bean from bean factory
-        Object bean = applicationContext.getBean(scopeHandlerName);
-        if (bean instanceof IScopeHandler) {
-            scopeHandler = (IScopeHandler) bean;
-        } else {
-            throw new ScopeHandlerNotFoundException(scopeHandlerName);
-        }
-        return scopeHandler;
-    }
-
-    /**
-     * Return mapping strategy used by this context. Mapping strategy define naming rules (prefixes, postfixes, default application name, etc) for all named objects in context.
-     *
-     * @return Mapping strategy
-     */
-    public IMappingStrategy getMappingStrategy() {
-        return mappingStrategy;
-    }
-
-    /**
-     * Return array or resource that match given pattern
-     *
-     * @param pattern
-     *            Pattern to check against
-     * @return Array of Resource objects
-     * @throws IOException
-     *             On I/O exception
-     *
-     * @see org.springframework.core.io.Resource
-     */
-    @SuppressWarnings("null")
-    public Resource[] getResources(String pattern) throws IOException {
-        return applicationContext.getResources(contextPath + pattern);
-    }
-
-    /**
-     * Return resource by path
-     *
-     * @param path
-     *            Resource path
-     * @return Resource
-     *
-     * @see org.springframework.core.io.Resource
-     */
-    @SuppressWarnings("null")
-    public Resource getResource(String path) {
-        return applicationContext.getResource(contextPath + path);
-    }
-
-    /**
-     * Resolve scope from host and path
-     *
-     * @param host
-     *            Host
-     * @param path
-     *            Path
-     * @return Scope
-     *
-     * @see org.red5.server.api.scope.IScope
-     * @see org.red5.server.scope.Scope
-     */
-    public IScope resolveScope(String host, String path) {
-        return scopeResolver.resolveScope(path);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("null")
-    public boolean hasBean(String beanId) {
-        return applicationContext.containsBean(beanId);
-    }
-
-    /**
-     * Return bean instantiated by bean factory
-     *
-     * @param beanId
-     *            Bean name
-     * @return Instantiated bean
-     *
-     * @see org.springframework.beans.factory.BeanFactory
-     */
-    @SuppressWarnings("null")
-    public Object getBean(String beanId) {
-        // for war applications the "application" beans are not stored in the
-        // sub-contexts, so look in the application context first and the core
-        // context second
-        Object bean = null;
-        try {
-            bean = applicationContext.getBean(beanId);
-        } catch (NoSuchBeanDefinitionException e) {
-            logger.warn("Bean lookup failed for {} in the application context", beanId, e);
-        }
-        if (bean == null) {
-            bean = getCoreService(beanId);
-        }
-        return bean;
-    }
-
-    /**
-     * Return core Red5 service instantiated by core context bean factory
-     *
-     * @param beanId
-     *            Bean name
-     * @return Core Red5 service instantiated
-     *
-     * @see org.springframework.beans.factory.BeanFactory
-     */
-    @SuppressWarnings("null")
-    public Object getCoreService(String beanId) {
-        return coreContext.getBean(beanId);
-    }
-
-    public void setCoreBeanFactory(BeanFactory core) {
-        coreContext = core;
-    }
-
-    /**
-     * Return current thread's context classloader
-     *
-     * @return Classloder context of current thread
-     */
-    public ClassLoader getClassLoader() {
-        return applicationContext.getClassLoader();
-    }
-
-    /**
-     * Allows for reconstruction via CompositeData.
-     *
-     * @param cd
-     *            composite data
-     * @return Context class instance
-     */
-    public static Context from(CompositeData cd) {
-        Context instance = new Context();
-        if (cd.containsKey("context") && cd.containsKey("contextPath")) {
-            Object context = cd.get("context");
-            Object contextPath = cd.get("contextPath");
-            if (context != null && contextPath != null) {
-                instance = new Context((ApplicationContext) context, (String) contextPath);
-            }
-        }
-        return instance;
-    }
-
+    return instance;
+  }
 }

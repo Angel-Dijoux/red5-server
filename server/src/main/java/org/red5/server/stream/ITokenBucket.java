@@ -8,85 +8,83 @@
 package org.red5.server.stream;
 
 /**
- * Basically token bucket is used to control the bandwidth used by a stream or a connection or a client. There's a background thread that distributes tokens to the buckets in the system according to the configuration of the bucket. The configuration includes how fast the tokens are distributed. When a stream, for example, needs to send out a packet, the packet's byte count is calculated and each byte corresponds to a
- * token in the bucket. The stream is assigned a bucket and the tokens in the bucket are acquired before the packet can be sent out. So if the speed(or bandwidth) in configuration is low, the stream can't send out packets fast.
+ * Basically token bucket is used to control the bandwidth used by a stream or a connection or a
+ * client. There's a background thread that distributes tokens to the buckets in the system
+ * according to the configuration of the bucket. The configuration includes how fast the tokens are
+ * distributed. When a stream, for example, needs to send out a packet, the packet's byte count is
+ * calculated and each byte corresponds to a token in the bucket. The stream is assigned a bucket
+ * and the tokens in the bucket are acquired before the packet can be sent out. So if the speed(or
+ * bandwidth) in configuration is low, the stream can't send out packets fast.
  *
  * @author The Red5 Project
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface ITokenBucket {
+  /**
+   * Acquire tokens amount of tokenCount waiting wait milliseconds if token not available.
+   *
+   * @param tokenCount The count of tokens to acquire.
+   * @param wait Milliseconds to wait. 0 means no wait and any value below zero means wait forever.
+   * @return true if successfully acquired or false if not acquired.
+   */
+  boolean acquireToken(long tokenCount, long wait);
+
+  /**
+   * Nonblockingly acquire token. If the token is not available and task is not null, the callback
+   * will be executed when the token is available. The tokens are not consumed automatically before
+   * callback, so it's recommended to acquire token again in callback function.
+   *
+   * @param tokenCount Number of tokens
+   * @param callback Callback
+   * @return true if successfully acquired or false if not acquired.
+   */
+  boolean acquireTokenNonblocking(long tokenCount, ITokenBucketCallback callback);
+
+  /**
+   * Nonblockingly acquire token. The upper limit is specified. If not enough tokens are left in
+   * bucket, all remaining will be returned.
+   *
+   * @param upperLimitCount Upper limit of aquisition
+   * @return Remaining tokens from bucket
+   */
+  long acquireTokenBestEffort(long upperLimitCount);
+
+  /**
+   * Get the capacity of this bucket in Byte.
+   *
+   * @return Capacity of this bucket in bytes
+   */
+  long getCapacity();
+
+  /**
+   * The amount of tokens increased per millisecond.
+   *
+   * @return Amount of tokens increased per millisecond.
+   */
+  double getSpeed();
+
+  /**
+   * Reset this token bucket. All pending threads are woken up with false returned for acquiring
+   * token and callback is removed without calling back.
+   */
+  void reset();
+
+  /** Callback for tocket bucket */
+  public interface ITokenBucketCallback {
     /**
-     * Acquire tokens amount of tokenCount waiting wait milliseconds if token not available.
+     * Being called when the tokens requested are available.
      *
-     * @param tokenCount
-     *            The count of tokens to acquire.
-     * @param wait
-     *            Milliseconds to wait. 0 means no wait and any value below zero means wait forever.
-     * @return true if successfully acquired or false if not acquired.
+     * @param bucket Bucket
+     * @param tokenCount Number of tokens
      */
-    boolean acquireToken(long tokenCount, long wait);
+    void available(ITokenBucket bucket, long tokenCount);
 
     /**
-     * Nonblockingly acquire token. If the token is not available and task is not null, the callback will be executed when the token is available. The tokens are not consumed automatically before callback, so it's recommended to acquire token again in callback function.
+     * Resets tokens in bucket
      *
-     * @param tokenCount
-     *            Number of tokens
-     * @param callback
-     *            Callback
-     * @return true if successfully acquired or false if not acquired.
+     * @param bucket Bucket
+     * @param tokenCount Number of tokens
      */
-    boolean acquireTokenNonblocking(long tokenCount, ITokenBucketCallback callback);
-
-    /**
-     * Nonblockingly acquire token. The upper limit is specified. If not enough tokens are left in bucket, all remaining will be returned.
-     *
-     * @param upperLimitCount
-     *            Upper limit of aquisition
-     * @return Remaining tokens from bucket
-     */
-    long acquireTokenBestEffort(long upperLimitCount);
-
-    /**
-     * Get the capacity of this bucket in Byte.
-     *
-     * @return Capacity of this bucket in bytes
-     */
-    long getCapacity();
-
-    /**
-     * The amount of tokens increased per millisecond.
-     *
-     * @return Amount of tokens increased per millisecond.
-     */
-    double getSpeed();
-
-    /**
-     * Reset this token bucket. All pending threads are woken up with false returned for acquiring token and callback is removed without calling back.
-     */
-    void reset();
-
-    /**
-     * Callback for tocket bucket
-     */
-    public interface ITokenBucketCallback {
-        /**
-         * Being called when the tokens requested are available.
-         *
-         * @param bucket
-         *            Bucket
-         * @param tokenCount
-         *            Number of tokens
-         */
-        void available(ITokenBucket bucket, long tokenCount);
-
-        /**
-         * Resets tokens in bucket
-         *
-         * @param bucket
-         *            Bucket
-         * @param tokenCount
-         *            Number of tokens
-         */
-        void reset(ITokenBucket bucket, long tokenCount);
-    }
+    void reset(ITokenBucket bucket, long tokenCount);
+  }
 }

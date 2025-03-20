@@ -9,7 +9,6 @@ package org.red5.server.service.flv.impl;
 
 import java.io.File;
 import java.io.IOException;
-
 import org.red5.io.IStreamableFile;
 import org.red5.io.flv.impl.FLV;
 import org.red5.server.service.BaseStreamableFileService;
@@ -25,39 +24,33 @@ import org.red5.server.service.flv.IFLVService;
  */
 public class FLVService extends BaseStreamableFileService implements IFLVService {
 
-    /**
-     * Generate FLV metadata?
-     */
-    private boolean generateMetadata;
+  /** Generate FLV metadata? */
+  private boolean generateMetadata;
 
-    /** {@inheritDoc} */
-    @Override
-    public String getPrefix() {
-        return "flv";
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String getPrefix() {
+    return "flv";
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public String getExtension() {
-        return ".flv";
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String getExtension() {
+    return ".flv";
+  }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IStreamableFile getStreamableFile(File file) throws IOException {
-        return new FLV(file, generateMetadata);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public IStreamableFile getStreamableFile(File file) throws IOException {
+    return new FLV(file, generateMetadata);
+  }
 
-    /**
-     * Generate metadata or not
-     *
-     * @param generate
-     *            true if there's need to generate metadata, false otherwise
-     */
-    public void setGenerateMetadata(boolean generate) {
-        generateMetadata = generate;
-    }
-
+  /**
+   * Generate metadata or not
+   *
+   * @param generate true if there's need to generate metadata, false otherwise
+   */
+  public void setGenerateMetadata(boolean generate) {
+    generateMetadata = generate;
+  }
 }

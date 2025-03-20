@@ -4,8 +4,7 @@ import org.red5.server.net.rtmp.event.IRTMPEvent;
 
 public interface IFileConsumer {
 
-    void setAudioDecoderConfiguration(IRTMPEvent audioConfig);
+  void setAudioDecoderConfiguration(IRTMPEvent audioConfig);
 
-    void setVideoDecoderConfiguration(IRTMPEvent videoConfig);
-
+  void setVideoDecoderConfiguration(IRTMPEvent videoConfig);
 }

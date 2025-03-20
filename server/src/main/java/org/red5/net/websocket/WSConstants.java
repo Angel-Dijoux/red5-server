@@ -14,44 +14,43 @@ package org.red5.net.websocket;
  */
 public class WSConstants {
 
-    public final static String WS_UPGRADE_HANDLER = "ws.upgrader";
+  public static final String WS_UPGRADE_HANDLER = "ws.upgrader";
 
-    public final static String WS_MANAGER = "ws.manager";
+  public static final String WS_MANAGER = "ws.manager";
 
-    public final static String WS_SCOPE = "ws.scope";
+  public static final String WS_SCOPE = "ws.scope";
 
-    public final static String WS_CONNECTION = "ws.connection";
+  public static final String WS_CONNECTION = "ws.connection";
 
-    public final static String SESSION = "session";
+  public static final String SESSION = "session";
 
-    public final static Object WS_HANDSHAKE = "ws.handshake";
+  public static final Object WS_HANDSHAKE = "ws.handshake";
 
-    public final static String WS_HEADER_KEY = "Sec-WebSocket-Key";
+  public static final String WS_HEADER_KEY = "Sec-WebSocket-Key";
 
-    public final static String WS_HEADER_VERSION = "Sec-WebSocket-Version";
+  public static final String WS_HEADER_VERSION = "Sec-WebSocket-Version";
 
-    public final static String WS_HEADER_EXTENSIONS = "Sec-WebSocket-Extensions";
+  public static final String WS_HEADER_EXTENSIONS = "Sec-WebSocket-Extensions";
 
-    public final static String WS_HEADER_PROTOCOL = "Sec-WebSocket-Protocol";
+  public static final String WS_HEADER_PROTOCOL = "Sec-WebSocket-Protocol";
 
-    public final static String HTTP_HEADER_HOST = "Host";
+  public static final String HTTP_HEADER_HOST = "Host";
 
-    public final static String HTTP_HEADER_ORIGIN = "Origin";
+  public static final String HTTP_HEADER_ORIGIN = "Origin";
 
-    public final static String HTTP_HEADER_USERAGENT = "User-Agent";
+  public static final String HTTP_HEADER_USERAGENT = "User-Agent";
 
-    public final static String WS_HEADER_FORWARDED = "X-Forwarded-For";
+  public static final String WS_HEADER_FORWARDED = "X-Forwarded-For";
 
-    public final static String WS_HEADER_REAL_IP = "X-Real-IP";
+  public static final String WS_HEADER_REAL_IP = "X-Real-IP";
 
-    public final static String WS_HEADER_GENERIC_PREFIX = "X-";
+  public static final String WS_HEADER_GENERIC_PREFIX = "X-";
 
-    public final static String URI_QS_PARAMETERS = "querystring-parameters";
+  public static final String URI_QS_PARAMETERS = "querystring-parameters";
 
-    public final static String IDLE_COUNTER = "idle.counter";
+  public static final String IDLE_COUNTER = "idle.counter";
 
-    public static final String WS_HEADER_REMOTE_IP = "remote.ip";
+  public static final String WS_HEADER_REMOTE_IP = "remote.ip";
 
-    public static final String WS_HEADER_REMOTE_PORT = "remote.port";
-
+  public static final String WS_HEADER_REMOTE_PORT = "remote.port";
 }

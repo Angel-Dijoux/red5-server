@@ -8,7 +8,6 @@
 package org.red5.client.net.rtmpt;
 
 import java.util.Map;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.client.net.rtmp.BaseRTMPClientHandler;
 import org.red5.client.net.rtmp.OutboundHandshake;
@@ -29,133 +28,134 @@ import org.slf4j.LoggerFactory;
  */
 public class RTMPTClient extends BaseRTMPClientHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(RTMPTClient.class);
+  private static final Logger log = LoggerFactory.getLogger(RTMPTClient.class);
 
-    // guarded by this
-    protected RTMPTClientConnector connector;
+  // guarded by this
+  protected RTMPTClientConnector connector;
 
-    protected RTMPTCodecFactory codecFactory;
+  protected RTMPTCodecFactory codecFactory;
 
-    public RTMPTClient() {
-        protocol = "rtmpt";
-        codecFactory = new RTMPTCodecFactory();
-        codecFactory.init();
+  public RTMPTClient() {
+    protocol = "rtmpt";
+    codecFactory = new RTMPTCodecFactory();
+    codecFactory.init();
+  }
+
+  @Override
+  public Map<String, Object> makeDefaultConnectionParams(
+      String server, int port, String application) {
+    Map<String, Object> params = super.makeDefaultConnectionParams(server, port, application);
+    if (!params.containsKey("tcUrl")) {
+      params.put("tcUrl", protocol + "://" + server + ':' + port + '/' + application);
     }
+    return params;
+  }
 
-    @Override
-    public Map<String, Object> makeDefaultConnectionParams(String server, int port, String application) {
-        Map<String, Object> params = super.makeDefaultConnectionParams(server, port, application);
-        if (!params.containsKey("tcUrl")) {
-            params.put("tcUrl", protocol + "://" + server + ':' + port + '/' + application);
-        }
-        return params;
-    }
+  @Override
+  protected synchronized void startConnector(String server, int port) {
+    connector = new RTMPTClientConnector(server, port, this);
+    log.debug("Created connector {}", connector);
+    connector.start();
+  }
 
-    @Override
-    protected synchronized void startConnector(String server, int port) {
-        connector = new RTMPTClientConnector(server, port, this);
-        log.debug("Created connector {}", connector);
-        connector.start();
-    }
-
-    /**
-     * Received message object router.
-     *
-     * @param message
-     *            an IoBuffer or Packet
-     */
-    public void messageReceived(Object message) {
-        if (message instanceof Packet) {
-            try {
-                messageReceived(conn, (Packet) message);
-            } catch (Exception e) {
-                log.warn("Exception on packet receive", e);
+  /**
+   * Received message object router.
+   *
+   * @param message an IoBuffer or Packet
+   */
+  public void messageReceived(Object message) {
+    if (message instanceof Packet) {
+      try {
+        messageReceived(conn, (Packet) message);
+      } catch (Exception e) {
+        log.warn("Exception on packet receive", e);
+      }
+    } else {
+      // raw buffer handling
+      IoBuffer in = (IoBuffer) message;
+      // filter based on current connection state
+      RTMP rtmp = conn.getState();
+      final byte connectionState = conn.getStateCode();
+      log.trace("connectionState: {}", RTMP.states[connectionState]);
+      // get the handshake
+      OutboundHandshake handshake =
+          (OutboundHandshake) conn.getAttribute(RTMPConnection.RTMP_HANDSHAKE);
+      switch (connectionState) {
+        case RTMP.STATE_CONNECT:
+          log.debug("Handshake - client phase 1 - size: {}", in.remaining());
+          in.get(); // 0x01
+          byte handshakeType = in.get(); // usually 0x03 (rtmp)
+          log.debug("Handshake - byte type: {}", handshakeType);
+          // copy out 1536 bytes
+          byte[] s1 = new byte[Constants.HANDSHAKE_SIZE];
+          in.get(s1);
+          // decode s1
+          IoBuffer out = handshake.decodeServerResponse1(IoBuffer.wrap(s1));
+          if (out != null) {
+            // set state to indicate we're waiting for S2
+            rtmp.setState(RTMP.STATE_HANDSHAKE);
+            conn.writeRaw(out);
+            // if we got S0S1+S2 continue processing
+            if (in.remaining() >= Constants.HANDSHAKE_SIZE) {
+              log.debug("Handshake - client phase 2 - size: {}", in.remaining());
+              byte[] s2 = new byte[Constants.HANDSHAKE_SIZE];
+              in.get(s2);
+              if (handshake.decodeServerResponse2(s2)) {
+                //
+                // conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
+                //                                conn.setStateCode(RTMP.STATE_CONNECTED);
+                //                                connectionOpened(conn);
+              } else {
+                log.warn("Handshake failed on S2 processing");
+                // conn.close();
+              }
+              // open regardless of server type
+              conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
+              conn.setStateCode(RTMP.STATE_CONNECTED);
+              connectionOpened(conn);
             }
-        } else {
-            // raw buffer handling
-            IoBuffer in = (IoBuffer) message;
-            // filter based on current connection state
-            RTMP rtmp = conn.getState();
-            final byte connectionState = conn.getStateCode();
-            log.trace("connectionState: {}", RTMP.states[connectionState]);
-            // get the handshake
-            OutboundHandshake handshake = (OutboundHandshake) conn.getAttribute(RTMPConnection.RTMP_HANDSHAKE);
-            switch (connectionState) {
-                case RTMP.STATE_CONNECT:
-                    log.debug("Handshake - client phase 1 - size: {}", in.remaining());
-                    in.get(); // 0x01
-                    byte handshakeType = in.get(); // usually 0x03 (rtmp)
-                    log.debug("Handshake - byte type: {}", handshakeType);
-                    // copy out 1536 bytes
-                    byte[] s1 = new byte[Constants.HANDSHAKE_SIZE];
-                    in.get(s1);
-                    // decode s1
-                    IoBuffer out = handshake.decodeServerResponse1(IoBuffer.wrap(s1));
-                    if (out != null) {
-                        // set state to indicate we're waiting for S2
-                        rtmp.setState(RTMP.STATE_HANDSHAKE);
-                        conn.writeRaw(out);
-                        // if we got S0S1+S2 continue processing
-                        if (in.remaining() >= Constants.HANDSHAKE_SIZE) {
-                            log.debug("Handshake - client phase 2 - size: {}", in.remaining());
-                            byte[] s2 = new byte[Constants.HANDSHAKE_SIZE];
-                            in.get(s2);
-                            if (handshake.decodeServerResponse2(s2)) {
-                                //                                conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
-                                //                                conn.setStateCode(RTMP.STATE_CONNECTED);
-                                //                                connectionOpened(conn);
-                            } else {
-                                log.warn("Handshake failed on S2 processing");
-                                //conn.close();
-                            }
-                            // open regardless of server type
-                            conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
-                            conn.setStateCode(RTMP.STATE_CONNECTED);
-                            connectionOpened(conn);
-                        }
-                    } else {
-                        log.warn("Handshake failed on S0S1 processing");
-                        conn.close();
-                    }
-                    break;
-                case RTMP.STATE_HANDSHAKE:
-                    log.debug("Handshake - client phase 2 - size: {}", in.remaining());
-                    byte[] s2 = new byte[Constants.HANDSHAKE_SIZE];
-                    in.get(s2);
-                    if (handshake.decodeServerResponse2(s2)) {
-                        //                        conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
-                        //                        conn.setStateCode(RTMP.STATE_CONNECTED);
-                        //                        connectionOpened(conn);
-                    } else {
-                        log.warn("Handshake failed on S2 processing");
-                        //conn.close();
-                    }
-                    // open regardless of server type
-                    conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
-                    conn.setStateCode(RTMP.STATE_CONNECTED);
-                    connectionOpened(conn);
-                    break;
-                default:
-                    throw new IllegalStateException("Invalid RTMP state: " + connectionState);
-            }
-        }
+          } else {
+            log.warn("Handshake failed on S0S1 processing");
+            conn.close();
+          }
+          break;
+        case RTMP.STATE_HANDSHAKE:
+          log.debug("Handshake - client phase 2 - size: {}", in.remaining());
+          byte[] s2 = new byte[Constants.HANDSHAKE_SIZE];
+          in.get(s2);
+          if (handshake.decodeServerResponse2(s2)) {
+            //                        conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
+            //                        conn.setStateCode(RTMP.STATE_CONNECTED);
+            //                        connectionOpened(conn);
+          } else {
+            log.warn("Handshake failed on S2 processing");
+            // conn.close();
+          }
+          // open regardless of server type
+          conn.removeAttribute(RTMPConnection.RTMP_HANDSHAKE);
+          conn.setStateCode(RTMP.STATE_CONNECTED);
+          connectionOpened(conn);
+          break;
+        default:
+          throw new IllegalStateException("Invalid RTMP state: " + connectionState);
+      }
     }
+  }
 
-    @Override
-    public synchronized void disconnect() {
-        if (connector != null) {
-            connector.setStopRequested(true);
-            connector.interrupt();
-        }
-        super.disconnect();
+  @Override
+  public synchronized void disconnect() {
+    if (connector != null) {
+      connector.setStopRequested(true);
+      connector.interrupt();
     }
+    super.disconnect();
+  }
 
-    public RTMPProtocolDecoder getDecoder() {
-        return codecFactory.getRTMPDecoder();
-    }
+  public RTMPProtocolDecoder getDecoder() {
+    return codecFactory.getRTMPDecoder();
+  }
 
-    public RTMPProtocolEncoder getEncoder() {
-        return codecFactory.getRTMPEncoder();
-    }
-
+  public RTMPProtocolEncoder getEncoder() {
+    return codecFactory.getRTMPEncoder();
+  }
 }

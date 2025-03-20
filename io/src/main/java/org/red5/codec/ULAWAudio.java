@@ -11,33 +11,32 @@ import org.apache.mina.core.buffer.IoBuffer;
 /**
  * Red5 audio codec for the PCM uLaw audio format.
  *
- * Stores the decoder configuration
+ * <p>Stores the decoder configuration
  *
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public class ULAWAudio extends AbstractAudio {
 
-    static final String CODEC_NAME = "PCM uLaw";
+  static final String CODEC_NAME = "PCM uLaw";
 
-    {
-        codec = AudioCodec.PCM_MULAW;
+  {
+    codec = AudioCodec.PCM_MULAW;
+  }
+
+  @Override
+  public String getName() {
+    return CODEC_NAME;
+  }
+
+  @Override
+  public boolean canHandleData(IoBuffer data) {
+    if (data.limit() == 0) {
+      // Empty buffer
+      return false;
     }
-
-    @Override
-    public String getName() {
-        return CODEC_NAME;
-    }
-
-    @Override
-    public boolean canHandleData(IoBuffer data) {
-        if (data.limit() == 0) {
-            // Empty buffer
-            return false;
-        }
-        byte first = data.get();
-        boolean result = (((first & 0xf0) >> 4) == AudioCodec.PCM_MULAW.getId());
-        data.rewind();
-        return result;
-    }
-
+    byte first = data.get();
+    boolean result = (((first & 0xf0) >> 4) == AudioCodec.PCM_MULAW.getId());
+    data.rewind();
+    return result;
+  }
 }

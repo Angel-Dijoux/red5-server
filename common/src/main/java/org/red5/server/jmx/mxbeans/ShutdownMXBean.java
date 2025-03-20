@@ -9,12 +9,9 @@ package org.red5.server.jmx.mxbeans;
 
 import javax.management.MXBean;
 
-/**
- * Red5 shutdown hook
- */
+/** Red5 shutdown hook */
 @MXBean
 public interface ShutdownMXBean {
 
-    public void destroy() throws Exception;
-
+  public void destroy() throws Exception;
 }

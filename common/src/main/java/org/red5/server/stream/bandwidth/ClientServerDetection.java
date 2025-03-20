@@ -9,7 +9,6 @@ package org.red5.server.stream.bandwidth;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.red5.server.api.IConnection;
 import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
@@ -20,50 +19,48 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author The Red5 Project
  * @author Dan Rossi
  */
 public class ClientServerDetection implements IPendingServiceCallback {
 
-    protected static Logger log = LoggerFactory.getLogger(ClientServerDetection.class);
+  protected static Logger log = LoggerFactory.getLogger(ClientServerDetection.class);
 
-    /**
-     * Handle callback from service call.
-     */
-    public void resultReceived(IPendingServiceCall call) {
-        // if we aren't connection, skip any further testing
-        if (Call.STATUS_NOT_CONNECTED != call.getStatus()) {
+  /** Handle callback from service call. */
+  public void resultReceived(IPendingServiceCall call) {
+    // if we aren't connection, skip any further testing
+    if (Call.STATUS_NOT_CONNECTED != call.getStatus()) {
 
-        } else {
-            log.debug("Pending call skipped due to being no longer connected");
-        }
+    } else {
+      log.debug("Pending call skipped due to being no longer connected");
     }
+  }
 
-    private IStreamCapableConnection getStats() {
-        IConnection conn = Red5.getConnectionLocal();
-        if (conn instanceof IStreamCapableConnection) {
-            return (IStreamCapableConnection) conn;
-        }
-        return null;
+  private IStreamCapableConnection getStats() {
+    IConnection conn = Red5.getConnectionLocal();
+    if (conn instanceof IStreamCapableConnection) {
+      return (IStreamCapableConnection) conn;
     }
+    return null;
+  }
 
-    public Map<String, Object> checkBandwidth(Object[] params) {
-        final IStreamCapableConnection stats = getStats();
-        Map<String, Object> statsValues = new HashMap<>();
-        Number time = 0;
-        if (params.length > 0) {
-            if (params[0] instanceof Double) {
-                time = (Double) params[0];
-            } else {
-                time = (Integer) params[0];
-            }
-        }
-        statsValues.put("cOutBytes", stats.getReadBytes());
-        statsValues.put("cInBytes", stats.getWrittenBytes());
-        statsValues.put("time", time.intValue());
-        log.debug("cOutBytes: {} cInBytes: {} time: {}", new Object[] { stats.getReadBytes(), stats.getWrittenBytes(), time });
-        return statsValues;
+  public Map<String, Object> checkBandwidth(Object[] params) {
+    final IStreamCapableConnection stats = getStats();
+    Map<String, Object> statsValues = new HashMap<>();
+    Number time = 0;
+    if (params.length > 0) {
+      if (params[0] instanceof Double) {
+        time = (Double) params[0];
+      } else {
+        time = (Integer) params[0];
+      }
     }
-
+    statsValues.put("cOutBytes", stats.getReadBytes());
+    statsValues.put("cInBytes", stats.getWrittenBytes());
+    statsValues.put("time", time.intValue());
+    log.debug(
+        "cOutBytes: {} cInBytes: {} time: {}",
+        new Object[] {stats.getReadBytes(), stats.getWrittenBytes(), time});
+    return statsValues;
+  }
 }

@@ -8,7 +8,6 @@
 package org.red5.server.tomcat;
 
 import java.lang.reflect.InvocationTargetException;
-
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
 import org.apache.catalina.core.StandardContext;
@@ -24,64 +23,76 @@ import org.apache.catalina.webresources.StandardRoot;
  */
 public class EmbeddedTomcat extends Tomcat {
 
-    private long cacheMaxSize = 1024 * 1024;
+  private long cacheMaxSize = 1024 * 1024;
 
-    /**
-     * @see #addWebapp(String, String)
-     */
-    public Context addWebapp(Host host, String contextPath, String docBase, ContextConfig config) {
-        Context ctx = createContext(host, contextPath);
-        ctx.setPath(contextPath);
-        ctx.setDocBase(docBase);
-        ctx.addLifecycleListener(new DefaultWebXmlListener());
-        ctx.setConfigFile(getWebappConfigFile(docBase, contextPath));
-        ctx.addLifecycleListener(config);
-        // prevent it from looking ( if it finds one - it'll have dup error )
-        config.setDefaultWebXml(noDefaultWebXmlPath());
-        // get the host first, creates a new std host if not already set
-        getHost();
-        // reset ParentClassLoader
-        if (!host.getParentClassLoader().equals(Thread.currentThread().getContextClassLoader())) {
-            host.setParentClassLoader(Thread.currentThread().getContextClassLoader());
-        }
-        StandardRoot standardRoot = new StandardRoot(ctx);
-        standardRoot.setCacheMaxSize(cacheMaxSize);
-        ctx.setResources(standardRoot);
-        // add the context
-        host.addChild(ctx);
-        return ctx;
+  /**
+   * @see #addWebapp(String, String)
+   */
+  public Context addWebapp(Host host, String contextPath, String docBase, ContextConfig config) {
+    Context ctx = createContext(host, contextPath);
+    ctx.setPath(contextPath);
+    ctx.setDocBase(docBase);
+    ctx.addLifecycleListener(new DefaultWebXmlListener());
+    ctx.setConfigFile(getWebappConfigFile(docBase, contextPath));
+    ctx.addLifecycleListener(config);
+    // prevent it from looking ( if it finds one - it'll have dup error )
+    config.setDefaultWebXml(noDefaultWebXmlPath());
+    // get the host first, creates a new std host if not already set
+    getHost();
+    // reset ParentClassLoader
+    if (!host.getParentClassLoader().equals(Thread.currentThread().getContextClassLoader())) {
+      host.setParentClassLoader(Thread.currentThread().getContextClassLoader());
     }
+    StandardRoot standardRoot = new StandardRoot(ctx);
+    standardRoot.setCacheMaxSize(cacheMaxSize);
+    ctx.setResources(standardRoot);
+    // add the context
+    host.addChild(ctx);
+    return ctx;
+  }
 
-    /**
-     * Create the configured {@link Context} for the given <code>host</code>. The default constructor of the class that was configured with {@link StandardHost#setContextClass(String)} will be used
-     *
-     * @param host
-     *            host for which the {@link Context} should be created, or <code>null</code> if default host should be used
-     * @param url
-     *            path of the webapp which should get the {@link Context}
-     * @return newly created {@link Context}
-     */
-    private Context createContext(Host host, String url) {
-        String contextClass = StandardContext.class.getName();
-        if (host == null) {
-            host = this.getHost();
-        }
-        if (host instanceof StandardHost) {
-            contextClass = ((StandardHost) host).getContextClass();
-        }
-        try {
-            return (Context) Class.forName(contextClass).getConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
-            throw new IllegalArgumentException("Can't instantiate context-class " + contextClass + " for host " + host + " and url " + url, e);
-        }
+  /**
+   * Create the configured {@link Context} for the given <code>host</code>. The default constructor
+   * of the class that was configured with {@link StandardHost#setContextClass(String)} will be used
+   *
+   * @param host host for which the {@link Context} should be created, or <code>null</code> if
+   *     default host should be used
+   * @param url path of the webapp which should get the {@link Context}
+   * @return newly created {@link Context}
+   */
+  private Context createContext(Host host, String url) {
+    String contextClass = StandardContext.class.getName();
+    if (host == null) {
+      host = this.getHost();
     }
-
-    public long getCacheMaxSize() {
-        return cacheMaxSize;
+    if (host instanceof StandardHost) {
+      contextClass = ((StandardHost) host).getContextClass();
     }
-
-    public void setCacheMaxSize(long cacheMaxSize) {
-        this.cacheMaxSize = cacheMaxSize;
+    try {
+      return (Context) Class.forName(contextClass).getConstructor().newInstance();
+    } catch (InstantiationException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | SecurityException
+        | ClassNotFoundException e) {
+      throw new IllegalArgumentException(
+          "Can't instantiate context-class "
+              + contextClass
+              + " for host "
+              + host
+              + " and url "
+              + url,
+          e);
     }
+  }
 
+  public long getCacheMaxSize() {
+    return cacheMaxSize;
+  }
+
+  public void setCacheMaxSize(long cacheMaxSize) {
+    this.cacheMaxSize = cacheMaxSize;
+  }
 }

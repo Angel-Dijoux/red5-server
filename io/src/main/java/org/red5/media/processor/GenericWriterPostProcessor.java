@@ -9,7 +9,6 @@ package org.red5.media.processor;
 
 import java.io.File;
 import java.util.Arrays;
-
 import org.red5.io.ITag;
 import org.red5.io.IoConstants;
 import org.red5.io.flv.impl.FLVReader;
@@ -23,48 +22,47 @@ import org.slf4j.LoggerFactory;
  */
 public class GenericWriterPostProcessor implements IPostProcessor {
 
-    protected Logger log = LoggerFactory.getLogger(getClass());
+  protected Logger log = LoggerFactory.getLogger(getClass());
 
-    private File file;
+  private File file;
 
-    @Override
-    public void init(Object... objs) {
-        log.info("init: {}", Arrays.toString(objs));
-        // we expect a file path to which a writer wrote to
-        file = new File(objs[0].toString());
-    }
+  @Override
+  public void init(Object... objs) {
+    log.info("init: {}", Arrays.toString(objs));
+    // we expect a file path to which a writer wrote to
+    file = new File(objs[0].toString());
+  }
 
-    @Override
-    public void run() {
-        if (file != null) {
-            try {
-                FLVReader reader = new FLVReader(file);
-                ITag tag = null;
-                int audio = 0, video = 0, meta = 0;
-                while (reader.hasMoreTags()) {
-                    tag = reader.readTag();
-                    if (tag != null) {
-                        switch (tag.getDataType()) {
-                            case IoConstants.TYPE_AUDIO:
-                                audio++;
-                                break;
-                            case IoConstants.TYPE_VIDEO:
-                                video++;
-                                break;
-                            case IoConstants.TYPE_METADATA:
-                                meta++;
-                                break;
-                        }
-                    }
-                }
-                reader.close();
-                log.info("Data type counts - audio: {} video: {} metadata: {}", audio, video, meta);
-            } catch (Exception e) {
-                log.error("Exception reading: {}", file.getName(), e);
+  @Override
+  public void run() {
+    if (file != null) {
+      try {
+        FLVReader reader = new FLVReader(file);
+        ITag tag = null;
+        int audio = 0, video = 0, meta = 0;
+        while (reader.hasMoreTags()) {
+          tag = reader.readTag();
+          if (tag != null) {
+            switch (tag.getDataType()) {
+              case IoConstants.TYPE_AUDIO:
+                audio++;
+                break;
+              case IoConstants.TYPE_VIDEO:
+                video++;
+                break;
+              case IoConstants.TYPE_METADATA:
+                meta++;
+                break;
             }
-        } else {
-            log.warn("File for parsing was not found");
+          }
         }
+        reader.close();
+        log.info("Data type counts - audio: {} video: {} metadata: {}", audio, video, meta);
+      } catch (Exception e) {
+        log.error("Exception reading: {}", file.getName(), e);
+      }
+    } else {
+      log.warn("File for parsing was not found");
     }
-
+  }
 }

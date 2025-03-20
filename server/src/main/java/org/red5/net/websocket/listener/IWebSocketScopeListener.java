@@ -12,25 +12,25 @@ import org.red5.net.websocket.WebSocketScope;
 
 public interface IWebSocketScopeListener {
 
-    void scopeCreated(WebSocketScope wsScope);
+  void scopeCreated(WebSocketScope wsScope);
 
-    void scopeAdded(WebSocketScope wsScope);
+  void scopeAdded(WebSocketScope wsScope);
 
-    void scopeRemoved(WebSocketScope wsScope);
+  void scopeRemoved(WebSocketScope wsScope);
 
-    void connectionAdded(WebSocketScope wsScope, WebSocketConnection wsConn);
+  void connectionAdded(WebSocketScope wsScope, WebSocketConnection wsConn);
 
-    void connectionRemoved(WebSocketScope wsScope, WebSocketConnection wsConn);
+  void connectionRemoved(WebSocketScope wsScope, WebSocketConnection wsConn);
 
-    /**
-     * XXX(paul) maybe add this for recv update earlier than onMessage callback.
-     *
-     * String message received on the given connection and scope.
-     *
-     * @param wsScope
-     * @param wsConn
-     * @param message
-     */
-    // void receivedMessage(WebSocketScope wsScope, WebSocketConnection wsConn, String message);
+  /**
+   * XXX(paul) maybe add this for recv update earlier than onMessage callback.
+   *
+   * <p>String message received on the given connection and scope.
+   *
+   * @param wsScope
+   * @param wsConn
+   * @param message
+   */
+  // void receivedMessage(WebSocketScope wsScope, WebSocketConnection wsConn, String message);
 
 }

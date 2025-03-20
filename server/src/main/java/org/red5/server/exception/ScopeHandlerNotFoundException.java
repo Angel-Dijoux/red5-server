@@ -7,21 +7,17 @@
 
 package org.red5.server.exception;
 
-/**
- * Scope handler not found. Thrown when scope handler with given name can't be found
- */
+/** Scope handler not found. Thrown when scope handler with given name can't be found */
 public class ScopeHandlerNotFoundException extends RuntimeException {
 
-    private static final long serialVersionUID = 1894151808129303439L;
+  private static final long serialVersionUID = 1894151808129303439L;
 
-    /**
-     * Create exception from given scope handler name
-     *
-     * @param handlerName
-     *            Scope handler name
-     */
-    public ScopeHandlerNotFoundException(String handlerName) {
-        super("No scope handler found: " + handlerName);
-    }
-
+  /**
+   * Create exception from given scope handler name
+   *
+   * @param handlerName Scope handler name
+   */
+  public ScopeHandlerNotFoundException(String handlerName) {
+    super("No scope handler found: " + handlerName);
+  }
 }

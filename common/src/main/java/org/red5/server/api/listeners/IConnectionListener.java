@@ -8,7 +8,6 @@
 package org.red5.server.api.listeners;
 
 import java.beans.PropertyChangeListener;
-
 import org.red5.server.api.IConnection;
 
 /**
@@ -17,24 +16,20 @@ import org.red5.server.api.IConnection;
  * @author The Red5 Project
  * @author Joachim Bauch (bauch@struktur.de)
  * @author Paul Gregoire (mondain@gmail.com)
- *
  */
 public interface IConnectionListener extends PropertyChangeListener {
 
-    /**
-     * A new connection was established.
-     *
-     * @param conn
-     *            the new connection
-     */
-    public void notifyConnected(IConnection conn);
+  /**
+   * A new connection was established.
+   *
+   * @param conn the new connection
+   */
+  public void notifyConnected(IConnection conn);
 
-    /**
-     * A connection was disconnected.
-     *
-     * @param conn
-     *            the disconnected connection
-     */
-    public void notifyDisconnected(IConnection conn);
-
+  /**
+   * A connection was disconnected.
+   *
+   * @param conn the disconnected connection
+   */
+  public void notifyDisconnected(IConnection conn);
 }

@@ -17,14 +17,13 @@ import org.red5.server.adapter.MultiThreadedApplicationAdapter;
  */
 public class EchoApplication extends MultiThreadedApplicationAdapter {
 
-    /**
-     * Return passed parameter back to client.
-     *
-     * @param param		Parameter to return.
-     * @return			Passed parameter.
-     */
-    public Object echo(Object param) {
-        return param;
-    }
-
+  /**
+   * Return passed parameter back to client.
+   *
+   * @param param Parameter to return.
+   * @return Passed parameter.
+   */
+  public Object echo(Object param) {
+    return param;
+  }
 }

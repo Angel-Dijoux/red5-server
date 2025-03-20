@@ -8,7 +8,6 @@
 package org.red5.server.scheduling;
 
 import java.util.Map;
-
 import org.red5.server.api.scheduling.IScheduledJob;
 import org.red5.server.api.scheduling.ISchedulingService;
 import org.slf4j.Logger;
@@ -22,54 +21,51 @@ import org.slf4j.LoggerFactory;
  */
 public class JDKSchedulingServiceJob implements Runnable {
 
-    private final static Logger log = LoggerFactory.getLogger(JDKSchedulingServiceJob.class);
+  private static final Logger log = LoggerFactory.getLogger(JDKSchedulingServiceJob.class);
 
-    /**
-     * Job data map
-     */
-    private final Map<String, Object> jobDataMap;
+  /** Job data map */
+  private final Map<String, Object> jobDataMap;
 
-    private final String jobName;
+  private final String jobName;
 
-    // set this flag to prevent removal within the internal run() of the scheduled job
-    private final boolean autoRemove;
+  // set this flag to prevent removal within the internal run() of the scheduled job
+  private final boolean autoRemove;
 
-    public JDKSchedulingServiceJob(String name, Map<String, Object> dataMap) {
-        this.jobDataMap = dataMap;
-        log.debug("Set job data map: {}", jobDataMap);
-        this.jobName = name;
-        this.autoRemove = true;
+  public JDKSchedulingServiceJob(String name, Map<String, Object> dataMap) {
+    this.jobDataMap = dataMap;
+    log.debug("Set job data map: {}", jobDataMap);
+    this.jobName = name;
+    this.autoRemove = true;
+  }
+
+  public JDKSchedulingServiceJob(String name, Map<String, Object> dataMap, boolean autoRemove) {
+    this.jobDataMap = dataMap;
+    log.debug("Set job data map: {}", jobDataMap);
+    this.jobName = name;
+    this.autoRemove = autoRemove;
+  }
+
+  public void run() {
+    // log.debug("execute");
+    ISchedulingService service =
+        (ISchedulingService) jobDataMap.get(ISchedulingService.SCHEDULING_SERVICE);
+    IScheduledJob job = null;
+    try {
+      job = (IScheduledJob) jobDataMap.get(ISchedulingService.SCHEDULED_JOB);
+      if (job != null) {
+        job.execute(service);
+      }
+    } catch (Throwable e) {
+      if (job != null) {
+        log.warn("Job {} execution failed", job.toString(), e);
+      }
+    } finally {
+      // remove the job
+      if (autoRemove) {
+        service.removeScheduledJob(jobName);
+        // clear the map
+        jobDataMap.clear();
+      }
     }
-
-    public JDKSchedulingServiceJob(String name, Map<String, Object> dataMap, boolean autoRemove) {
-        this.jobDataMap = dataMap;
-        log.debug("Set job data map: {}", jobDataMap);
-        this.jobName = name;
-        this.autoRemove = autoRemove;
-    }
-
-    public void run() {
-        //log.debug("execute");
-        ISchedulingService service = (ISchedulingService) jobDataMap.get(ISchedulingService.SCHEDULING_SERVICE);
-        IScheduledJob job = null;
-        try {
-            job = (IScheduledJob) jobDataMap.get(ISchedulingService.SCHEDULED_JOB);
-            if (job != null) {
-                job.execute(service);
-            }
-        } catch (Throwable e) {
-            if (job != null) {
-                log.warn("Job {} execution failed", job.toString(), e);
-            }
-        } finally {
-            // remove the job
-            if (autoRemove) {
-                service.removeScheduledJob(jobName);
-                // clear the map
-                jobDataMap.clear();
-            }
-
-        }
-    }
-
+  }
 }

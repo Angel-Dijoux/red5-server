@@ -13,9 +13,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
 import javax.net.ssl.SSLContext;
-
 import org.apache.mina.core.future.IoFuture;
 import org.apache.mina.core.future.IoFutureListener;
 import org.apache.mina.core.session.IoSession;
@@ -43,172 +41,171 @@ import org.slf4j.LoggerFactory;
  */
 public class RTMPSClient extends RTMPClient {
 
-    private static final Logger log = LoggerFactory.getLogger(RTMPSClient.class);
+  private static final Logger log = LoggerFactory.getLogger(RTMPSClient.class);
 
-    private static String[] cipherSuites;
+  private static String[] cipherSuites;
 
-    // I/O handler
-    private final RTMPSClientIoHandler ioHandler;
+  // I/O handler
+  private final RTMPSClientIoHandler ioHandler;
 
-    /**
-     * Password for accessing the keystore.
-     */
-    private char[] password = "password123".toCharArray();
+  /** Password for accessing the keystore. */
+  private char[] password = "password123".toCharArray();
 
-    /**
-     * Path to the keystore and truststore files.
-     */
-    private InputStream keystoreStream, truststoreStream;
+  /** Path to the keystore and truststore files. */
+  private InputStream keystoreStream, truststoreStream;
 
-    /**
-     * The keystore type, valid options are JKS and PKCS12
-     */
-    private String keyStoreType = "PKCS12";
+  /** The keystore type, valid options are JKS and PKCS12 */
+  private String keyStoreType = "PKCS12";
 
-    /** Constructs a new RTMPClient. */
-    public RTMPSClient() {
-        protocol = "rtmps";
-        ioHandler = new RTMPSClientIoHandler();
-        ioHandler.setHandler(this);
-        setExceptionHandler(new ClientExceptionHandler() {
-            @Override
-            public void handleException(Throwable throwable) {
-                log.error("Exception", throwable);
-                try {
-                    ioHandler.exceptionCaught(null, throwable);
-                } catch (Exception e) {
-                    log.debug("Exception", e);
-                }
+  /** Constructs a new RTMPClient. */
+  public RTMPSClient() {
+    protocol = "rtmps";
+    ioHandler = new RTMPSClientIoHandler();
+    ioHandler.setHandler(this);
+    setExceptionHandler(
+        new ClientExceptionHandler() {
+          @Override
+          public void handleException(Throwable throwable) {
+            log.error("Exception", throwable);
+            try {
+              ioHandler.exceptionCaught(null, throwable);
+            } catch (Exception e) {
+              log.debug("Exception", e);
             }
+          }
         });
-    }
+  }
 
-    /**
-     * Creates a new RTMPSClient with the given keystore type and password.
-     *
-     * @param keyStoreType keystore type
-     * @param password keystore password
-     */
-    public RTMPSClient(String keyStoreType, String password) {
-        protocol = "rtmps";
-        this.keyStoreType = keyStoreType;
-        this.password = password.toCharArray();
-        ioHandler = new RTMPSClientIoHandler();
-        ioHandler.setHandler(this);
-    }
+  /**
+   * Creates a new RTMPSClient with the given keystore type and password.
+   *
+   * @param keyStoreType keystore type
+   * @param password keystore password
+   */
+  public RTMPSClient(String keyStoreType, String password) {
+    protocol = "rtmps";
+    this.keyStoreType = keyStoreType;
+    this.password = password.toCharArray();
+    ioHandler = new RTMPSClientIoHandler();
+    ioHandler.setHandler(this);
+  }
 
-    /**
-     * Creates a new RTMPSClient with the given keystore type, password, and paths to store files. If the stores
-     * are inside a jar file, use the following format: jar:file:/path/to/your.jar!/path/to/file/in/jar
-     *
-     * @param keyStoreType keystore type
-     * @param password keystore password
-     * @param keystorePath path to keystore file
-     * @param truststorePath path to truststore file
-     * @throws IOException
-     */
-    public RTMPSClient(String keyStoreType, String password, String keystorePath, String truststorePath) throws IOException {
-        protocol = "rtmps";
-        this.keyStoreType = keyStoreType;
-        this.password = password.toCharArray();
-        this.keystoreStream = Files.newInputStream(Paths.get(URI.create(keystorePath)));
-        this.truststoreStream = Files.newInputStream(Paths.get(URI.create(truststorePath)));
-        ioHandler = new RTMPSClientIoHandler();
-        ioHandler.setHandler(this);
-    }
+  /**
+   * Creates a new RTMPSClient with the given keystore type, password, and paths to store files. If
+   * the stores are inside a jar file, use the following format:
+   * jar:file:/path/to/your.jar!/path/to/file/in/jar
+   *
+   * @param keyStoreType keystore type
+   * @param password keystore password
+   * @param keystorePath path to keystore file
+   * @param truststorePath path to truststore file
+   * @throws IOException
+   */
+  public RTMPSClient(
+      String keyStoreType, String password, String keystorePath, String truststorePath)
+      throws IOException {
+    protocol = "rtmps";
+    this.keyStoreType = keyStoreType;
+    this.password = password.toCharArray();
+    this.keystoreStream = Files.newInputStream(Paths.get(URI.create(keystorePath)));
+    this.truststoreStream = Files.newInputStream(Paths.get(URI.create(truststorePath)));
+    ioHandler = new RTMPSClientIoHandler();
+    ioHandler.setHandler(this);
+  }
 
-    @SuppressWarnings({ "rawtypes" })
+  @SuppressWarnings({"rawtypes"})
+  @Override
+  protected void startConnector(String server, int port) {
+    log.debug("startConnector - server: {} port: {}", server, port);
+    socketConnector = new NioSocketConnector();
+    socketConnector.setHandler(ioHandler);
+    future = socketConnector.connect(new InetSocketAddress(server, port));
+    future.addListener(
+        new IoFutureListener() {
+          @Override
+          public void operationComplete(IoFuture future) {
+            try {
+              // will throw RuntimeException after connection error
+              future.getSession();
+            } catch (Throwable t) {
+              try {
+                ioHandler.exceptionCaught(null, t);
+              } catch (Exception e) {
+                // no-op
+              }
+            }
+          }
+        });
+    // Now wait for the close to be completed
+    future.awaitUninterruptibly(CONNECTOR_WORKER_TIMEOUT);
+  }
+
+  /**
+   * Password used to access the keystore file.
+   *
+   * @param password keystore password
+   */
+  public void setKeyStorePassword(String password) {
+    this.password = password.toCharArray();
+  }
+
+  /**
+   * Set the key store type, JKS or PKCS12.
+   *
+   * @param keyStoreType keystore type
+   */
+  public void setKeyStoreType(String keyStoreType) {
+    this.keyStoreType = keyStoreType;
+  }
+
+  public static void setCipherSuites(String[] cipherSuites) {
+    RTMPSClient.cipherSuites = cipherSuites;
+  }
+
+  private class RTMPSClientIoHandler extends RTMPMinaIoHandler {
+
+    /** {@inheritDoc} */
     @Override
-    protected void startConnector(String server, int port) {
-        log.debug("startConnector - server: {} port: {}", server, port);
-        socketConnector = new NioSocketConnector();
-        socketConnector.setHandler(ioHandler);
-        future = socketConnector.connect(new InetSocketAddress(server, port));
-        future.addListener(new IoFutureListener() {
-            @Override
-            public void operationComplete(IoFuture future) {
-                try {
-                    // will throw RuntimeException after connection error
-                    future.getSession();
-                } catch (Throwable t) {
-                    try {
-                        ioHandler.exceptionCaught(null, t);
-                    } catch (Exception e) {
-                        // no-op
-                    }
-                }
-            }
-        });
-        // Now wait for the close to be completed
-        future.awaitUninterruptibly(CONNECTOR_WORKER_TIMEOUT);
-    }
-
-    /**
-     * Password used to access the keystore file.
-     *
-     * @param password keystore password
-     */
-    public void setKeyStorePassword(String password) {
-        this.password = password.toCharArray();
-    }
-
-    /**
-     * Set the key store type, JKS or PKCS12.
-     *
-     * @param keyStoreType keystore type
-     */
-    public void setKeyStoreType(String keyStoreType) {
-        this.keyStoreType = keyStoreType;
-    }
-
-    public static void setCipherSuites(String[] cipherSuites) {
-        RTMPSClient.cipherSuites = cipherSuites;
-    }
-
-    private class RTMPSClientIoHandler extends RTMPMinaIoHandler {
-
-        /** {@inheritDoc} */
-        @Override
-        public void sessionOpened(IoSession session) throws Exception {
-            log.debug("RTMPS sessionOpened: {}", session);
-            // if we're using a input streams, pass them to the ctor
-            SSLContext context = null;
-            if (keystoreStream != null && truststoreStream != null) {
-                context = TLSFactory.getTLSContext(keyStoreType, password, keystoreStream, password, truststoreStream);
-            } else {
-                context = TLSFactory.getTLSContext(keyStoreType, password);
-            }
-            SslFilter sslFilter = new SslFilter(context);
-            if (sslFilter != null) {
-                // we are a client
-                sslFilter.setUseClientMode(true);
-                // set the cipher suites
-                if (cipherSuites != null) {
-                    sslFilter.setEnabledCipherSuites(cipherSuites);
-                }
-                session.getFilterChain().addFirst("sslFilter", sslFilter);
-            }
-            super.sessionOpened(session);
+    public void sessionOpened(IoSession session) throws Exception {
+      log.debug("RTMPS sessionOpened: {}", session);
+      // if we're using a input streams, pass them to the ctor
+      SSLContext context = null;
+      if (keystoreStream != null && truststoreStream != null) {
+        context =
+            TLSFactory.getTLSContext(
+                keyStoreType, password, keystoreStream, password, truststoreStream);
+      } else {
+        context = TLSFactory.getTLSContext(keyStoreType, password);
+      }
+      SslFilter sslFilter = new SslFilter(context);
+      if (sslFilter != null) {
+        // we are a client
+        sslFilter.setUseClientMode(true);
+        // set the cipher suites
+        if (cipherSuites != null) {
+          sslFilter.setEnabledCipherSuites(cipherSuites);
         }
-
-        @Override
-        public void sessionClosed(IoSession session) throws Exception {
-            log.debug("RTMPS sessionClosed: {}", session);
-            super.sessionClosed(session);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-            log.warn("Exception caught: {}", cause.getMessage());
-            log.debug("Exception detail", cause);
-            // if there are any errors using ssl, kill the session
-            if (session != null) {
-                session.closeNow();
-            }
-            socketConnector.dispose(false);
-        }
-
+        session.getFilterChain().addFirst("sslFilter", sslFilter);
+      }
+      super.sessionOpened(session);
     }
 
+    @Override
+    public void sessionClosed(IoSession session) throws Exception {
+      log.debug("RTMPS sessionClosed: {}", session);
+      super.sessionClosed(session);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
+      log.warn("Exception caught: {}", cause.getMessage());
+      log.debug("Exception detail", cause);
+      // if there are any errors using ssl, kill the session
+      if (session != null) {
+        session.closeNow();
+      }
+      socketConnector.dispose(false);
+    }
+  }
 }

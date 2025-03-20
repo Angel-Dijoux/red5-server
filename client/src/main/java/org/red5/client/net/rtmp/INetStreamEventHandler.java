@@ -9,9 +9,7 @@ package org.red5.client.net.rtmp;
 
 import org.red5.server.net.rtmp.event.Notify;
 
-/**
- * Notify handler for client-side stream
- */
+/** Notify handler for client-side stream */
 public interface INetStreamEventHandler {
-    void onStreamEvent(Notify notify);
+  void onStreamEvent(Notify notify);
 }

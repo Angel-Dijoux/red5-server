@@ -7,11 +7,15 @@
 
 package org.red5.client.net.rtmp;
 
-/**
- * Represents the current state of the client.
- */
+/** Represents the current state of the client. */
 public enum ClientState {
-
-    UNINIT, CONNECTING, CONNECTED, STREAM_CREATING, PUBLISHING, UNPUBLISHED, PLAYING, STOPPED, DISCONNECTED;
-
+  UNINIT,
+  CONNECTING,
+  CONNECTED,
+  STREAM_CREATING,
+  PUBLISHING,
+  UNPUBLISHED,
+  PLAYING,
+  STOPPED,
+  DISCONNECTED;
 }

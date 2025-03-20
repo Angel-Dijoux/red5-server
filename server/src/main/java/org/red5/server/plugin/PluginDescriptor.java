@@ -16,54 +16,53 @@ import java.util.Map;
  */
 public final class PluginDescriptor {
 
-    private String pluginName;
+  private String pluginName;
 
-    private String pluginType;
+  private String pluginType;
 
-    private String method;
+  private String method;
 
-    private String methodReturnType;
+  private String methodReturnType;
 
-    private Map<String, Object> properties;
+  private Map<String, Object> properties;
 
-    public String getPluginName() {
-        return pluginName;
-    }
+  public String getPluginName() {
+    return pluginName;
+  }
 
-    public void setPluginName(String pluginName) {
-        this.pluginName = pluginName;
-    }
+  public void setPluginName(String pluginName) {
+    this.pluginName = pluginName;
+  }
 
-    public String getPluginType() {
-        return pluginType;
-    }
+  public String getPluginType() {
+    return pluginType;
+  }
 
-    public void setPluginType(String pluginType) {
-        this.pluginType = pluginType;
-    }
+  public void setPluginType(String pluginType) {
+    this.pluginType = pluginType;
+  }
 
-    public String getMethod() {
-        return method;
-    }
+  public String getMethod() {
+    return method;
+  }
 
-    public void setMethod(String method) {
-        this.method = method;
-    }
+  public void setMethod(String method) {
+    this.method = method;
+  }
 
-    public String getMethodReturnType() {
-        return methodReturnType;
-    }
+  public String getMethodReturnType() {
+    return methodReturnType;
+  }
 
-    public void setMethodReturnType(String methodReturnType) {
-        this.methodReturnType = methodReturnType;
-    }
+  public void setMethodReturnType(String methodReturnType) {
+    this.methodReturnType = methodReturnType;
+  }
 
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
 
-    public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
-    }
-
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+  }
 }

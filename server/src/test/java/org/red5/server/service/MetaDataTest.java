@@ -8,7 +8,6 @@
 package org.red5.server.service;
 
 import junit.framework.TestCase;
-
 import org.red5.io.flv.meta.MetaData;
 
 /**
@@ -19,59 +18,58 @@ import org.red5.io.flv.meta.MetaData;
  */
 public class MetaDataTest extends TestCase {
 
-    MetaData<?, ?> data;
+  MetaData<?, ?> data;
 
-    /** Constructs a new MetaDataTest. */
-    public MetaDataTest() {
-        data = new MetaData<Object, Object>();
-    }
+  /** Constructs a new MetaDataTest. */
+  public MetaDataTest() {
+    data = new MetaData<Object, Object>();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+  /** {@inheritDoc} */
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
 
-        data.setCanSeekToEnd(true);
-        data.setDuration(7.347);
-        data.setFrameRate(15);
-        data.setHeight(333);
-        data.setVideoCodecId(4);
-        data.setVideoDataRate(400);
-        data.setWidth(300);
-    }
+    data.setCanSeekToEnd(true);
+    data.setDuration(7.347);
+    data.setFrameRate(15);
+    data.setHeight(333);
+    data.setVideoCodecId(4);
+    data.setVideoDataRate(400);
+    data.setWidth(300);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void tearDown() {
-        data = null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void tearDown() {
+    data = null;
+  }
 
-    public void testCanSeekToEnd() {
-        assertEquals(true, data.getCanSeekToEnd());
-    }
+  public void testCanSeekToEnd() {
+    assertEquals(true, data.getCanSeekToEnd());
+  }
 
-    public void testDuration() {
-        assertEquals(7.347, data.getDuration(), 0);
-    }
+  public void testDuration() {
+    assertEquals(7.347, data.getDuration(), 0);
+  }
 
-    public void testFrameRate() {
-        assertEquals(15.0, data.getFrameRate());
-    }
+  public void testFrameRate() {
+    assertEquals(15.0, data.getFrameRate());
+  }
 
-    public void testHeight() {
-        assertEquals(333, data.getHeight());
-    }
+  public void testHeight() {
+    assertEquals(333, data.getHeight());
+  }
 
-    public void testVideoCodecId() {
-        assertEquals(4, data.getVideoCodecId());
-    }
+  public void testVideoCodecId() {
+    assertEquals(4, data.getVideoCodecId());
+  }
 
-    public void testVideoDataRate() {
-        assertEquals(400, data.getVideoDataRate());
-    }
+  public void testVideoDataRate() {
+    assertEquals(400, data.getVideoDataRate());
+  }
 
-    public void testWidth() {
-        assertEquals(400, data.getVideoDataRate());
-    }
-
+  public void testWidth() {
+    assertEquals(400, data.getVideoDataRate());
+  }
 }

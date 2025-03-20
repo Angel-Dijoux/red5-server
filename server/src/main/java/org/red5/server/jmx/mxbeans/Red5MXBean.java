@@ -18,12 +18,11 @@ import javax.management.MXBean;
 @MXBean
 public interface Red5MXBean {
 
-    public ConnectionMXBean getConnection();
+  public ConnectionMXBean getConnection();
 
-    public ScopeMXBean getScope();
+  public ScopeMXBean getScope();
 
-    public ClientMXBean getClient();
+  public ClientMXBean getClient();
 
-    public ContextMXBean getContext();
-
+  public ContextMXBean getContext();
 }

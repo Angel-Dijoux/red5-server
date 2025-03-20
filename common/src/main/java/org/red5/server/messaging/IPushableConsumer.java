@@ -16,17 +16,14 @@ import java.io.IOException;
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface IPushableConsumer extends IConsumer {
-    public static final String KEY = IPushableConsumer.class.getName();
+  public static final String KEY = IPushableConsumer.class.getName();
 
-    /**
-     * Pushes message through pipe
-     *
-     * @param pipe
-     *            Pipe
-     * @param message
-     *            Message
-     * @throws IOException
-     *             if message could not be written
-     */
-    void pushMessage(IPipe pipe, IMessage message) throws IOException;
+  /**
+   * Pushes message through pipe
+   *
+   * @param pipe Pipe
+   * @param message Message
+   * @throws IOException if message could not be written
+   */
+  void pushMessage(IPipe pipe, IMessage message) throws IOException;
 }

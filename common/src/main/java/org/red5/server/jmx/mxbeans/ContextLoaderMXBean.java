@@ -9,24 +9,21 @@ package org.red5.server.jmx.mxbeans;
 
 import javax.management.MXBean;
 
-/**
- * Red5 applications loader
- */
+/** Red5 applications loader */
 @MXBean
 public interface ContextLoaderMXBean extends ShutdownMXBean {
 
-    public void setContextsConfig(String contextsConfig);
+  public void setContextsConfig(String contextsConfig);
 
-    public void init() throws Exception;
+  public void init() throws Exception;
 
-    public void shutdown();
+  public void shutdown();
 
-    public void setParentContext(String parentContextKey, String appContextId);
+  public void setParentContext(String parentContextKey, String appContextId);
 
-    public String getContextsConfig();
+  public String getContextsConfig();
 
-    public void loadContext(String name, String config);
+  public void loadContext(String name, String config);
 
-    public void unloadContext(String name);
-
+  public void unloadContext(String name);
 }

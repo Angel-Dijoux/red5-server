@@ -10,9 +10,7 @@ package org.red5.server.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.TreeSet;
-
 import junit.framework.TestCase;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.cache.impl.NoCacheImpl;
 import org.red5.io.ITag;
@@ -36,148 +34,142 @@ import org.red5.server.service.flv.impl.FLVService;
  */
 public class MetaDataInjectionTest extends TestCase {
 
-    private IFLVService service;
+  private IFLVService service;
 
-    /**
-     * SetUp is called before each test
-     */
-    @Override
-    public void setUp() {
-        service = new FLVService();
+  /** SetUp is called before each test */
+  @Override
+  public void setUp() {
+    service = new FLVService();
+  }
+
+  /**
+   * Test MetaData injection
+   *
+   * @throws IOException if io exception
+   */
+  public void testMetaDataInjection() throws IOException {
+    String path = "target/test-classes/fixtures/test_cue1.flv";
+    File f = new File(path);
+    System.out.println("Path: " + f.getAbsolutePath());
+    if (f.exists()) {
+      f.delete();
     }
+    // Create new file
+    f.createNewFile();
 
-    /**
-     * Test MetaData injection
-     *
-     * @throws IOException
-     *             if io exception
-     */
-    public void testMetaDataInjection() throws IOException {
-        String path = "target/test-classes/fixtures/test_cue1.flv";
-        File f = new File(path);
-        System.out.println("Path: " + f.getAbsolutePath());
-        if (f.exists()) {
-            f.delete();
+    // Use service to grab FLV file
+    IFLV flv = (IFLV) service.getStreamableFile(f);
+
+    // Grab a writer for writing a new FLV
+    ITagWriter writer = flv.getWriter();
+
+    // Create a reader for testing
+    File readfile = new File(path);
+    IFLV readflv = (IFLV) service.getStreamableFile(readfile);
+    readflv.setCache(NoCacheImpl.getInstance());
+
+    // Grab a reader for reading a FLV in
+    ITagReader reader = readflv.getReader();
+
+    // Inject MetaData
+    writeTagsWithInjection(reader, writer);
+  }
+
+  /**
+   * Write FLV tags and inject Cue Points
+   *
+   * @param reader
+   * @param writer
+   * @throws IOException
+   */
+  private void writeTagsWithInjection(ITagReader reader, ITagWriter writer) throws IOException {
+
+    IMetaCue cp = new MetaCue<Object, Object>();
+    cp.setName("cue_1");
+    cp.setTime(0.01);
+    cp.setType(ICueType.EVENT);
+
+    IMetaCue cp1 = new MetaCue<Object, Object>();
+    cp1.setName("cue_1");
+    cp1.setTime(2.01);
+    cp1.setType(ICueType.EVENT);
+
+    // Place in TreeSet for sorting
+    TreeSet<IMetaCue> ts = new TreeSet<IMetaCue>();
+    ts.add(cp);
+    ts.add(cp1);
+
+    int cuePointTimeStamp = getTimeInMilliseconds(ts.first());
+
+    ITag tag = null;
+    ITag injectedTag = null;
+
+    while (reader.hasMoreTags()) {
+      tag = reader.readTag();
+
+      if (tag.getDataType() != IoConstants.TYPE_METADATA) {
+        // injectNewMetaData();
+      } else {
+        // in
+      }
+
+      // if there are cuePoints in the TreeSet
+      if (!ts.isEmpty()) {
+
+        // If the tag has a greater timestamp than the
+        // cuePointTimeStamp, then inject the tag
+        while (tag.getTimestamp() > cuePointTimeStamp) {
+
+          injectedTag = injectMetaData(ts.first(), tag);
+          writer.writeTag(injectedTag);
+          tag.setPreviousTagSize((injectedTag.getBodySize() + 11));
+
+          // Advance to the next CuePoint
+          ts.remove(ts.first());
+
+          if (ts.isEmpty()) {
+            break;
+          }
+
+          cuePointTimeStamp = getTimeInMilliseconds(ts.first());
         }
-        // Create new file
-        f.createNewFile();
+      }
 
-        // Use service to grab FLV file
-        IFLV flv = (IFLV) service.getStreamableFile(f);
-
-        // Grab a writer for writing a new FLV
-        ITagWriter writer = flv.getWriter();
-
-        // Create a reader for testing
-        File readfile = new File(path);
-        IFLV readflv = (IFLV) service.getStreamableFile(readfile);
-        readflv.setCache(NoCacheImpl.getInstance());
-
-        // Grab a reader for reading a FLV in
-        ITagReader reader = readflv.getReader();
-
-        // Inject MetaData
-        writeTagsWithInjection(reader, writer);
-
+      writer.writeTag(tag);
     }
+  }
 
-    /**
-     * Write FLV tags and inject Cue Points
-     *
-     * @param reader
-     * @param writer
-     * @throws IOException
-     */
-    private void writeTagsWithInjection(ITagReader reader, ITagWriter writer) throws IOException {
+  /**
+   * Injects metadata (Cue Points) into a tag
+   *
+   * @param cue
+   * @param writer
+   * @param tag
+   * @return ITag tag
+   */
+  private ITag injectMetaData(Object cue, ITag tag) {
+    IMetaCue cp = (MetaCue<?, ?>) cue;
+    Output out = new Output(IoBuffer.allocate(1000));
+    Serializer.serialize(out, "onCuePoint");
+    Serializer.serialize(out, cp);
 
-        IMetaCue cp = new MetaCue<Object, Object>();
-        cp.setName("cue_1");
-        cp.setTime(0.01);
-        cp.setType(ICueType.EVENT);
+    IoBuffer tmpBody = out.buf().flip();
+    int tmpBodySize = out.buf().limit();
+    int tmpPreviousTagSize = tag.getPreviousTagSize();
+    byte tmpDataType = IoConstants.TYPE_METADATA;
+    int tmpTimestamp = getTimeInMilliseconds(cp);
 
-        IMetaCue cp1 = new MetaCue<Object, Object>();
-        cp1.setName("cue_1");
-        cp1.setTime(2.01);
-        cp1.setType(ICueType.EVENT);
+    return new Tag(tmpDataType, tmpTimestamp, tmpBodySize, tmpBody, tmpPreviousTagSize);
+  }
 
-        // Place in TreeSet for sorting
-        TreeSet<IMetaCue> ts = new TreeSet<IMetaCue>();
-        ts.add(cp);
-        ts.add(cp1);
-
-        int cuePointTimeStamp = getTimeInMilliseconds(ts.first());
-
-        ITag tag = null;
-        ITag injectedTag = null;
-
-        while (reader.hasMoreTags()) {
-            tag = reader.readTag();
-
-            if (tag.getDataType() != IoConstants.TYPE_METADATA) {
-                //injectNewMetaData();
-            } else {
-                //in
-            }
-
-            // if there are cuePoints in the TreeSet
-            if (!ts.isEmpty()) {
-
-                // If the tag has a greater timestamp than the
-                // cuePointTimeStamp, then inject the tag
-                while (tag.getTimestamp() > cuePointTimeStamp) {
-
-                    injectedTag = injectMetaData(ts.first(), tag);
-                    writer.writeTag(injectedTag);
-                    tag.setPreviousTagSize((injectedTag.getBodySize() + 11));
-
-                    // Advance to the next CuePoint
-                    ts.remove(ts.first());
-
-                    if (ts.isEmpty()) {
-                        break;
-                    }
-
-                    cuePointTimeStamp = getTimeInMilliseconds(ts.first());
-                }
-            }
-
-            writer.writeTag(tag);
-
-        }
-    }
-
-    /**
-     * Injects metadata (Cue Points) into a tag
-     *
-     * @param cue
-     * @param writer
-     * @param tag
-     * @return ITag tag
-     */
-    private ITag injectMetaData(Object cue, ITag tag) {
-        IMetaCue cp = (MetaCue<?, ?>) cue;
-        Output out = new Output(IoBuffer.allocate(1000));
-        Serializer.serialize(out, "onCuePoint");
-        Serializer.serialize(out, cp);
-
-        IoBuffer tmpBody = out.buf().flip();
-        int tmpBodySize = out.buf().limit();
-        int tmpPreviousTagSize = tag.getPreviousTagSize();
-        byte tmpDataType = IoConstants.TYPE_METADATA;
-        int tmpTimestamp = getTimeInMilliseconds(cp);
-
-        return new Tag(tmpDataType, tmpTimestamp, tmpBodySize, tmpBody, tmpPreviousTagSize);
-    }
-
-    /**
-     * Returns a timestamp in milliseconds
-     *
-     * @param object
-     * @return int time
-     */
-    private int getTimeInMilliseconds(Object object) {
-        IMetaCue cp = (MetaCue<?, ?>) object;
-        return (int) (cp.getTime() * 1000.00);
-    }
-
+  /**
+   * Returns a timestamp in milliseconds
+   *
+   * @param object
+   * @return int time
+   */
+  private int getTimeInMilliseconds(Object object) {
+    IMetaCue cp = (MetaCue<?, ?>) object;
+    return (int) (cp.getTime() * 1000.00);
+  }
 }

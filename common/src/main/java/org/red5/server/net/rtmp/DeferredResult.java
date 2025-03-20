@@ -8,7 +8,6 @@
 package org.red5.server.net.rtmp;
 
 import java.lang.ref.WeakReference;
-
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.slf4j.Logger;
@@ -21,100 +20,84 @@ import org.slf4j.LoggerFactory;
  * @author Joachim Bauch (jojo@struktur.de)
  */
 public class DeferredResult {
-    /**
-     * Logger
-     */
-    protected static Logger log = LoggerFactory.getLogger(DeferredResult.class);
+  /** Logger */
+  protected static Logger log = LoggerFactory.getLogger(DeferredResult.class);
 
-    /**
-     * Weak reference to used channel
-     */
-    private WeakReference<Channel> channel;
+  /** Weak reference to used channel */
+  private WeakReference<Channel> channel;
 
-    /**
-     * Pending call object
-     */
-    private IPendingServiceCall call;
+  /** Pending call object */
+  private IPendingServiceCall call;
 
-    /**
-     * Transaction id
-     */
-    private int transactionId;
+  /** Transaction id */
+  private int transactionId;
 
-    /**
-     * Results sent flag
-     */
-    private boolean resultSent = false;
+  /** Results sent flag */
+  private boolean resultSent = false;
 
-    /**
-     * Set the result of a method call and send to the caller.
-     *
-     * @param result
-     *            deferred result of the method call
-     */
-    public void setResult(Object result) {
-        if (resultSent) {
-            throw new RuntimeException("You can only set the result once.");
-        }
-        this.resultSent = true;
-        Channel channel = this.channel.get();
-        if (channel == null) {
-            log.warn("The client is no longer connected.");
-            return;
-        }
-        call.setResult(result);
-        Invoke reply = new Invoke();
-        reply.setCall(call);
-        reply.setTransactionId(transactionId);
-        channel.write(reply);
-        channel.getConnection().unregisterDeferredResult(this);
+  /**
+   * Set the result of a method call and send to the caller.
+   *
+   * @param result deferred result of the method call
+   */
+  public void setResult(Object result) {
+    if (resultSent) {
+      throw new RuntimeException("You can only set the result once.");
     }
-
-    /**
-     * Check if the result has been sent to the client.
-     *
-     * @return <pre>
-     * true
-     * </pre>
-     *
-     *         if the result has been sent, otherwise
-     *
-     *         <pre>
-     * false
-     * </pre>
-     */
-    public boolean wasSent() {
-        return resultSent;
+    this.resultSent = true;
+    Channel channel = this.channel.get();
+    if (channel == null) {
+      log.warn("The client is no longer connected.");
+      return;
     }
+    call.setResult(result);
+    Invoke reply = new Invoke();
+    reply.setCall(call);
+    reply.setTransactionId(transactionId);
+    channel.write(reply);
+    channel.getConnection().unregisterDeferredResult(this);
+  }
 
-    /**
-     * Setter for transaction id.
-     *
-     * @param id
-     *            Invocation object identifier
-     */
-    public void setTransactionId(int id) {
-        this.transactionId = id;
-    }
+  /**
+   * Check if the result has been sent to the client.
+   *
+   * @return
+   *     <pre>
+   * true
+   * </pre>
+   *     if the result has been sent, otherwise
+   *     <pre>
+   * false
+   * </pre>
+   */
+  public boolean wasSent() {
+    return resultSent;
+  }
 
-    /**
-     * Setter for service call.
-     *
-     * @param call
-     *            Service call
-     */
-    public void setServiceCall(IPendingServiceCall call) {
-        this.call = call;
-    }
+  /**
+   * Setter for transaction id.
+   *
+   * @param id Invocation object identifier
+   */
+  public void setTransactionId(int id) {
+    this.transactionId = id;
+  }
 
-    /**
-     * Setter for channel.
-     *
-     * @param channel
-     *            Channel
-     */
-    public void setChannel(Channel channel) {
-        this.channel = new WeakReference<Channel>(channel);
-    }
+  /**
+   * Setter for service call.
+   *
+   * @param call Service call
+   */
+  public void setServiceCall(IPendingServiceCall call) {
+    this.call = call;
+  }
 
+  /**
+   * Setter for channel.
+   *
+   * @param channel Channel
+   */
+  public void setChannel(Channel channel) {
+    this.channel = new WeakReference<Channel>(channel);
+  }
 }

@@ -24,172 +24,163 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class PipeConnectionEvent extends EventObject {
 
-    private static final long serialVersionUID = 9078843765378168072L;
+  private static final long serialVersionUID = 9078843765378168072L;
 
-    /** Pipe connection event type */
-    public enum EventType {
-        /** Provider connects in pull mode */
-        PROVIDER_CONNECT_PULL,
-        /** Provider connects in push mode */
-        PROVIDER_CONNECT_PUSH,
-        /** Provider disconnects */
-        PROVIDER_DISCONNECT,
-        /** Consumer connects in pull mode */
-        CONSUMER_CONNECT_PULL,
-        /** Consumer connects in push mode */
-        CONSUMER_CONNECT_PUSH,
-        /** Consumer disconnects */
-        CONSUMER_DISCONNECT
-    };
+  /** Pipe connection event type */
+  public enum EventType {
+    /** Provider connects in pull mode */
+    PROVIDER_CONNECT_PULL,
+    /** Provider connects in push mode */
+    PROVIDER_CONNECT_PUSH,
+    /** Provider disconnects */
+    PROVIDER_DISCONNECT,
+    /** Consumer connects in pull mode */
+    CONSUMER_CONNECT_PULL,
+    /** Consumer connects in push mode */
+    CONSUMER_CONNECT_PUSH,
+    /** Consumer disconnects */
+    CONSUMER_DISCONNECT
+  };
 
-    /**
-     * Provider
-     */
-    private final transient IProvider provider;
+  /** Provider */
+  private final transient IProvider provider;
 
-    /**
-     * Consumer
-     */
-    private final transient IConsumer consumer;
+  /** Consumer */
+  private final transient IConsumer consumer;
 
-    /**
-     * Event type
-     */
-    private final EventType type;
+  /** Event type */
+  private final EventType type;
 
-    /**
-     * Parameters map
-     */
-    private final ConcurrentMap<String, Object> paramMap = new ConcurrentHashMap<>();
+  /** Parameters map */
+  private final ConcurrentMap<String, Object> paramMap = new ConcurrentHashMap<>();
 
-    /**
-     * List of tasks to be executed for the event
-     */
-    private final LinkedList<Runnable> taskList = new LinkedList<>();
+  /** List of tasks to be executed for the event */
+  private final LinkedList<Runnable> taskList = new LinkedList<>();
 
-    /**
-     * Construct an object with the specific pipe as the source
-     *
-     * @param source pipe that triggers this event
-     * @param type event type
-     * @param consumer the consumer
-     * @param paramMap parameters map
-     */
-    private PipeConnectionEvent(AbstractPipe source, EventType type, IConsumer consumer, Map<String, Object> paramMap) {
-        super(source);
-        this.type = type;
-        this.consumer = consumer;
-        this.provider = null;
-        setParamMap(paramMap);
+  /**
+   * Construct an object with the specific pipe as the source
+   *
+   * @param source pipe that triggers this event
+   * @param type event type
+   * @param consumer the consumer
+   * @param paramMap parameters map
+   */
+  private PipeConnectionEvent(
+      AbstractPipe source, EventType type, IConsumer consumer, Map<String, Object> paramMap) {
+    super(source);
+    this.type = type;
+    this.consumer = consumer;
+    this.provider = null;
+    setParamMap(paramMap);
+  }
+
+  /**
+   * Construct an object with the specific pipe as the source
+   *
+   * @param source pipe that triggers this event
+   * @param type event type
+   * @param provider the provider
+   * @param paramMap parameters map
+   */
+  private PipeConnectionEvent(
+      AbstractPipe source, EventType type, IProvider provider, Map<String, Object> paramMap) {
+    super(source);
+    this.type = type;
+    this.consumer = null;
+    this.provider = provider;
+    setParamMap(paramMap);
+  }
+
+  /**
+   * Return pipe connection provider
+   *
+   * @return Provider
+   */
+  public IProvider getProvider() {
+    return provider;
+  }
+
+  /**
+   * Return pipe connection consumer
+   *
+   * @return Consumer
+   */
+  public IConsumer getConsumer() {
+    return consumer;
+  }
+
+  /**
+   * Return event type
+   *
+   * @return Event type
+   */
+  public EventType getType() {
+    return type;
+  }
+
+  /**
+   * Return event parameters as Map
+   *
+   * @return Event parameters as Map
+   */
+  public Map<String, Object> getParamMap() {
+    return paramMap;
+  }
+
+  /**
+   * Setter for event parameters map
+   *
+   * @param paramMap Event parameters as Map
+   */
+  public void setParamMap(Map<String, Object> paramMap) {
+    if (paramMap != null && !paramMap.isEmpty()) {
+      this.paramMap.putAll(paramMap);
     }
+  }
 
-    /**
-     * Construct an object with the specific pipe as the source
-     *
-     * @param source pipe that triggers this event
-     * @param type event type
-     * @param provider the provider
-     * @param paramMap parameters map
-     */
-    private PipeConnectionEvent(AbstractPipe source, EventType type, IProvider provider, Map<String, Object> paramMap) {
-        super(source);
-        this.type = type;
-        this.consumer = null;
-        this.provider = provider;
-        setParamMap(paramMap);
-    }
+  /**
+   * Add task to list
+   *
+   * @param task Task to add
+   */
+  public void addTask(Runnable task) {
+    taskList.add(task);
+  }
 
-    /**
-     * Return pipe connection provider
-     *
-     * @return Provider
-     */
-    public IProvider getProvider() {
-        return provider;
-    }
+  /**
+   * Return list of tasks
+   *
+   * @return List of tasks
+   */
+  List<Runnable> getTaskList() {
+    return taskList;
+  }
 
-    /**
-     * Return pipe connection consumer
-     *
-     * @return Consumer
-     */
-    public IConsumer getConsumer() {
-        return consumer;
-    }
+  /**
+   * Builds a PipeConnectionEvent with a source pipe and consumer.
+   *
+   * @param source pipe that triggers this event
+   * @param type event type
+   * @param consumer the consumer
+   * @param paramMap parameters map
+   * @return event
+   */
+  public static final PipeConnectionEvent build(
+      AbstractPipe source, EventType type, IConsumer consumer, Map<String, Object> paramMap) {
+    return new PipeConnectionEvent(source, type, consumer, paramMap);
+  }
 
-    /**
-     * Return event type
-     *
-     * @return Event type
-     */
-    public EventType getType() {
-        return type;
-    }
-
-    /**
-     * Return event parameters as Map
-     *
-     * @return Event parameters as Map
-     */
-    public Map<String, Object> getParamMap() {
-        return paramMap;
-    }
-
-    /**
-     * Setter for event parameters map
-     *
-     * @param paramMap
-     *            Event parameters as Map
-     */
-    public void setParamMap(Map<String, Object> paramMap) {
-        if (paramMap != null && !paramMap.isEmpty()) {
-            this.paramMap.putAll(paramMap);
-        }
-    }
-
-    /**
-     * Add task to list
-     *
-     * @param task
-     *            Task to add
-     */
-    public void addTask(Runnable task) {
-        taskList.add(task);
-    }
-
-    /**
-     * Return list of tasks
-     *
-     * @return List of tasks
-     */
-    List<Runnable> getTaskList() {
-        return taskList;
-    }
-
-    /**
-     * Builds a PipeConnectionEvent with a source pipe and consumer.
-     *
-     * @param source pipe that triggers this event
-     * @param type event type
-     * @param consumer the consumer
-     * @param paramMap parameters map
-     * @return event
-     */
-    public final static PipeConnectionEvent build(AbstractPipe source, EventType type, IConsumer consumer, Map<String, Object> paramMap) {
-        return new PipeConnectionEvent(source, type, consumer, paramMap);
-    }
-
-    /**
-     * Builds a PipeConnectionEvent with a source pipe and provider.
-     *
-     * @param source pipe that triggers this event
-     * @param type event type
-     * @param provider the provider
-     * @param paramMap parameters map
-     * @return event
-     */
-    public final static PipeConnectionEvent build(AbstractPipe source, EventType type, IProvider provider, Map<String, Object> paramMap) {
-        return new PipeConnectionEvent(source, type, provider, paramMap);
-    }
-
+  /**
+   * Builds a PipeConnectionEvent with a source pipe and provider.
+   *
+   * @param source pipe that triggers this event
+   * @param type event type
+   * @param provider the provider
+   * @param paramMap parameters map
+   * @return event
+   */
+  public static final PipeConnectionEvent build(
+      AbstractPipe source, EventType type, IProvider provider, Map<String, Object> paramMap) {
+    return new PipeConnectionEvent(source, type, provider, paramMap);
+  }
 }

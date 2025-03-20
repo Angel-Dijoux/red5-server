@@ -7,9 +7,9 @@
 
 package org.red5.io;
 
-/**
- * Buffer types (auto, direct or heap).
- */
+/** Buffer types (auto, direct or heap). */
 public enum BufferType {
-    AUTO, DIRECT, HEAP
+  AUTO,
+  DIRECT,
+  HEAP
 }

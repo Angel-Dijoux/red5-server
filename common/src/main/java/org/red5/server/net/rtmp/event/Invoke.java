@@ -12,99 +12,93 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.server.api.service.IPendingServiceCall;
 
-/**
- * Remote invocation event
- */
+/** Remote invocation event */
 public class Invoke extends Notify {
 
-    private static final long serialVersionUID = -769677790148010729L;
+  private static final long serialVersionUID = -769677790148010729L;
 
-    {
-        dataType = TYPE_INVOKE;
+  {
+    dataType = TYPE_INVOKE;
+  }
+
+  /** Constructs a new Invoke. */
+  public Invoke() {}
+
+  /**
+   * Create new invocation event with given data
+   *
+   * @param data Event data
+   */
+  public Invoke(IoBuffer data) {
+    super(data);
+  }
+
+  /**
+   * Create new invocation event with given pending service call
+   *
+   * @param call Pending call
+   */
+  public Invoke(IPendingServiceCall call) {
+    super(call);
+  }
+
+  /**
+   * Setter for transaction id
+   *
+   * @param transactionId the transactionId to set
+   */
+  public void setTransactionId(int transactionId) {
+    this.transactionId = transactionId;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public IPendingServiceCall getCall() {
+    return (IPendingServiceCall) call;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
     }
-
-    /** Constructs a new Invoke. */
-    public Invoke() {
+    if (!(obj instanceof Invoke)) {
+      return false;
     }
+    return super.equals(obj);
+  }
 
-    /**
-     * Create new invocation event with given data
-     *
-     * @param data
-     *            Event data
-     */
-    public Invoke(IoBuffer data) {
-        super(data);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String toString() {
+    return String.format(
+        "Invoke #%d: %s", transactionId, (call != null ? call.toString() : "null"));
+  }
 
-    /**
-     * Create new invocation event with given pending service call
-     *
-     * @param call
-     *            Pending call
-     */
-    public Invoke(IPendingServiceCall call) {
-        super(call);
-    }
-
-    /**
-     * Setter for transaction id
-     *
-     * @param transactionId
-     *            the transactionId to set
-     */
-    public void setTransactionId(int transactionId) {
-        this.transactionId = transactionId;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public IPendingServiceCall getCall() {
-        return (IPendingServiceCall) call;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (!(obj instanceof Invoke)) {
-            return false;
-        }
-        return super.equals(obj);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return String.format("Invoke #%d: %s", transactionId, (call != null ? call.toString() : "null"));
-    }
-
-    /**
-     * Duplicate this Invoke message to future injection. Serialize to memory and deserialize, safe way.
-     *
-     * @return duplicated Invoke event
-     */
-    @Override
-    public Invoke duplicate() throws IOException, ClassNotFoundException {
-        Invoke result = new Invoke();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        writeExternal(oos);
-        oos.close();
-        byte[] buf = baos.toByteArray();
-        baos.close();
-        ByteArrayInputStream bais = new ByteArrayInputStream(buf);
-        ObjectInputStream ois = new ObjectInputStream(bais);
-        result.readExternal(ois);
-        ois.close();
-        bais.close();
-        return result;
-    }
-
+  /**
+   * Duplicate this Invoke message to future injection. Serialize to memory and deserialize, safe
+   * way.
+   *
+   * @return duplicated Invoke event
+   */
+  @Override
+  public Invoke duplicate() throws IOException, ClassNotFoundException {
+    Invoke result = new Invoke();
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    writeExternal(oos);
+    oos.close();
+    byte[] buf = baos.toByteArray();
+    baos.close();
+    ByteArrayInputStream bais = new ByteArrayInputStream(buf);
+    ObjectInputStream ois = new ObjectInputStream(bais);
+    result.readExternal(ois);
+    ois.close();
+    bais.close();
+    return result;
+  }
 }

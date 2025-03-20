@@ -20,30 +20,29 @@ import org.slf4j.Logger;
  */
 public class ScopeSecurityHandler implements IScopeSecurityHandler {
 
-    private Logger log = Red5LoggerFactory.getLogger(this.getClass());
+  private Logger log = Red5LoggerFactory.getLogger(this.getClass());
 
-    protected boolean connectionAllowed = true;
+  protected boolean connectionAllowed = true;
 
-    protected boolean scopeAllowed = true;
+  protected boolean scopeAllowed = true;
 
-    @Override
-    public boolean allowed(IConnection conn) {
-        log.debug("Allowing: {} connection: {}", connectionAllowed, conn);
-        return connectionAllowed;
-    }
+  @Override
+  public boolean allowed(IConnection conn) {
+    log.debug("Allowing: {} connection: {}", connectionAllowed, conn);
+    return connectionAllowed;
+  }
 
-    @Override
-    public boolean allowed(IScope scope) {
-        log.debug("Allowing: {} scope: {}", scopeAllowed, scope);
-        return scopeAllowed;
-    }
+  @Override
+  public boolean allowed(IScope scope) {
+    log.debug("Allowing: {} scope: {}", scopeAllowed, scope);
+    return scopeAllowed;
+  }
 
-    public void setConnectionAllowed(boolean connectionAllowed) {
-        this.connectionAllowed = connectionAllowed;
-    }
+  public void setConnectionAllowed(boolean connectionAllowed) {
+    this.connectionAllowed = connectionAllowed;
+  }
 
-    public void setScopeAllowed(boolean scopeAllowed) {
-        this.scopeAllowed = scopeAllowed;
-    }
-
+  public void setScopeAllowed(boolean scopeAllowed) {
+    this.scopeAllowed = scopeAllowed;
+  }
 }

@@ -18,58 +18,51 @@ import java.util.Map;
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface IMessageInput {
-    /**
-     * Pull message from this input endpoint. Return w/o waiting.
-     *
-     * @return The pulled message or null if message is not available.
-     * @throws IOException
-     *             on error
-     */
-    IMessage pullMessage() throws IOException;
+  /**
+   * Pull message from this input endpoint. Return w/o waiting.
+   *
+   * @return The pulled message or null if message is not available.
+   * @throws IOException on error
+   */
+  IMessage pullMessage() throws IOException;
 
-    /**
-     * Pull message from this input endpoint. Wait wait milliseconds if message is not available.
-     *
-     * @param wait
-     *            milliseconds to wait when message is not available.
-     * @return The pulled message or null if message is not available.
-     */
-    IMessage pullMessage(long wait);
+  /**
+   * Pull message from this input endpoint. Wait wait milliseconds if message is not available.
+   *
+   * @param wait milliseconds to wait when message is not available.
+   * @return The pulled message or null if message is not available.
+   */
+  IMessage pullMessage(long wait);
 
-    /**
-     * Connect to a consumer.
-     *
-     * @param consumer
-     *            Consumer
-     * @param paramMap
-     *            Parameters map
-     * @return true when successfully subscribed, false otherwise.
-     */
-    boolean subscribe(IConsumer consumer, Map<String, Object> paramMap);
+  /**
+   * Connect to a consumer.
+   *
+   * @param consumer Consumer
+   * @param paramMap Parameters map
+   * @return true when successfully subscribed, false otherwise.
+   */
+  boolean subscribe(IConsumer consumer, Map<String, Object> paramMap);
 
-    /**
-     * Disconnect from a consumer.
-     *
-     * @param consumer
-     *            Consumer to disconnect
-     * @return true when successfully unsubscribed, false otherwise.
-     */
-    boolean unsubscribe(IConsumer consumer);
+  /**
+   * Disconnect from a consumer.
+   *
+   * @param consumer Consumer to disconnect
+   * @return true when successfully unsubscribed, false otherwise.
+   */
+  boolean unsubscribe(IConsumer consumer);
 
-    /**
-     * Getter for consumers list.
-     *
-     * @return Consumers.
-     */
-    List<IConsumer> getConsumers();
+  /**
+   * Getter for consumers list.
+   *
+   * @return Consumers.
+   */
+  List<IConsumer> getConsumers();
 
-    /**
-     * Send OOB Control Message to all providers on the other side of pipe.
-     *
-     * @param consumer
-     *            The consumer that sends the message
-     * @param oobCtrlMsg
-     *            Out-of-band control message
-     */
-    void sendOOBControlMessage(IConsumer consumer, OOBControlMessage oobCtrlMsg);
+  /**
+   * Send OOB Control Message to all providers on the other side of pipe.
+   *
+   * @param consumer The consumer that sends the message
+   * @param oobCtrlMsg Out-of-band control message
+   */
+  void sendOOBControlMessage(IConsumer consumer, OOBControlMessage oobCtrlMsg);
 }

@@ -8,32 +8,34 @@
 package org.red5.io.sctp;
 
 import java.io.IOException;
-
 import org.red5.io.sctp.packet.SctpPacket;
 
 public interface IAssociationControl {
 
-    public static enum State {
-        CLOSED, COOKIE_WAIT, COOKIE_ECHOED, ESTABLISHED
-    }
+  public static enum State {
+    CLOSED,
+    COOKIE_WAIT,
+    COOKIE_ECHOED,
+    ESTABLISHED
+  }
 
-    static final int VALID_COOKIE_TIME = 60; // in seconds
+  static final int VALID_COOKIE_TIME = 60; // in seconds
 
-    static final int DEFAULT_ADVERTISE_RECEIVE_WINDOW_CREDIT = 1024;
+  static final int DEFAULT_ADVERTISE_RECEIVE_WINDOW_CREDIT = 1024;
 
-    static final int DEFAULT_NUMBER_OF_OUTBOUND_STREAM = 1;
+  static final int DEFAULT_NUMBER_OF_OUTBOUND_STREAM = 1;
 
-    static final int DEFAULT_NUMBER_OF_INBOUND_STREAM = 1;
+  static final int DEFAULT_NUMBER_OF_INBOUND_STREAM = 1;
 
-    State getState();
+  State getState();
 
-    void setState(State state);
+  void setState(State state);
 
-    int getDestinationPort();
+  int getDestinationPort();
 
-    int getSourcePort();
+  int getSourcePort();
 
-    void sendPacket(SctpPacket packet) throws IOException;
+  void sendPacket(SctpPacket packet) throws IOException;
 
-    int getVerificationTag();
+  int getVerificationTag();
 }

@@ -11,31 +11,30 @@ import org.apache.mina.core.buffer.IoBuffer;
 /**
  * Red5 audio codec for the MP3 audio format.
  *
- * Stores the decoder configuration
+ * <p>Stores the decoder configuration
  *
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public class MP3Audio extends AbstractAudio {
 
-    {
-        codec = AudioCodec.MP3;
-    }
+  {
+    codec = AudioCodec.MP3;
+  }
 
-    @Override
-    public String getName() {
-        return codec.name();
-    }
+  @Override
+  public String getName() {
+    return codec.name();
+  }
 
-    @Override
-    public boolean canHandleData(IoBuffer data) {
-        if (data.limit() == 0) {
-            // Empty buffer
-            return false;
-        }
-        byte first = data.get();
-        boolean result = (((first & 0xf0) >> 4) == AudioCodec.MP3.getId());
-        data.rewind();
-        return result;
+  @Override
+  public boolean canHandleData(IoBuffer data) {
+    if (data.limit() == 0) {
+      // Empty buffer
+      return false;
     }
-
+    byte first = data.get();
+    boolean result = (((first & 0xf0) >> 4) == AudioCodec.MP3.getId());
+    data.rewind();
+    return result;
+  }
 }

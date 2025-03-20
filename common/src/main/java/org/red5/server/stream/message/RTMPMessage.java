@@ -11,71 +11,62 @@ import org.red5.server.messaging.AbstractMessage;
 import org.red5.server.net.rtmp.RTMPType;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 
-/**
- * RTMP message
- */
+/** RTMP message */
 public class RTMPMessage extends AbstractMessage {
 
-    private final IRTMPEvent body;
+  private final IRTMPEvent body;
 
-    /**
-     * Creates a new rtmp message.
-     *
-     * @param body
-     *            value to set for property 'body'
-     */
-    private RTMPMessage(IRTMPEvent body) {
-        this.body = body;
-        this.body.setSourceType(body.getSourceType());
-        this.setMessageType(RTMPType.valueOf(body.getDataType()));
-    }
+  /**
+   * Creates a new rtmp message.
+   *
+   * @param body value to set for property 'body'
+   */
+  private RTMPMessage(IRTMPEvent body) {
+    this.body = body;
+    this.body.setSourceType(body.getSourceType());
+    this.setMessageType(RTMPType.valueOf(body.getDataType()));
+  }
 
-    /**
-     * Creates a new rtmp message.
-     *
-     * @param body
-     *            value to set for property 'body'
-     * @param eventTime
-     *            updated timestamp
-     */
-    private RTMPMessage(IRTMPEvent body, int eventTime) {
-        this.body = body;
-        this.body.setTimestamp(eventTime);
-        this.body.setSourceType(body.getSourceType());
-        this.setMessageType(RTMPType.valueOf(body.getDataType()));
-    }
+  /**
+   * Creates a new rtmp message.
+   *
+   * @param body value to set for property 'body'
+   * @param eventTime updated timestamp
+   */
+  private RTMPMessage(IRTMPEvent body, int eventTime) {
+    this.body = body;
+    this.body.setTimestamp(eventTime);
+    this.body.setSourceType(body.getSourceType());
+    this.setMessageType(RTMPType.valueOf(body.getDataType()));
+  }
 
-    /**
-     * Return RTMP message body
-     *
-     * @return Value for property 'body'.
-     */
-    public IRTMPEvent getBody() {
-        return body;
-    }
+  /**
+   * Return RTMP message body
+   *
+   * @return Value for property 'body'.
+   */
+  public IRTMPEvent getBody() {
+    return body;
+  }
 
-    /**
-     * Builder for RTMPMessage.
-     *
-     * @param body
-     *            event data
-     * @return Immutable RTMPMessage
-     */
-    public final static RTMPMessage build(IRTMPEvent body) {
-        return new RTMPMessage(body);
-    }
+  /**
+   * Builder for RTMPMessage.
+   *
+   * @param body event data
+   * @return Immutable RTMPMessage
+   */
+  public static final RTMPMessage build(IRTMPEvent body) {
+    return new RTMPMessage(body);
+  }
 
-    /**
-     * Builder for RTMPMessage.
-     *
-     * @param body
-     *            event data
-     * @param eventTime
-     *            time value to set on the event body
-     * @return Immutable RTMPMessage
-     */
-    public final static RTMPMessage build(IRTMPEvent body, int eventTime) {
-        return new RTMPMessage(body, eventTime);
-    }
-
+  /**
+   * Builder for RTMPMessage.
+   *
+   * @param body event data
+   * @param eventTime time value to set on the event body
+   * @return Immutable RTMPMessage
+   */
+  public static final RTMPMessage build(IRTMPEvent body, int eventTime) {
+    return new RTMPMessage(body, eventTime);
+  }
 }

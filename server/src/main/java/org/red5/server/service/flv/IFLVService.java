@@ -16,6 +16,4 @@ import org.red5.server.api.service.IStreamableFileService;
  * @author Dominick Accattato (daccattato@gmail.com)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
-public interface IFLVService extends IStreamableFileService {
-
-}
+public interface IFLVService extends IStreamableFileService {}

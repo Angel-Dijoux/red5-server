@@ -12,18 +12,17 @@ import org.red5.server.api.IConnection;
 
 public class RTMPTClientConnection extends BaseRTMPTConnection {
 
-    public RTMPTClientConnection() {
-        super(IConnection.Type.PERSISTENT.name().toLowerCase());
-    }
+  public RTMPTClientConnection() {
+    super(IConnection.Type.PERSISTENT.name().toLowerCase());
+  }
 
-    @Override
-    protected void onInactive() {
-        this.close();
-    }
+  @Override
+  protected void onInactive() {
+    this.close();
+  }
 
-    @Override
-    public IoBuffer getPendingMessages(int targetSize) {
-        return foldPendingMessages(targetSize);
-    }
-
+  @Override
+  public IoBuffer getPendingMessages(int targetSize) {
+    return foldPendingMessages(targetSize);
+  }
 }

@@ -17,64 +17,59 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class StatisticsCounter {
 
-    /** Current number */
-    private AtomicInteger current = new AtomicInteger();
+  /** Current number */
+  private AtomicInteger current = new AtomicInteger();
 
-    /** Total number */
-    private int total;
+  /** Total number */
+  private int total;
 
-    /** Highest / max number during collection */
-    private int max;
+  /** Highest / max number during collection */
+  private int max;
 
-    /**
-     * Increment statistics by one.
-     */
-    public void increment() {
-        max = Math.max(max, current.incrementAndGet());
-        total++;
-    }
+  /** Increment statistics by one. */
+  public void increment() {
+    max = Math.max(max, current.incrementAndGet());
+    total++;
+  }
 
-    /**
-     * Decrement statistics by one.
-     */
-    public void decrement() {
-        current.decrementAndGet();
-    }
+  /** Decrement statistics by one. */
+  public void decrement() {
+    current.decrementAndGet();
+  }
 
-    /**
-     * Get current number.
-     *
-     * @return current number
-     */
-    public int getCurrent() {
-        return current.intValue();
-    }
+  /**
+   * Get current number.
+   *
+   * @return current number
+   */
+  public int getCurrent() {
+    return current.intValue();
+  }
 
-    /**
-     * Get total number.
-     *
-     * @return total
-     */
-    public int getTotal() {
-        return total;
-    }
+  /**
+   * Get total number.
+   *
+   * @return total
+   */
+  public int getTotal() {
+    return total;
+  }
 
-    /**
-     * Get maximum number. Use total instead.
-     *
-     * @return max
-     */
-    public int getMax() {
-        return max;
-    }
+  /**
+   * Get maximum number. Use total instead.
+   *
+   * @return max
+   */
+  public int getMax() {
+    return max;
+  }
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "StatisticsCounter [current=" + current + ", max=" + max + ", total=" + total + "]";
-    }
-
+  /*
+   * (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return "StatisticsCounter [current=" + current + ", max=" + max + ", total=" + total + "]";
+  }
 }

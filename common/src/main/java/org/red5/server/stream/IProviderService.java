@@ -9,141 +9,121 @@ package org.red5.server.stream;
 
 import java.io.File;
 import java.util.Set;
-
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.scope.IScopeService;
 import org.red5.server.api.stream.IBroadcastStream;
 import org.red5.server.messaging.IMessageInput;
 
-/**
- * Central unit to get access to different types of provider inputs
- */
+/** Central unit to get access to different types of provider inputs */
 public interface IProviderService extends IScopeService {
 
-    public final static String BEAN_NAME = "providerService";
+  public static final String BEAN_NAME = "providerService";
 
-    enum INPUT_TYPE {
-        NOT_FOUND, LIVE, LIVE_WAIT, VOD;
-    };
+  enum INPUT_TYPE {
+    NOT_FOUND,
+    LIVE,
+    LIVE_WAIT,
+    VOD;
+  };
 
-    /**
-     * Returns the input type for a named provider if a source of input exists. Live is checked first and VOD second. If the VOD
-     * file is not located, a LIVE_WAIT is returned if legacy live-wait support is enabled.
-     *
-     * @param scope
-     *            Scope of provider
-     * @param name
-     *            Name of provider
-     * @param type
-     *            Type of video stream
-     * @return LIVE if live, VOD if VOD, and LIVE_WAIT otherwise
-     */
-    INPUT_TYPE lookupProviderInput(IScope scope, String name, int type);
+  /**
+   * Returns the input type for a named provider if a source of input exists. Live is checked first
+   * and VOD second. If the VOD file is not located, a LIVE_WAIT is returned if legacy live-wait
+   * support is enabled.
+   *
+   * @param scope Scope of provider
+   * @param name Name of provider
+   * @param type Type of video stream
+   * @return LIVE if live, VOD if VOD, and LIVE_WAIT otherwise
+   */
+  INPUT_TYPE lookupProviderInput(IScope scope, String name, int type);
 
-    /**
-     * Get a named provider as the source of input. Live stream first, VOD stream second.
-     *
-     * @param scope
-     *            Scope of provider
-     * @param name
-     *            Name of provider
-     * @return null if nothing found.
-     */
-    IMessageInput getProviderInput(IScope scope, String name);
+  /**
+   * Get a named provider as the source of input. Live stream first, VOD stream second.
+   *
+   * @param scope Scope of provider
+   * @param name Name of provider
+   * @return null if nothing found.
+   */
+  IMessageInput getProviderInput(IScope scope, String name);
 
-    /**
-     * Get a named Live provider as the source of input.
-     *
-     * @param scope
-     *            Scope of provider
-     * @param name
-     *            Name of provider
-     * @param needCreate
-     *            Whether there's need to create basic scope / live provider if they don't exist
-     * @return null if not found.
-     */
-    IMessageInput getLiveProviderInput(IScope scope, String name, boolean needCreate);
+  /**
+   * Get a named Live provider as the source of input.
+   *
+   * @param scope Scope of provider
+   * @param name Name of provider
+   * @param needCreate Whether there's need to create basic scope / live provider if they don't
+   *     exist
+   * @return null if not found.
+   */
+  IMessageInput getLiveProviderInput(IScope scope, String name, boolean needCreate);
 
-    /**
-     * Get a named VOD provider as the source of input.
-     *
-     * @param scope
-     *            Scope of provider
-     * @param name
-     *            Name of provider
-     * @return null if not found.
-     */
-    IMessageInput getVODProviderInput(IScope scope, String name);
+  /**
+   * Get a named VOD provider as the source of input.
+   *
+   * @param scope Scope of provider
+   * @param name Name of provider
+   * @return null if not found.
+   */
+  IMessageInput getVODProviderInput(IScope scope, String name);
 
-    /**
-     * Get a named VOD source file.
-     *
-     * @param scope
-     *            Scope of provider
-     * @param name
-     *            Name of provider
-     * @return null if not found.
-     */
-    File getVODProviderFile(IScope scope, String name);
+  /**
+   * Get a named VOD source file.
+   *
+   * @param scope Scope of provider
+   * @param name Name of provider
+   * @return null if not found.
+   */
+  File getVODProviderFile(IScope scope, String name);
 
-    /**
-     * Register a broadcast stream to a scope.
-     *
-     * @param scope
-     *            Scope
-     * @param name
-     *            Name of stream
-     * @param stream
-     *            Broadcast stream to register
-     * @return true if register successfully.
-     */
-    boolean registerBroadcastStream(IScope scope, String name, IBroadcastStream stream);
+  /**
+   * Register a broadcast stream to a scope.
+   *
+   * @param scope Scope
+   * @param name Name of stream
+   * @param stream Broadcast stream to register
+   * @return true if register successfully.
+   */
+  boolean registerBroadcastStream(IScope scope, String name, IBroadcastStream stream);
 
-    /**
-     * Get names of existing broadcast streams in a scope.
-     *
-     * @param scope
-     *            Scope to get stream names from
-     * @return List of stream names
-     */
-    Set<String> getBroadcastStreamNames(IScope scope);
+  /**
+   * Get names of existing broadcast streams in a scope.
+   *
+   * @param scope Scope to get stream names from
+   * @return List of stream names
+   */
+  Set<String> getBroadcastStreamNames(IScope scope);
 
-    /**
-     * Unregister a broadcast stream of a specific name from a scope.
-     *
-     * @param scope
-     *            Scope
-     * @param name
-     *            Stream name
-     * @return true if unregister successfully.
-     */
-    boolean unregisterBroadcastStream(IScope scope, String name);
+  /**
+   * Unregister a broadcast stream of a specific name from a scope.
+   *
+   * @param scope Scope
+   * @param name Stream name
+   * @return true if unregister successfully.
+   */
+  boolean unregisterBroadcastStream(IScope scope, String name);
 
-    /**
-     * Unregister a broadcast stream of a specific name from a scope.
-     *
-     * @param scope
-     *            Scope
-     * @param name
-     *            Stream name
-     * @param stream
-     *            Broadcast stream
-     * @return true if unregister successfully.
-     */
-    boolean unregisterBroadcastStream(IScope scope, String name, IBroadcastStream stream);
+  /**
+   * Unregister a broadcast stream of a specific name from a scope.
+   *
+   * @param scope Scope
+   * @param name Stream name
+   * @param stream Broadcast stream
+   * @return true if unregister successfully.
+   */
+  boolean unregisterBroadcastStream(IScope scope, String name, IBroadcastStream stream);
 
-    /**
-     * Whether or not legacy live-wait support is enabled.
-     *
-     * @return true if enabled and false otherwise
-     */
-    boolean isLiveWaitSupport();
+  /**
+   * Whether or not legacy live-wait support is enabled.
+   *
+   * @return true if enabled and false otherwise
+   */
+  boolean isLiveWaitSupport();
 
-    /**
-     * Sets live-wait support.
-     *
-     * @param liveWaitSupport use live-wait or not
-     */
-    void setLiveWaitSupport(boolean liveWaitSupport);
-
+  /**
+   * Sets live-wait support.
+   *
+   * @param liveWaitSupport use live-wait or not
+   */
+  void setLiveWaitSupport(boolean liveWaitSupport);
 }

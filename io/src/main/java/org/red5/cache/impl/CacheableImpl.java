@@ -20,80 +20,81 @@ import org.slf4j.LoggerFactory;
  */
 public class CacheableImpl implements ICacheable {
 
-    private static final long serialVersionUID = 1539954562379472856L;
+  private static final long serialVersionUID = 1539954562379472856L;
 
-    protected static Logger log = LoggerFactory.getLogger(CacheableImpl.class);
+  protected static Logger log = LoggerFactory.getLogger(CacheableImpl.class);
 
-    private byte[] bytes;
+  private byte[] bytes;
 
-    private String name;
+  private String name;
 
-    private boolean cached;
+  private boolean cached;
 
-    public CacheableImpl(Object obj) {
-        IoBuffer tmp = IoBuffer.allocate(128).setAutoExpand(true);
-        tmp.putObject(obj);
-        tmp.flip();
-        bytes = new byte[tmp.remaining()];
-        tmp.get(bytes);
-        cached = true;
-        tmp.free();
-        tmp = null;
+  public CacheableImpl(Object obj) {
+    IoBuffer tmp = IoBuffer.allocate(128).setAutoExpand(true);
+    tmp.putObject(obj);
+    tmp.flip();
+    bytes = new byte[tmp.remaining()];
+    tmp.get(bytes);
+    cached = true;
+    tmp.free();
+    tmp = null;
+  }
+
+  public CacheableImpl(IoBuffer buffer) {
+    if (log.isDebugEnabled()) {
+      log.debug("Buffer is direct: {} capacity: {}", buffer.isDirect(), buffer.capacity());
+      log.debug(
+          "Buffer limit: {} remaining: {} position: {}",
+          new Object[] {buffer.limit(), buffer.remaining(), buffer.position()});
     }
-
-    public CacheableImpl(IoBuffer buffer) {
-        if (log.isDebugEnabled()) {
-            log.debug("Buffer is direct: {} capacity: {}", buffer.isDirect(), buffer.capacity());
-            log.debug("Buffer limit: {} remaining: {} position: {}", new Object[] { buffer.limit(), buffer.remaining(), buffer.position() });
-        }
-        bytes = new byte[buffer.remaining()];
-        buffer.rewind();
-        buffer.get(bytes);
-        cached = true;
-        if (log.isDebugEnabled()) {
-            log.debug("Buffer size: {}", buffer.capacity());
-        }
-        buffer = null;
+    bytes = new byte[buffer.remaining()];
+    buffer.rewind();
+    buffer.get(bytes);
+    cached = true;
+    if (log.isDebugEnabled()) {
+      log.debug("Buffer size: {}", buffer.capacity());
     }
+    buffer = null;
+  }
 
-    public void addRequest() {
-        log.info("Adding request for: {}", name);
-    }
+  public void addRequest() {
+    log.info("Adding request for: {}", name);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public byte[] getBytes() {
-        return bytes;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public byte[] getBytes() {
+    return bytes;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public IoBuffer getByteBuffer() {
-        return IoBuffer.wrap(bytes).asReadOnlyBuffer();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public IoBuffer getByteBuffer() {
+    return IoBuffer.wrap(bytes).asReadOnlyBuffer();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public String getName() {
-        return name;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String getName() {
+    return name;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean isCached() {
-        return cached;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean isCached() {
+    return cached;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setCached(boolean cached) {
-        this.cached = cached;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void setCached(boolean cached) {
+    this.cached = cached;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
+  /** {@inheritDoc} */
+  @Override
+  public void setName(String name) {
+    this.name = name;
+  }
 }

@@ -8,21 +8,15 @@
 package org.red5.io.webm;
 
 import java.io.IOException;
-
 import org.red5.io.matroska.dtd.Tag;
 
-/**
- * Interface for all classes able to consume webm Tag.
- *
- */
+/** Interface for all classes able to consume webm Tag. */
 public interface TagConsumer {
-    /**
-     * Method will be called as soon as webm Tag is available
-     *
-     * @param tag
-     *            - tag to be processed
-     * @throws IOException
-     *             - exception accured during processing
-     */
-    void consume(Tag tag) throws IOException;
+  /**
+   * Method will be called as soon as webm Tag is available
+   *
+   * @param tag - tag to be processed
+   * @throws IOException - exception accured during processing
+   */
+  void consume(Tag tag) throws IOException;
 }

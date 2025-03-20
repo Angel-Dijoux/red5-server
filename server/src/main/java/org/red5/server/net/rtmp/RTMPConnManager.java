@@ -17,7 +17,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.red5.server.BaseConnection;
 import org.red5.server.net.IConnectionManager;
 import org.red5.server.net.rtmpt.RTMPTConnection;
@@ -35,196 +34,204 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  *
  * @author The Red5 Project
  */
-public class RTMPConnManager implements IConnectionManager<BaseConnection>, ApplicationContextAware, DisposableBean {
+public class RTMPConnManager
+    implements IConnectionManager<BaseConnection>, ApplicationContextAware, DisposableBean {
 
-    private static final Logger log = LoggerFactory.getLogger(RTMPConnManager.class);
+  private static final Logger log = LoggerFactory.getLogger(RTMPConnManager.class);
 
-    protected static IConnectionManager<BaseConnection> instance;
+  protected static IConnectionManager<BaseConnection> instance;
 
-    protected static ApplicationContext applicationContext;
+  protected static ApplicationContext applicationContext;
 
-    protected ScheduledExecutorService executor;
+  protected ScheduledExecutorService executor;
 
-    protected ScheduledFuture<?> checkerFuture;
+  protected ScheduledFuture<?> checkerFuture;
 
-    protected ConcurrentMap<String, BaseConnection> connMap = new ConcurrentHashMap<>();
+  protected ConcurrentMap<String, BaseConnection> connMap = new ConcurrentHashMap<>();
 
-    protected AtomicInteger conns = new AtomicInteger();
+  protected AtomicInteger conns = new AtomicInteger();
 
-    protected boolean debug;
+  protected boolean debug;
 
-    public static IConnectionManager<BaseConnection> getInstance() {
-        if (instance == null) {
-            log.trace("Connection manager instance does not exist");
-            if (applicationContext != null && applicationContext.containsBean("rtmpConnManager")) {
-                log.trace("Connection manager bean exists");
-                instance = (RTMPConnManager) applicationContext.getBean("rtmpConnManager");
-            } else {
-                log.trace("Connection manager bean doesnt exist, creating new instance");
-                instance = new RTMPConnManager();
-            }
-        }
-        return instance;
+  public static IConnectionManager<BaseConnection> getInstance() {
+    if (instance == null) {
+      log.trace("Connection manager instance does not exist");
+      if (applicationContext != null && applicationContext.containsBean("rtmpConnManager")) {
+        log.trace("Connection manager bean exists");
+        instance = (RTMPConnManager) applicationContext.getBean("rtmpConnManager");
+      } else {
+        log.trace("Connection manager bean doesnt exist, creating new instance");
+        instance = new RTMPConnManager();
+      }
     }
+    return instance;
+  }
 
-    public void createConnectionChecker() {
-        executor = Executors.newScheduledThreadPool(1, new CustomizableThreadFactory("ConnectionChecker-"));
-        // create a scheduled job to check for dead or hung connections
-        checkerFuture = executor.scheduleAtFixedRate(() -> {
-            // count the connections that need closing
-            int closedConnections = 0;
-            // get all the current connections
-            Collection<BaseConnection> allConns = getAllConnections();
-            log.debug("Checking {} connections", allConns.size());
-            for (BaseConnection conn : allConns) {
+  public void createConnectionChecker() {
+    executor =
+        Executors.newScheduledThreadPool(1, new CustomizableThreadFactory("ConnectionChecker-"));
+    // create a scheduled job to check for dead or hung connections
+    checkerFuture =
+        executor.scheduleAtFixedRate(
+            () -> {
+              // count the connections that need closing
+              int closedConnections = 0;
+              // get all the current connections
+              Collection<BaseConnection> allConns = getAllConnections();
+              log.debug("Checking {} connections", allConns.size());
+              for (BaseConnection conn : allConns) {
                 if (conn instanceof RTMPMinaConnection) {
-                    ((RTMPMinaConnection) conn).dumpInfo();
+                  ((RTMPMinaConnection) conn).dumpInfo();
                 }
                 String sessionId = conn.getSessionId();
                 if (conn.isDisconnected()) {
-                    removeConnection(sessionId);
+                  removeConnection(sessionId);
                 } else if (conn.isIdle()) {
-                    if (!conn.isClosed()) {
-                        log.debug("Connection {} is not closed", conn.getSessionId());
-                    } else {
-                        closedConnections++;
-                    }
+                  if (!conn.isClosed()) {
+                    log.debug("Connection {} is not closed", conn.getSessionId());
+                  } else {
+                    closedConnections++;
+                  }
                 }
-            }
-            // if there is more than one connection that needed to be closed, request a GC to clean up memory.
-            if (closedConnections > 0) {
+              }
+              // if there is more than one connection that needed to be closed, request a GC to
+              // clean up memory.
+              if (closedConnections > 0) {
                 System.gc();
-            }
-        }, 7000, 30000, TimeUnit.MILLISECONDS);
-    }
+              }
+            },
+            7000,
+            30000,
+            TimeUnit.MILLISECONDS);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public BaseConnection createConnection(Class<?> connCls) {
-        BaseConnection conn = null;
-        if (RTMPConnection.class.isAssignableFrom(connCls)) {
-            try {
-                // create connection
-                conn = createConnectionInstance(connCls);
-                // add to local map
-                connMap.put(conn.getSessionId(), conn);
-                log.trace("Connections: {}", conns.incrementAndGet());
-                // set the scheduler
-                if (applicationContext.containsBean("rtmpScheduler")) {
-                    ((RTMPConnection) conn).setScheduler((ThreadPoolTaskScheduler) applicationContext.getBean("rtmpScheduler"));
-                }
-                log.trace("Connection created: {}", conn);
-            } catch (Exception ex) {
-                log.warn("Exception creating connection", ex);
-            }
+  /** {@inheritDoc} */
+  @Override
+  public BaseConnection createConnection(Class<?> connCls) {
+    BaseConnection conn = null;
+    if (RTMPConnection.class.isAssignableFrom(connCls)) {
+      try {
+        // create connection
+        conn = createConnectionInstance(connCls);
+        // add to local map
+        connMap.put(conn.getSessionId(), conn);
+        log.trace("Connections: {}", conns.incrementAndGet());
+        // set the scheduler
+        if (applicationContext.containsBean("rtmpScheduler")) {
+          ((RTMPConnection) conn)
+              .setScheduler((ThreadPoolTaskScheduler) applicationContext.getBean("rtmpScheduler"));
         }
-        return conn;
+        log.trace("Connection created: {}", conn);
+      } catch (Exception ex) {
+        log.warn("Exception creating connection", ex);
+      }
     }
+    return conn;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public BaseConnection createConnection(Class<?> connCls, String sessionId) {
-        throw new UnsupportedOperationException("Not implemented");
+  /** {@inheritDoc} */
+  @Override
+  public BaseConnection createConnection(Class<?> connCls, String sessionId) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  /**
+   * Returns a connection for a given session id.
+   *
+   * @param sessionId session id
+   * @return connection if found and null otherwise
+   */
+  public BaseConnection getConnectionBySessionId(String sessionId) {
+    log.trace("Getting connection by session id: {}", sessionId);
+    BaseConnection conn = connMap.get(sessionId);
+    if (conn == null && log.isDebugEnabled()) {
+      log.debug("Connection not found for {}", sessionId);
+      if (log.isTraceEnabled()) {
+        log.trace("Connections ({}) {}", connMap.size(), connMap.values());
+      }
     }
+    return conn;
+  }
 
-    /**
-     * Returns a connection for a given session id.
-     *
-     * @param sessionId session id
-     * @return connection if found and null otherwise
-     */
-    public BaseConnection getConnectionBySessionId(String sessionId) {
-        log.trace("Getting connection by session id: {}", sessionId);
-        BaseConnection conn = connMap.get(sessionId);
-        if (conn == null && log.isDebugEnabled()) {
-            log.debug("Connection not found for {}", sessionId);
-            if (log.isTraceEnabled()) {
-                log.trace("Connections ({}) {}", connMap.size(), connMap.values());
-            }
-        }
-        return conn;
+  /** {@inheritDoc} */
+  @Override
+  public BaseConnection removeConnection(BaseConnection conn) {
+    return removeConnection(conn.getSessionId());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public BaseConnection removeConnection(String sessionId) {
+    log.trace("Removing connection with session id: {}", sessionId);
+    if (log.isTraceEnabled()) {
+      log.trace("Connections ({}) at pre-remove: {}", connMap.size(), connMap.values());
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public BaseConnection removeConnection(BaseConnection conn) {
-        return removeConnection(conn.getSessionId());
+    // remove from map
+    BaseConnection conn = connMap.remove(sessionId);
+    if (conn != null) {
+      log.trace("Connections: {}", conns.decrementAndGet());
     }
+    return conn;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public BaseConnection removeConnection(String sessionId) {
-        log.trace("Removing connection with session id: {}", sessionId);
-        if (log.isTraceEnabled()) {
-            log.trace("Connections ({}) at pre-remove: {}", connMap.size(), connMap.values());
-        }
-        // remove from map
-        BaseConnection conn = connMap.remove(sessionId);
-        if (conn != null) {
-            log.trace("Connections: {}", conns.decrementAndGet());
-        }
-        return conn;
+  /** {@inheritDoc} */
+  @Override
+  public Collection<BaseConnection> getAllConnections() {
+    ArrayList<BaseConnection> list = new ArrayList<>(connMap.size());
+    list.addAll(connMap.values());
+    return list;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Collection<BaseConnection> removeConnections() {
+    final List<BaseConnection> list = new ArrayList<>(connMap.size());
+    connMap
+        .values()
+        .forEach(
+            conn -> {
+              removeConnection(conn.getSessionId());
+              list.add(conn);
+            });
+    return list;
+  }
+
+  /**
+   * Creates a connection instance based on the supplied type.
+   *
+   * @param cls class
+   * @return connection
+   * @throws Exception on error
+   */
+  public RTMPConnection createConnectionInstance(Class<?> cls) throws Exception {
+    RTMPConnection conn = null;
+    if (cls == RTMPMinaConnection.class) {
+      conn = (RTMPMinaConnection) applicationContext.getBean(RTMPMinaConnection.class);
+    } else if (cls == RTMPTConnection.class) {
+      conn = (RTMPTConnection) applicationContext.getBean(RTMPTConnection.class);
+    } else {
+      conn = (RTMPConnection) cls.getDeclaredConstructor().newInstance();
     }
+    return conn;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public Collection<BaseConnection> getAllConnections() {
-        ArrayList<BaseConnection> list = new ArrayList<>(connMap.size());
-        list.addAll(connMap.values());
-        return list;
+  /**
+   * @param debug the debug to set
+   */
+  public void setDebug(boolean debug) {
+    this.debug = debug;
+  }
+
+  @SuppressWarnings("null")
+  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    RTMPConnManager.applicationContext = applicationContext;
+  }
+
+  @Override
+  public void destroy() throws Exception {
+    if (checkerFuture != null && !checkerFuture.isDone()) {
+      checkerFuture.cancel(true);
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public Collection<BaseConnection> removeConnections() {
-        final List<BaseConnection> list = new ArrayList<>(connMap.size());
-        connMap.values().forEach(conn -> {
-            removeConnection(conn.getSessionId());
-            list.add(conn);
-        });
-        return list;
-    }
-
-    /**
-     * Creates a connection instance based on the supplied type.
-     *
-     * @param cls
-     *            class
-     * @return connection
-     * @throws Exception
-     *             on error
-     */
-    public RTMPConnection createConnectionInstance(Class<?> cls) throws Exception {
-        RTMPConnection conn = null;
-        if (cls == RTMPMinaConnection.class) {
-            conn = (RTMPMinaConnection) applicationContext.getBean(RTMPMinaConnection.class);
-        } else if (cls == RTMPTConnection.class) {
-            conn = (RTMPTConnection) applicationContext.getBean(RTMPTConnection.class);
-        } else {
-            conn = (RTMPConnection) cls.getDeclaredConstructor().newInstance();
-        }
-        return conn;
-    }
-
-    /**
-     * @param debug
-     *            the debug to set
-     */
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    @SuppressWarnings("null")
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        RTMPConnManager.applicationContext = applicationContext;
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        if (checkerFuture != null && !checkerFuture.isDone()) {
-            checkerFuture.cancel(true);
-        }
-        executor.shutdownNow();
-    }
-
+    executor.shutdownNow();
+  }
 }

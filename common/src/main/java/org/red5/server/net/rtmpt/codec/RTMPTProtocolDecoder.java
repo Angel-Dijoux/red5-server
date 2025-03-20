@@ -9,12 +9,10 @@ package org.red5.server.net.rtmpt.codec;
 
 import org.red5.server.net.rtmp.codec.RTMPProtocolDecoder;
 
-/**
- * RTMPT protocol decoder. To be implemeted.
- */
+/** RTMPT protocol decoder. To be implemeted. */
 public class RTMPTProtocolDecoder extends RTMPProtocolDecoder {
 
-    /*
-     * Nothing special here right now...
-     */
+  /*
+   * Nothing special here right now...
+   */
 }

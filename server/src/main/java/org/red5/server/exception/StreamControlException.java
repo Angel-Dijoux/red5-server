@@ -7,14 +7,9 @@
 
 package org.red5.server.exception;
 
-/**
- * Stream control exception
- */
+/** Stream control exception */
 public class StreamControlException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -8396541091694329882L;
-
+  /** */
+  private static final long serialVersionUID = -8396541091694329882L;
 }

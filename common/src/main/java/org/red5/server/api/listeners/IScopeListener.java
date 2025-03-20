@@ -18,36 +18,31 @@ import org.red5.server.api.scope.IScope;
  */
 public interface IScopeListener {
 
-    /**
-     * A scope has been created.
-     *
-     * @param scope
-     *            the new scope
-     */
-    public void notifyScopeCreated(IScope scope);
+  /**
+   * A scope has been created.
+   *
+   * @param scope the new scope
+   */
+  public void notifyScopeCreated(IScope scope);
 
-    /**
-     * A scope has been removed.
-     *
-     * @param scope
-     *            the removed scope
-     */
-    public void notifyScopeRemoved(IScope scope);
+  /**
+   * A scope has been removed.
+   *
+   * @param scope the removed scope
+   */
+  public void notifyScopeRemoved(IScope scope);
 
-    /**
-     * A basic scope has been added.
-     *
-     * @param scope
-     *            the added scope
-     */
-    public void notifyBasicScopeAdded(IBasicScope scope);
+  /**
+   * A basic scope has been added.
+   *
+   * @param scope the added scope
+   */
+  public void notifyBasicScopeAdded(IBasicScope scope);
 
-    /**
-     * A basic scope has been removed.
-     *
-     * @param scope
-     *            the removed scope
-     */
-    public void notifyBasicScopeRemoved(IBasicScope scope);
-
+  /**
+   * A basic scope has been removed.
+   *
+   * @param scope the removed scope
+   */
+  public void notifyBasicScopeRemoved(IBasicScope scope);
 }

@@ -19,10 +19,9 @@ import javax.servlet.ServletException;
 @MXBean
 public interface LoaderMXBean extends ShutdownMXBean {
 
-    public boolean startWebApplication(String application) throws ServletException;
+  public boolean startWebApplication(String application) throws ServletException;
 
-    public void removeContext(String path);
+  public void removeContext(String path);
 
-    public void destroy() throws Exception;
-
+  public void destroy() throws Exception;
 }

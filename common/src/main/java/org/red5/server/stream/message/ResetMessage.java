@@ -17,8 +17,7 @@ import org.red5.server.messaging.AbstractMessage;
  */
 public class ResetMessage extends AbstractMessage {
 
-    {
-        this.messageType = "reset";
-    }
-
+  {
+    this.messageType = "reset";
+  }
 }

@@ -9,7 +9,6 @@ package org.red5.client.net.rtmps;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -35,122 +34,124 @@ import org.slf4j.LoggerFactory;
  */
 public class RTMPTSClientConnector extends RTMPTClientConnector {
 
-    private static final Logger log = LoggerFactory.getLogger(RTMPTSClientConnector.class);
+  private static final Logger log = LoggerFactory.getLogger(RTMPTSClientConnector.class);
 
-    {
-        httpClient = HttpConnectionUtil.getSecureClient();
-    }
+  {
+    httpClient = HttpConnectionUtil.getSecureClient();
+  }
 
-    public RTMPTSClientConnector(String server, int port, RTMPTSClient client) {
-        targetHost = new HttpHost(server, port, "https");
-        this.client = client;
-    }
+  public RTMPTSClientConnector(String server, int port, RTMPTSClient client) {
+    targetHost = new HttpHost(server, port, "https");
+    this.client = client;
+  }
 
-    @Override
-    public void run() {
-        HttpPost post = null;
-        try {
-            RTMPTClientConnection conn = openConnection();
-            // set a reference to the connection on the client
-            client.setConnection((RTMPConnection) conn);
-            // set thread local
-            Red5.setConnectionLocal(conn);
-            while (!conn.isClosing() && !stopRequested) {
-                IoBuffer toSend = conn.getPendingMessages(SEND_TARGET_SIZE);
-                int limit = toSend != null ? toSend.limit() : 0;
-                if (limit > 0 && toSend != null) {
-                    post = makePost("send");
-                    post.setEntity(new InputStreamEntity(toSend.asInputStream(), limit));
-                    post.addHeader("Content-Type", CONTENT_TYPE);
-                } else {
-                    post = makePost("idle");
-                    post.setEntity(ZERO_REQUEST_ENTITY);
-                    post.addHeader("Content-Type", CONTENT_TYPE);
-                }
-                // execute
-                HttpResponse response = httpClient.execute(targetHost, post);
-                // check for error
-                checkResponseCode(response);
-                // handle data
-                byte[] received = EntityUtils.toByteArray(response.getEntity());
-                // wrap the bytes
-                IoBuffer data = IoBuffer.wrap(received);
-                log.debug("State: {}", RTMP.states[conn.getStateCode()]);
-                // ensure handshake is done
-                if (conn.hasAttribute(RTMPConnection.RTMP_HANDSHAKE)) {
-                    client.messageReceived(data);
-                    continue;
-                }
-                if (data.limit() > 0) {
-                    data.skip(1); // XXX: polling interval lies in this byte
-                }
-                List<?> messages = conn.decode(data);
-                if (messages == null || messages.isEmpty()) {
-                    try {
-                        // XXX handle polling delay
-                        Thread.sleep(250);
-                    } catch (InterruptedException e) {
-                        if (stopRequested) {
-                            post.abort();
-                            break;
-                        }
-                    }
-                    continue;
-                }
-                for (Object message : messages) {
-                    try {
-                        client.messageReceived(message);
-                    } catch (Exception e) {
-                        log.error("Could not process message", e);
-                    }
-                }
-            }
-            finalizeConnection();
-            client.connectionClosed(conn);
-        } catch (Throwable e) {
-            log.debug("RTMPT handling exception", e);
-            client.handleException(e);
-            if (post != null) {
-                post.abort();
-            }
-        } finally {
-            Red5.setConnectionLocal(null);
+  @Override
+  public void run() {
+    HttpPost post = null;
+    try {
+      RTMPTClientConnection conn = openConnection();
+      // set a reference to the connection on the client
+      client.setConnection((RTMPConnection) conn);
+      // set thread local
+      Red5.setConnectionLocal(conn);
+      while (!conn.isClosing() && !stopRequested) {
+        IoBuffer toSend = conn.getPendingMessages(SEND_TARGET_SIZE);
+        int limit = toSend != null ? toSend.limit() : 0;
+        if (limit > 0 && toSend != null) {
+          post = makePost("send");
+          post.setEntity(new InputStreamEntity(toSend.asInputStream(), limit));
+          post.addHeader("Content-Type", CONTENT_TYPE);
+        } else {
+          post = makePost("idle");
+          post.setEntity(ZERO_REQUEST_ENTITY);
+          post.addHeader("Content-Type", CONTENT_TYPE);
         }
-    }
-
-    private RTMPTClientConnection openConnection() throws IOException {
-        RTMPTClientConnection conn = null;
-        HttpPost openPost = getPost("/open/1");
-        setCommonHeaders(openPost);
-        openPost.addHeader("Content-Type", CONTENT_TYPE);
-        openPost.setEntity(ZERO_REQUEST_ENTITY);
         // execute
-        HttpResponse response = httpClient.execute(targetHost, openPost);
+        HttpResponse response = httpClient.execute(targetHost, post);
+        // check for error
         checkResponseCode(response);
-        // get the response entity
-        HttpEntity entity = response.getEntity();
-        if (entity != null) {
-            String responseStr = EntityUtils.toString(entity);
-            sessionId = responseStr.substring(0, responseStr.length() - 1);
-            log.debug("Got an id {}", sessionId);
-            // create a new connection
-            conn = (RTMPTClientConnection) RTMPClientConnManager.getInstance().createConnection(RTMPTClientConnection.class, sessionId);
-            log.debug("Got session id {} from connection", conn.getSessionId());
-            // client state
-            conn.setHandler(client);
-            conn.setDecoder(client.getDecoder());
-            conn.setEncoder(client.getEncoder());
-            // create an outbound handshake
-            OutboundHandshake outgoingHandshake = new OutboundHandshake();
-            // set the handshake type
-            outgoingHandshake.setHandshakeType(RTMPConnection.RTMP_NON_ENCRYPTED);
-            // add the handshake
-            conn.setAttribute(RTMPConnection.RTMP_HANDSHAKE, outgoingHandshake);
-            log.debug("Handshake 1st phase");
-            IoBuffer handshake = outgoingHandshake.generateClientRequest1();
-            conn.writeRaw(handshake);
+        // handle data
+        byte[] received = EntityUtils.toByteArray(response.getEntity());
+        // wrap the bytes
+        IoBuffer data = IoBuffer.wrap(received);
+        log.debug("State: {}", RTMP.states[conn.getStateCode()]);
+        // ensure handshake is done
+        if (conn.hasAttribute(RTMPConnection.RTMP_HANDSHAKE)) {
+          client.messageReceived(data);
+          continue;
         }
-        return conn;
+        if (data.limit() > 0) {
+          data.skip(1); // XXX: polling interval lies in this byte
+        }
+        List<?> messages = conn.decode(data);
+        if (messages == null || messages.isEmpty()) {
+          try {
+            // XXX handle polling delay
+            Thread.sleep(250);
+          } catch (InterruptedException e) {
+            if (stopRequested) {
+              post.abort();
+              break;
+            }
+          }
+          continue;
+        }
+        for (Object message : messages) {
+          try {
+            client.messageReceived(message);
+          } catch (Exception e) {
+            log.error("Could not process message", e);
+          }
+        }
+      }
+      finalizeConnection();
+      client.connectionClosed(conn);
+    } catch (Throwable e) {
+      log.debug("RTMPT handling exception", e);
+      client.handleException(e);
+      if (post != null) {
+        post.abort();
+      }
+    } finally {
+      Red5.setConnectionLocal(null);
     }
+  }
 
+  private RTMPTClientConnection openConnection() throws IOException {
+    RTMPTClientConnection conn = null;
+    HttpPost openPost = getPost("/open/1");
+    setCommonHeaders(openPost);
+    openPost.addHeader("Content-Type", CONTENT_TYPE);
+    openPost.setEntity(ZERO_REQUEST_ENTITY);
+    // execute
+    HttpResponse response = httpClient.execute(targetHost, openPost);
+    checkResponseCode(response);
+    // get the response entity
+    HttpEntity entity = response.getEntity();
+    if (entity != null) {
+      String responseStr = EntityUtils.toString(entity);
+      sessionId = responseStr.substring(0, responseStr.length() - 1);
+      log.debug("Got an id {}", sessionId);
+      // create a new connection
+      conn =
+          (RTMPTClientConnection)
+              RTMPClientConnManager.getInstance()
+                  .createConnection(RTMPTClientConnection.class, sessionId);
+      log.debug("Got session id {} from connection", conn.getSessionId());
+      // client state
+      conn.setHandler(client);
+      conn.setDecoder(client.getDecoder());
+      conn.setEncoder(client.getEncoder());
+      // create an outbound handshake
+      OutboundHandshake outgoingHandshake = new OutboundHandshake();
+      // set the handshake type
+      outgoingHandshake.setHandshakeType(RTMPConnection.RTMP_NON_ENCRYPTED);
+      // add the handshake
+      conn.setAttribute(RTMPConnection.RTMP_HANDSHAKE, outgoingHandshake);
+      log.debug("Handshake 1st phase");
+      IoBuffer handshake = outgoingHandshake.generateClientRequest1();
+      conn.writeRaw(handshake);
+    }
+    return conn;
+  }
 }

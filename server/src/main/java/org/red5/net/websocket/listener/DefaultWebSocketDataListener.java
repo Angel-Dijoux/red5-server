@@ -10,7 +10,6 @@ package org.red5.net.websocket.listener;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
-
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.WebSocketPlugin;
 import org.red5.net.websocket.WebSocketScope;
@@ -21,55 +20,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default WebSocket data listener. In this default implementation, all messages are echoed back to every connection in the current scope.
+ * Default WebSocket data listener. In this default implementation, all messages are echoed back to
+ * every connection in the current scope.
  *
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public class DefaultWebSocketDataListener extends WebSocketDataListener {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultWebSocketDataListener.class);
+  private static final Logger log = LoggerFactory.getLogger(DefaultWebSocketDataListener.class);
 
-    @Override
-    public void onWSConnect(WebSocketConnection conn) {
-        log.info("Connect: {}", conn);
-    }
+  @Override
+  public void onWSConnect(WebSocketConnection conn) {
+    log.info("Connect: {}", conn);
+  }
 
-    @Override
-    public void onWSDisconnect(WebSocketConnection conn) {
-        log.info("Disconnect: {}", conn);
-    }
+  @Override
+  public void onWSDisconnect(WebSocketConnection conn) {
+    log.info("Disconnect: {}", conn);
+  }
 
-    @Override
-    public void onWSMessage(WSMessage message) {
-        // assume we have text
-        String msg = new String(message.getPayload().array());
-        log.info("onWSMessage: {}", msg);
-        // get the path
-        String path = message.getPath();
-        // just echo back the message
-        WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path);
-        if (manager != null) {
-            // get the ws scope
-            WebSocketScope wsScope = manager.getScope(path);
-            Set<WebSocketConnection> conns = wsScope.getConns();
-            for (WebSocketConnection conn : conns) {
-                log.debug("Echoing to {}", conn);
-                try {
-                    conn.send(msg);
-                } catch (UnsupportedEncodingException e) {
-                    log.warn("Encoding issue with the message data: {}", message, e);
-                } catch (IOException e) {
-                    log.warn("IO exception", e);
-                }
-            }
-        } else {
-            log.info("No manager found for path: {}", path);
+  @Override
+  public void onWSMessage(WSMessage message) {
+    // assume we have text
+    String msg = new String(message.getPayload().array());
+    log.info("onWSMessage: {}", msg);
+    // get the path
+    String path = message.getPath();
+    // just echo back the message
+    WebSocketScopeManager manager =
+        ((WebSocketPlugin) PluginRegistry.getPlugin(WebSocketPlugin.NAME)).getManager(path);
+    if (manager != null) {
+      // get the ws scope
+      WebSocketScope wsScope = manager.getScope(path);
+      Set<WebSocketConnection> conns = wsScope.getConns();
+      for (WebSocketConnection conn : conns) {
+        log.debug("Echoing to {}", conn);
+        try {
+          conn.send(msg);
+        } catch (UnsupportedEncodingException e) {
+          log.warn("Encoding issue with the message data: {}", message, e);
+        } catch (IOException e) {
+          log.warn("IO exception", e);
         }
+      }
+    } else {
+      log.info("No manager found for path: {}", path);
     }
+  }
 
-    @Override
-    public void stop() {
-        log.info("Stop");
-    }
-
+  @Override
+  public void stop() {
+    log.info("Stop");
+  }
 }

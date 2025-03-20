@@ -14,235 +14,215 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-
 import org.red5.server.api.event.IEventListener;
 import org.red5.server.net.rtmp.event.BaseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Shared object event
- */
+/** Shared object event */
 public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessage {
 
-    private static Logger log = LoggerFactory.getLogger(SharedObjectMessage.class);
+  private static Logger log = LoggerFactory.getLogger(SharedObjectMessage.class);
 
-    private static final long serialVersionUID = -8128704039659990049L;
+  private static final long serialVersionUID = -8128704039659990049L;
 
-    /**
-     * SO event name
-     */
-    private String name;
+  /** SO event name */
+  private String name;
 
-    /**
-     * SO events chain
-     */
-    private ConcurrentSkipListSet<ISharedObjectEvent> events = new ConcurrentSkipListSet<>();
+  /** SO events chain */
+  private ConcurrentSkipListSet<ISharedObjectEvent> events = new ConcurrentSkipListSet<>();
 
-    /**
-     * SO version, used for synchronization purposes
-     */
-    private volatile int version;
+  /** SO version, used for synchronization purposes */
+  private volatile int version;
 
-    /**
-     * Whether SO persistent
-     */
-    private boolean persistent;
+  /** Whether SO persistent */
+  private boolean persistent;
 
-    public SharedObjectMessage() {
+  public SharedObjectMessage() {}
+
+  /**
+   * Creates Shared Object event with given name, version and persistence flag
+   *
+   * @param name Event name
+   * @param version SO version
+   * @param persistent SO persistence flag
+   */
+  public SharedObjectMessage(String name, int version, boolean persistent) {
+    this(null, name, version, persistent);
+  }
+
+  /**
+   * Creates Shared Object event with given listener, name, SO version and persistence flag
+   *
+   * @param source Event listener
+   * @param name Event name
+   * @param version SO version
+   * @param persistent SO persistence flag
+   */
+  public SharedObjectMessage(IEventListener source, String name, int version, boolean persistent) {
+    super(Type.SHARED_OBJECT, source);
+    this.name = name;
+    this.version = version;
+    this.persistent = persistent;
+  }
+
+  /** Resets the version and events to an initial state. */
+  public void reset() {
+    version = 0;
+    events.clear();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public byte getDataType() {
+    return TYPE_SHARED_OBJECT;
+  }
+
+  /** {@inheritDoc} */
+  public int getVersion() {
+    return version;
+  }
+
+  /**
+   * Setter for version
+   *
+   * @param version New version
+   */
+  protected void setVersion(int version) {
+    this.version = version;
+  }
+
+  /** {@inheritDoc} */
+  public String getName() {
+    return name;
+  }
+
+  /**
+   * Setter for name
+   *
+   * @param name Event name
+   */
+  protected void setName(String name) {
+    this.name = name;
+  }
+
+  /** {@inheritDoc} */
+  public boolean isPersistent() {
+    return persistent;
+  }
+
+  /**
+   * Setter for persistence flag
+   *
+   * @param persistent Persistence flag
+   */
+  protected void setPersistent(boolean persistent) {
+    this.persistent = persistent;
+  }
+
+  /** {@inheritDoc} */
+  public boolean addEvent(ISharedObjectEvent.Type type, String key, Object value) {
+    return events.add(new SharedObjectEvent(type, key, value));
+  }
+
+  /** {@inheritDoc} */
+  public boolean addEvent(ISharedObjectEvent event) {
+    return events.add(event);
+  }
+
+  /** {@inheritDoc} */
+  public void addEvents(List<ISharedObjectEvent> events) {
+    this.events.addAll(events);
+  }
+
+  /** {@inheritDoc} */
+  public void addEvents(Queue<ISharedObjectEvent> events) {
+    this.events.addAll(events);
+  }
+
+  /** {@inheritDoc} */
+  public void addEvents(Set<ISharedObjectEvent> events) {
+    this.events.addAll(events);
+  }
+
+  /** {@inheritDoc} */
+  public Set<ISharedObjectEvent> getEvents() {
+    return events;
+  }
+
+  /** {@inheritDoc} */
+  public void clear() {
+    events.clear();
+  }
+
+  /** {@inheritDoc} */
+  public boolean isEmpty() {
+    return events.isEmpty();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Type getType() {
+    return Type.SHARED_OBJECT;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Object getObject() {
+    return getEvents();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected void releaseInternal() {}
+
+  /** {@inheritDoc} */
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder(getClass().getSimpleName());
+    sb.append(": ")
+        .append(name)
+        .append(" v=")
+        .append(version)
+        .append(" persistent=")
+        .append(persistent)
+        .append(" { ");
+    for (ISharedObjectEvent event : events) {
+      sb.append(event);
+      sb.append(' ');
     }
+    sb.append('}');
+    return sb.toString();
+  }
 
-    /**
-     * Creates Shared Object event with given name, version and persistence flag
-     *
-     * @param name
-     *            Event name
-     * @param version
-     *            SO version
-     * @param persistent
-     *            SO persistence flag
-     */
-    public SharedObjectMessage(String name, int version, boolean persistent) {
-        this(null, name, version, persistent);
+  @SuppressWarnings({"unchecked"})
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    super.readExternal(in);
+    name = (String) in.readUTF();
+    version = in.readInt();
+    persistent = in.readBoolean();
+    Object o = in.readObject();
+    if (o != null) {
+      log.trace("events type: {}", o.getClass().getName());
+      if (o instanceof ConcurrentSkipListSet) {
+        events = (ConcurrentSkipListSet<ISharedObjectEvent>) o;
+      }
     }
-
-    /**
-     * Creates Shared Object event with given listener, name, SO version and persistence flag
-     *
-     * @param source
-     *            Event listener
-     * @param name
-     *            Event name
-     * @param version
-     *            SO version
-     * @param persistent
-     *            SO persistence flag
-     */
-    public SharedObjectMessage(IEventListener source, String name, int version, boolean persistent) {
-        super(Type.SHARED_OBJECT, source);
-        this.name = name;
-        this.version = version;
-        this.persistent = persistent;
+    if (log.isTraceEnabled()) {
+      log.trace("readExternal: {}", toString());
     }
+  }
 
-    /**
-     * Resets the version and events to an initial state.
-     */
-    public void reset() {
-        version = 0;
-        events.clear();
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    super.writeExternal(out);
+    if (log.isTraceEnabled()) {
+      log.trace("writeExternal: {}", toString());
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public byte getDataType() {
-        return TYPE_SHARED_OBJECT;
-    }
-
-    /** {@inheritDoc} */
-    public int getVersion() {
-        return version;
-    }
-
-    /**
-     * Setter for version
-     *
-     * @param version
-     *            New version
-     */
-    protected void setVersion(int version) {
-        this.version = version;
-    }
-
-    /** {@inheritDoc} */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Setter for name
-     *
-     * @param name
-     *            Event name
-     */
-    protected void setName(String name) {
-        this.name = name;
-    }
-
-    /** {@inheritDoc} */
-    public boolean isPersistent() {
-        return persistent;
-    }
-
-    /**
-     * Setter for persistence flag
-     *
-     * @param persistent
-     *            Persistence flag
-     */
-    protected void setPersistent(boolean persistent) {
-        this.persistent = persistent;
-    }
-
-    /** {@inheritDoc} */
-    public boolean addEvent(ISharedObjectEvent.Type type, String key, Object value) {
-        return events.add(new SharedObjectEvent(type, key, value));
-    }
-
-    /** {@inheritDoc} */
-    public boolean addEvent(ISharedObjectEvent event) {
-        return events.add(event);
-    }
-
-    /** {@inheritDoc} */
-    public void addEvents(List<ISharedObjectEvent> events) {
-        this.events.addAll(events);
-    }
-
-    /** {@inheritDoc} */
-    public void addEvents(Queue<ISharedObjectEvent> events) {
-        this.events.addAll(events);
-    }
-
-    /** {@inheritDoc} */
-    public void addEvents(Set<ISharedObjectEvent> events) {
-        this.events.addAll(events);
-    }
-
-    /** {@inheritDoc} */
-    public Set<ISharedObjectEvent> getEvents() {
-        return events;
-    }
-
-    /** {@inheritDoc} */
-    public void clear() {
-        events.clear();
-    }
-
-    /** {@inheritDoc} */
-    public boolean isEmpty() {
-        return events.isEmpty();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Type getType() {
-        return Type.SHARED_OBJECT;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Object getObject() {
-        return getEvents();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void releaseInternal() {
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-        sb.append(": ").append(name).append(" v=").append(version).append(" persistent=").append(persistent).append(" { ");
-        for (ISharedObjectEvent event : events) {
-            sb.append(event);
-            sb.append(' ');
-        }
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @SuppressWarnings({ "unchecked" })
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        name = (String) in.readUTF();
-        version = in.readInt();
-        persistent = in.readBoolean();
-        Object o = in.readObject();
-        if (o != null) {
-            log.trace("events type: {}", o.getClass().getName());
-            if (o instanceof ConcurrentSkipListSet) {
-                events = (ConcurrentSkipListSet<ISharedObjectEvent>) o;
-            }
-        }
-        if (log.isTraceEnabled()) {
-            log.trace("readExternal: {}", toString());
-        }
-    }
-
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        if (log.isTraceEnabled()) {
-            log.trace("writeExternal: {}", toString());
-        }
-        out.writeUTF(name);
-        out.writeInt(version);
-        out.writeBoolean(persistent);
-        out.writeObject(events);
-    }
-
+    out.writeUTF(name);
+    out.writeInt(version);
+    out.writeBoolean(persistent);
+    out.writeObject(events);
+  }
 }

@@ -12,135 +12,115 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-public class SharedObjectEvent implements ISharedObjectEvent, Externalizable, Comparable<SharedObjectEvent> {
+public class SharedObjectEvent
+    implements ISharedObjectEvent, Externalizable, Comparable<SharedObjectEvent> {
 
-    private static final long serialVersionUID = -4129018814289863535L;
+  private static final long serialVersionUID = -4129018814289863535L;
 
-    /**
-     * Nano timestamp for ordering.
-     */
-    private long ts = System.nanoTime();
+  /** Nano timestamp for ordering. */
+  private long ts = System.nanoTime();
 
-    /**
-     * Event type
-     */
-    private Type type;
+  /** Event type */
+  private Type type;
 
-    /**
-     * Changed pair key
-     */
-    private String key;
+  /** Changed pair key */
+  private String key;
 
-    /**
-     * Changed pair value
-     */
-    private Object value;
+  /** Changed pair value */
+  private Object value;
 
-    public SharedObjectEvent() {
+  public SharedObjectEvent() {}
+
+  /**
+   * @param type type
+   * @param key key
+   * @param value value
+   */
+  public SharedObjectEvent(Type type, String key, Object value) {
+    this.type = type;
+    this.key = key;
+    this.value = value;
+  }
+
+  public long getTimestamp() {
+    return ts;
+  }
+
+  /** {@inheritDoc} */
+  public String getKey() {
+    return key;
+  }
+
+  /** {@inheritDoc} */
+  public Type getType() {
+    return type;
+  }
+
+  /** {@inheritDoc} */
+  public Object getValue() {
+    return value;
+  }
+
+  /*
+   * (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((key == null) ? 0 : key.hashCode());
+    result = prime * result + ((type == null) ? 0 : type.hashCode());
+    result = prime * result + ((value == null) ? 0 : value.hashCode());
+    return result;
+  }
+
+  /*
+   * (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    SharedObjectEvent other = (SharedObjectEvent) obj;
+    if (ts != other.getTimestamp()) {
+      return false;
     }
+    if (key == null) {
+      if (other.key != null) return false;
+    } else if (!key.equals(other.key)) return false;
+    if (type != other.type) return false;
+    if (value == null) {
+      if (other.value != null) return false;
+    } else if (!value.equals(other.value)) return false;
+    return true;
+  }
 
-    /**
-     *
-     * @param type
-     *            type
-     * @param key
-     *            key
-     * @param value
-     *            value
-     */
-    public SharedObjectEvent(Type type, String key, Object value) {
-        this.type = type;
-        this.key = key;
-        this.value = value;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String toString() {
+    return String.format(
+        "SharedObjectEvent(%s, key: %s value: %s)", getType(), getKey(), getValue());
+  }
 
-    public long getTimestamp() {
-        return ts;
-    }
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    type = Type.valueOf(in.readUTF());
+    key = (String) in.readUTF();
+    value = in.readObject();
+    ts = in.readLong();
+  }
 
-    /** {@inheritDoc} */
-    public String getKey() {
-        return key;
-    }
+  public void writeExternal(ObjectOutput out) throws IOException {
+    out.writeUTF(type.name());
+    out.writeUTF(key);
+    out.writeObject(value);
+    out.writeLong(ts);
+  }
 
-    /** {@inheritDoc} */
-    public Type getType() {
-        return type;
-    }
-
-    /** {@inheritDoc} */
-    public Object getValue() {
-        return value;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((key == null) ? 0 : key.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        SharedObjectEvent other = (SharedObjectEvent) obj;
-        if (ts != other.getTimestamp()) {
-            return false;
-        }
-        if (key == null) {
-            if (other.key != null)
-                return false;
-        } else if (!key.equals(other.key))
-            return false;
-        if (type != other.type)
-            return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
-            return false;
-        return true;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return String.format("SharedObjectEvent(%s, key: %s value: %s)", getType(), getKey(), getValue());
-    }
-
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        type = Type.valueOf(in.readUTF());
-        key = (String) in.readUTF();
-        value = in.readObject();
-        ts = in.readLong();
-    }
-
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeUTF(type.name());
-        out.writeUTF(key);
-        out.writeObject(value);
-        out.writeLong(ts);
-    }
-
-    @Override
-    public int compareTo(SharedObjectEvent other) {
-        return Long.compare(this.ts, other.getTimestamp());
-    }
-
+  @Override
+  public int compareTo(SharedObjectEvent other) {
+    return Long.compare(this.ts, other.getTimestamp());
+  }
 }

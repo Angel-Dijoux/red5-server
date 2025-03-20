@@ -16,67 +16,68 @@ import org.red5.server.api.statistics.ISharedObjectStatistics;
  * @author The Red5 Project
  * @author Joachim Bauch (jojo@struktur.de)
  */
-public interface ISharedObject extends IBasicScope, ISharedObjectBase, ISharedObjectSecurityService {
+public interface ISharedObject
+    extends IBasicScope, ISharedObjectBase, ISharedObjectSecurityService {
 
-    /**
-     * Prevent shared object from being released. Each call to
-     *
-     * <pre>
-     * acquire
-     * </pre>
-     *
-     * must be paired with a call to
-     *
-     * <pre>
-     * release
-     * </pre>
-     *
-     * so the SO isn't held forever.
-     *
-     * This method basically is a no-op for persistent SOs as their data is stored and they can be released without losing their contents.
-     */
-    public void acquire();
+  /**
+   * Prevent shared object from being released. Each call to
+   *
+   * <pre>
+   * acquire
+   * </pre>
+   *
+   * must be paired with a call to
+   *
+   * <pre>
+   * release
+   * </pre>
+   *
+   * so the SO isn't held forever.
+   *
+   * <p>This method basically is a no-op for persistent SOs as their data is stored and they can be
+   * released without losing their contents.
+   */
+  public void acquire();
 
-    /**
-     * Check if shared object currently is acquired.
-     *
-     * @return <pre>
-     * true
-     * </pre>
-     *
-     *         if the SO is acquired, otherwise
-     *
-     *         <pre>
-     * false
-     * </pre>
-     */
-    public boolean isAcquired();
+  /**
+   * Check if shared object currently is acquired.
+   *
+   * @return
+   *     <pre>
+   * true
+   * </pre>
+   *     if the SO is acquired, otherwise
+   *     <pre>
+   * false
+   * </pre>
+   */
+  public boolean isAcquired();
 
-    /**
-     * Release previously acquired shared object. If the SO is non-persistent, no more clients are connected the SO isn't acquired any more, the data is released.
-     */
-    public void release();
+  /**
+   * Release previously acquired shared object. If the SO is non-persistent, no more clients are
+   * connected the SO isn't acquired any more, the data is released.
+   */
+  public void release();
 
-    /**
-     * Return statistics about the shared object.
-     *
-     * @return statistics
-     */
-    public ISharedObjectStatistics getStatistics();
+  /**
+   * Return statistics about the shared object.
+   *
+   * @return statistics
+   */
+  public ISharedObjectStatistics getStatistics();
 
-    /**
-     * Sets a "dirty" flag to indicate that the attributes have been modified.
-     *
-     * @param dirty if dirty / modified
-     */
-    @Deprecated
-    public void setDirty(boolean dirty);
+  /**
+   * Sets a "dirty" flag to indicate that the attributes have been modified.
+   *
+   * @param dirty if dirty / modified
+   */
+  @Deprecated
+  public void setDirty(boolean dirty);
 
-    /**
-     * Sets a "dirty" flag to indicate that the named attribute has been modified.
-     *
-     * @param name attribute key which is now dirty
-     */
-    void setDirty(String name);
-
+  /**
+   * Sets a "dirty" flag to indicate that the named attribute has been modified.
+   *
+   * @param name attribute key which is now dirty
+   */
+  void setDirty(String name);
 }

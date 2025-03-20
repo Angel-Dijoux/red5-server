@@ -12,16 +12,13 @@ package org.red5.server.api.service;
  *
  * @author The Red5 Project
  * @author Joachim Bauch (jojo@struktur.de)
- *
  */
 public interface IPendingServiceCallback {
 
-    /**
-     * Triggered when results are recieved
-     *
-     * @param call
-     *            Call object this callback is applied to
-     */
-    public void resultReceived(IPendingServiceCall call);
-
+  /**
+   * Triggered when results are recieved
+   *
+   * @param call Call object this callback is applied to
+   */
+  public void resultReceived(IPendingServiceCall call);
 }

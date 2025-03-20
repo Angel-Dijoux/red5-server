@@ -11,28 +11,27 @@ import org.apache.mina.core.write.WriteRequestWrapper;
  */
 public class EncryptedWriteRequest extends WriteRequestWrapper {
 
-    private final IoBuffer encryptedMessage;
+  private final IoBuffer encryptedMessage;
 
-    public EncryptedWriteRequest(WriteRequest writeRequest, IoBuffer encryptedMessage) {
-        super(writeRequest);
-        this.encryptedMessage = encryptedMessage;
-    }
+  public EncryptedWriteRequest(WriteRequest writeRequest, IoBuffer encryptedMessage) {
+    super(writeRequest);
+    this.encryptedMessage = encryptedMessage;
+  }
 
-    @Override
-    public WriteRequest getOriginalRequest() {
-        // we dont want to return the original request because its message is essentially overwritten
-        // prevents java.nio.InvalidMarkException in AbstractPollingIoProcessor
-        return null;
-    }
+  @Override
+  public WriteRequest getOriginalRequest() {
+    // we dont want to return the original request because its message is essentially overwritten
+    // prevents java.nio.InvalidMarkException in AbstractPollingIoProcessor
+    return null;
+  }
 
-    @Override
-    public Object getMessage() {
-        return encryptedMessage;
-    }
+  @Override
+  public Object getMessage() {
+    return encryptedMessage;
+  }
 
-    @Override
-    public boolean isEncoded() {
-        return true;
-    }
-
+  @Override
+  public boolean isEncoded() {
+    return true;
+  }
 }

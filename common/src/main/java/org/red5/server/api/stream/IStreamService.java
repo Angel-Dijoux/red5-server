@@ -10,225 +10,186 @@ package org.red5.server.api.stream;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.scope.IScopeService;
 
-/**
- * This interface represents the stream methods that can be called throug RTMP.
- */
+/** This interface represents the stream methods that can be called throug RTMP. */
 public interface IStreamService extends IScopeService {
 
-    public static String BEAN_NAME = "streamService";
+  public static String BEAN_NAME = "streamService";
 
-    /**
-     * Create a stream and return a corresponding id.
-     *
-     * @return ID of created stream
-     */
-    public Number createStream();
+  /**
+   * Create a stream and return a corresponding id.
+   *
+   * @return ID of created stream
+   */
+  public Number createStream();
 
-    /**
-     * Create a stream and return a corresponding id.
-     *
-     * @param streamId
-     *            Stream id
-     * @return ID of created stream
-     */
-    public Number createStream(Number streamId);
+  /**
+   * Create a stream and return a corresponding id.
+   *
+   * @param streamId Stream id
+   * @return ID of created stream
+   */
+  public Number createStream(Number streamId);
 
-    /**
-     * Close the stream but not deallocate the resources.
-     *
-     * @param connection
-     *            Connection
-     * @param streamId
-     *            Stream id
-     */
-    public void closeStream(IConnection connection, Number streamId);
+  /**
+   * Close the stream but not deallocate the resources.
+   *
+   * @param connection Connection
+   * @param streamId Stream id
+   */
+  public void closeStream(IConnection connection, Number streamId);
 
-    /**
-     * Close the stream if not been closed. Deallocate the related resources.
-     *
-     * @param streamId
-     *            Stream id
-     */
-    public void deleteStream(Number streamId);
+  /**
+   * Close the stream if not been closed. Deallocate the related resources.
+   *
+   * @param streamId Stream id
+   */
+  public void deleteStream(Number streamId);
 
-    /**
-     * Called by FMS.
-     *
-     * @param streamId
-     *            Stream id
-     */
-    public void initStream(Number streamId);
+  /**
+   * Called by FMS.
+   *
+   * @param streamId Stream id
+   */
+  public void initStream(Number streamId);
 
-    /**
-     * Called by FMS.
-     *
-     * @param streamId
-     *            Stream id
-     * @param idk
-     *            I dont know what this is yet
-     */
-    public void initStream(Number streamId, Object idk);
+  /**
+   * Called by FMS.
+   *
+   * @param streamId Stream id
+   * @param idk I dont know what this is yet
+   */
+  public void initStream(Number streamId, Object idk);
 
-    /**
-     * Called by FME.
-     *
-     * @param streamName
-     *            stream name
-     */
-    public void releaseStream(String streamName);
+  /**
+   * Called by FME.
+   *
+   * @param streamName stream name
+   */
+  public void releaseStream(String streamName);
 
-    /**
-     * Delete stream
-     *
-     * @param conn
-     *            Stream capable connection
-     * @param streamId
-     *            Stream id
-     */
-    public void deleteStream(IStreamCapableConnection conn, Number streamId);
+  /**
+   * Delete stream
+   *
+   * @param conn Stream capable connection
+   * @param streamId Stream id
+   */
+  public void deleteStream(IStreamCapableConnection conn, Number streamId);
 
-    /**
-     * Play stream without initial stop
-     *
-     * @param dontStop
-     *            Stoppage flag
-     */
-    public void play(Boolean dontStop);
+  /**
+   * Play stream without initial stop
+   *
+   * @param dontStop Stoppage flag
+   */
+  public void play(Boolean dontStop);
 
-    /**
-     * Play stream with name
-     *
-     * @param name
-     *            Stream name
-     */
-    public void play(String name);
+  /**
+   * Play stream with name
+   *
+   * @param name Stream name
+   */
+  public void play(String name);
 
-    /**
-     * Play stream with name from start position
-     *
-     * @param name
-     *            Stream name
-     * @param start
-     *            Start position
-     */
-    public void play(String name, int start);
+  /**
+   * Play stream with name from start position
+   *
+   * @param name Stream name
+   * @param start Start position
+   */
+  public void play(String name, int start);
 
-    /**
-     * Play stream with name from start position and for given amount if time
-     *
-     * @param name
-     *            Stream name
-     * @param start
-     *            Start position
-     * @param length
-     *            Playback length
-     */
-    public void play(String name, int start, int length);
+  /**
+   * Play stream with name from start position and for given amount if time
+   *
+   * @param name Stream name
+   * @param start Start position
+   * @param length Playback length
+   */
+  public void play(String name, int start, int length);
 
-    default void play(String name, Double start, Double length) {
-        play(name, start.intValue(), length.intValue());
-    }
+  default void play(String name, Double start, Double length) {
+    play(name, start.intValue(), length.intValue());
+  }
 
-    /**
-     * Publishes stream from given position for given amount of time
-     *
-     * @param name
-     *            Stream published name
-     * @param start
-     *            Start position
-     * @param length
-     *            Playback length
-     * @param flushPlaylist
-     *            Flush playlist?
-     */
-    public void play(String name, int start, int length, boolean flushPlaylist);
+  /**
+   * Publishes stream from given position for given amount of time
+   *
+   * @param name Stream published name
+   * @param start Start position
+   * @param length Playback length
+   * @param flushPlaylist Flush playlist?
+   */
+  public void play(String name, int start, int length, boolean flushPlaylist);
 
-    default void play(String name, Double start, Double length, boolean flushPlaylist) {
-        play(name, start.intValue(), length.intValue(), flushPlaylist);
-    }
+  default void play(String name, Double start, Double length, boolean flushPlaylist) {
+    play(name, start.intValue(), length.intValue(), flushPlaylist);
+  }
 
-    /**
-     * Publishes stream with given name
-     *
-     * @param name
-     *            Stream published name
-     */
-    public void publish(String name);
+  /**
+   * Publishes stream with given name
+   *
+   * @param name Stream published name
+   */
+  public void publish(String name);
 
-    /**
-     * Publishes stream with given name and mode
-     *
-     * @param name
-     *            Stream published name
-     * @param mode
-     *            Stream publishing mode
-     */
-    public void publish(String name, String mode);
+  /**
+   * Publishes stream with given name and mode
+   *
+   * @param name Stream published name
+   * @param mode Stream publishing mode
+   */
+  public void publish(String name, String mode);
 
-    /**
-     * Publish
-     *
-     * @param dontStop
-     *            Whether need to stop first
-     */
-    public void publish(Boolean dontStop);
+  /**
+   * Publish
+   *
+   * @param dontStop Whether need to stop first
+   */
+  public void publish(Boolean dontStop);
 
-    /**
-     * Seek to position
-     *
-     * @param position
-     *            Seek position
-     */
-    public void seek(int position);
+  /**
+   * Seek to position
+   *
+   * @param position Seek position
+   */
+  public void seek(int position);
 
-    /**
-     * Pauses playback
-     *
-     * @param pausePlayback
-     *            Pause or resume flash
-     * @param position
-     *            Pause position
-     */
-    public void pause(Boolean pausePlayback, int position);
+  /**
+   * Pauses playback
+   *
+   * @param pausePlayback Pause or resume flash
+   * @param position Pause position
+   */
+  public void pause(Boolean pausePlayback, int position);
 
-    /**
-     * Undocumented Flash Plugin 10 call, assuming to be the alias to pause(boolean, int)
-     *
-     * @param pausePlayback
-     *            Pause or resume flash
-     * @param position
-     *            Pause position
-     */
-    public void pauseRaw(Boolean pausePlayback, int position);
+  /**
+   * Undocumented Flash Plugin 10 call, assuming to be the alias to pause(boolean, int)
+   *
+   * @param pausePlayback Pause or resume flash
+   * @param position Pause position
+   */
+  public void pauseRaw(Boolean pausePlayback, int position);
 
-    /**
-     * Can receive video?
-     *
-     * @param receive
-     *            Boolean flag
-     */
-    public void receiveVideo(boolean receive);
+  /**
+   * Can receive video?
+   *
+   * @param receive Boolean flag
+   */
+  public void receiveVideo(boolean receive);
 
-    /**
-     * If called without parameter imply it is true.
-     */
-    default void receiveVideo() {
-        receiveVideo(true);
-    }
+  /** If called without parameter imply it is true. */
+  default void receiveVideo() {
+    receiveVideo(true);
+  }
 
-    /**
-     * Can receive audio?
-     *
-     * @param receive
-     *            Boolean flag
-     */
-    public void receiveAudio(boolean receive);
+  /**
+   * Can receive audio?
+   *
+   * @param receive Boolean flag
+   */
+  public void receiveAudio(boolean receive);
 
-    /**
-     * If called without parameter imply it is true.
-     */
-    default void receiveAudio() {
-        receiveAudio(true);
-    }
-
+  /** If called without parameter imply it is true. */
+  default void receiveAudio() {
+    receiveAudio(true);
+  }
 }

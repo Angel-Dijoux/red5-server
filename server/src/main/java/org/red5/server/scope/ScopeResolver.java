@@ -8,7 +8,6 @@
 package org.red5.server.scope;
 
 import java.util.Arrays;
-
 import org.apache.commons.lang3.StringUtils;
 import org.red5.server.api.scope.IGlobalScope;
 import org.red5.server.api.scope.IScope;
@@ -20,93 +19,86 @@ import org.red5.server.exception.ScopeShuttingDownException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Resolves scopes from path
- */
+/** Resolves scopes from path */
 public class ScopeResolver implements IScopeResolver {
 
-    protected static Logger log = LoggerFactory.getLogger(ScopeResolver.class);
+  protected static Logger log = LoggerFactory.getLogger(ScopeResolver.class);
 
-    /**
-     * Global scope
-     */
-    protected IGlobalScope globalScope;
+  /** Global scope */
+  protected IGlobalScope globalScope;
 
-    /**
-     * Getter for global scope
-     *
-     * @return Global scope
-     */
-    public IGlobalScope getGlobalScope() {
-        return globalScope;
+  /**
+   * Getter for global scope
+   *
+   * @return Global scope
+   */
+  public IGlobalScope getGlobalScope() {
+    return globalScope;
+  }
+
+  /**
+   * Setter for global scope
+   *
+   * @param root Global scope
+   */
+  public void setGlobalScope(IGlobalScope root) {
+    this.globalScope = root;
+  }
+
+  /**
+   * Return scope associated with given path
+   *
+   * @param path Scope path
+   * @return Scope object
+   */
+  public IScope resolveScope(String path) {
+    // start from global scope
+    return resolveScope(globalScope, path);
+  }
+
+  /**
+   * Return scope associated with given path from given root scope.
+   *
+   * @param root Scope to start from
+   * @param path Scope path
+   * @return Scope object
+   */
+  public IScope resolveScope(IScope root, String path) {
+    log.debug("resolveScope - root: {} path: {}", root, path);
+    if (root == null) {
+      throw new ScopeException("Null root scope");
     }
-
-    /**
-     * Setter for global scope
-     *
-     * @param root
-     *            Global scope
-     */
-    public void setGlobalScope(IGlobalScope root) {
-        this.globalScope = root;
-    }
-
-    /**
-     * Return scope associated with given path
-     *
-     * @param path
-     *            Scope path
-     * @return Scope object
-     */
-    public IScope resolveScope(String path) {
-        // start from global scope
-        return resolveScope(globalScope, path);
-    }
-
-    /**
-     * Return scope associated with given path from given root scope.
-     *
-     * @param root
-     *            Scope to start from
-     * @param path
-     *            Scope path
-     * @return Scope object
-     */
-    public IScope resolveScope(IScope root, String path) {
-        log.debug("resolveScope - root: {} path: {}", root, path);
-        if (root == null) {
-            throw new ScopeException("Null root scope");
+    // start from root scope
+    IScope scope = root;
+    // if there's no path return root scope (e.i. root path scope)
+    if (StringUtils.isNotEmpty(path)) {
+      // Split path to parts
+      final String[] parts = path.split("/");
+      log.debug("Split path: {}", Arrays.toString(parts));
+      // Iterate thru them, skip empty parts
+      for (String child : parts) {
+        if (StringUtils.isEmpty(child)) {
+          // skip empty path elements
+          continue;
         }
-        // start from root scope
-        IScope scope = root;
-        // if there's no path return root scope (e.i. root path scope)
-        if (StringUtils.isNotEmpty(path)) {
-            // Split path to parts
-            final String[] parts = path.split("/");
-            log.debug("Split path: {}", Arrays.toString(parts));
-            // Iterate thru them, skip empty parts
-            for (String child : parts) {
-                if (StringUtils.isEmpty(child)) {
-                    // skip empty path elements
-                    continue;
-                }
-                // if scope does not exist and we are not in the root, create a child scope
-                if (!scope.hasChildScope(child) && !scope.equals(root)) {
-                    scope.createChildScope(child);
-                }
-                // get child scope
-                scope = scope.getScope(child);
-                // if the scope is null then the room was not found
-                if (scope == null) {
-                    throw new ScopeNotFoundException(scope, child);
-                }
-                // some scopes don't implement IScope, such as SharedObjectScope
-                if (scope instanceof IScope && scope.getType().equals(ScopeType.APPLICATION) && ((WebScope) scope).isShuttingDown()) {
-                    throw new ScopeShuttingDownException(scope);
-                }
-            }
+        // if scope does not exist and we are not in the root, create a child scope
+        if (!scope.hasChildScope(child) && !scope.equals(root)) {
+          scope.createChildScope(child);
         }
-        return scope;
+        // get child scope
+        scope = scope.getScope(child);
+        // if the scope is null then the room was not found
+        if (scope == null) {
+          throw new ScopeNotFoundException(scope, child);
+        }
+        // some scopes don't implement IScope, such as SharedObjectScope
+        if (scope instanceof IScope
+            && scope.getType().equals(ScopeType.APPLICATION)
+            && ((WebScope) scope).isShuttingDown()) {
+          throw new ScopeShuttingDownException(scope);
+        }
+      }
     }
-
+    return scope;
+  }
 }

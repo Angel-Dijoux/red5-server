@@ -9,37 +9,30 @@ package org.red5.server.stream;
 
 import org.red5.server.api.event.IEvent;
 
-/**
- * Source for streams
- */
+/** Source for streams */
 public interface IStreamSource {
-    /**
-     * Is there something more to stream?
-     *
-     * @return <pre>
-     * true
-     * </pre>
-     *
-     *         if there's streamable data,
-     *
-     *         <pre>
-     * false
-     * </pre>
-     *
-     *         otherwise
-     */
-    public abstract boolean hasMore();
+  /**
+   * Is there something more to stream?
+   *
+   * @return
+   *     <pre>
+   * true
+   * </pre>
+   *     if there's streamable data,
+   *     <pre>
+   * false
+   * </pre>
+   *     otherwise
+   */
+  public abstract boolean hasMore();
 
-    /**
-     * Double ended queue of event objects
-     *
-     * @return Event from queue
-     */
-    public abstract IEvent dequeue();
+  /**
+   * Double ended queue of event objects
+   *
+   * @return Event from queue
+   */
+  public abstract IEvent dequeue();
 
-    /**
-     * Close stream source
-     */
-    public abstract void close();
-
+  /** Close stream source */
+  public abstract void close();
 }

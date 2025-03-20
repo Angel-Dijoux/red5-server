@@ -14,17 +14,15 @@ import org.red5.server.messaging.IProvider;
  *
  * @author The Red5 Project
  * @author Joachim Bauch (jojo@struktur.de)
- *
  */
 public interface IStreamTypeAwareProvider extends IProvider {
 
-    public static final String KEY = IStreamTypeAwareProvider.class.getName();
+  public static final String KEY = IStreamTypeAwareProvider.class.getName();
 
-    /**
-     * Check if the provider contains video tags.
-     *
-     * @return provider has video
-     */
-    public boolean hasVideo();
-
+  /**
+   * Check if the provider contains video tags.
+   *
+   * @return provider has video
+   */
+  public boolean hasVideo();
 }

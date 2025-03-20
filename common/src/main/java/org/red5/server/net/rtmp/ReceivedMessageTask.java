@@ -10,7 +10,6 @@ package org.red5.server.net.rtmp;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.red5.server.api.Red5;
 import org.red5.server.net.rtmp.message.Packet;
 
@@ -21,73 +20,69 @@ import org.red5.server.net.rtmp.message.Packet;
  */
 public final class ReceivedMessageTask implements Callable<Packet> {
 
-    private final RTMPConnection conn;
+  private final RTMPConnection conn;
 
-    private final IRTMPHandler handler;
+  private final IRTMPHandler handler;
 
-    private final Packet packet;
+  private final Packet packet;
 
-    private final int hashCode;
+  private final int hashCode;
 
-    private AtomicBoolean processing = new AtomicBoolean(false);
+  private AtomicBoolean processing = new AtomicBoolean(false);
 
-    public ReceivedMessageTask(RTMPConnection conn, Packet packet) {
-        this.conn = conn;
-        this.packet = packet;
-        this.handler = conn.getHandler();
-        // generate hash code
-        hashCode = Objects.hash(conn.getSessionId(), packet);
+  public ReceivedMessageTask(RTMPConnection conn, Packet packet) {
+    this.conn = conn;
+    this.packet = packet;
+    this.handler = conn.getHandler();
+    // generate hash code
+    hashCode = Objects.hash(conn.getSessionId(), packet);
+  }
+
+  public Packet call() throws Exception {
+    if (processing.compareAndSet(false, true)) {
+      // set connection to thread local
+      Red5.setConnectionLocal(conn);
+      try {
+        // pass message to the handler
+        handler.messageReceived(conn, packet);
+        // if we get this far, set done / completed flag
+        packet.setProcessed(true);
+      } finally {
+        // clear thread local
+        Red5.setConnectionLocal(null);
+      }
+    } else {
+      throw new IllegalStateException("Task is already being processed");
     }
+    return packet;
+  }
 
-    public Packet call() throws Exception {
-        if (processing.compareAndSet(false, true)) {
-            // set connection to thread local
-            Red5.setConnectionLocal(conn);
-            try {
-                // pass message to the handler
-                handler.messageReceived(conn, packet);
-                // if we get this far, set done / completed flag
-                packet.setProcessed(true);
-            } finally {
-                // clear thread local
-                Red5.setConnectionLocal(null);
-            }
-        } else {
-            throw new IllegalStateException("Task is already being processed");
-        }
-        return packet;
+  public Packet getPacket() {
+    return packet;
+  }
+
+  @Override
+  public int hashCode() {
+    return hashCode;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    ReceivedMessageTask other = (ReceivedMessageTask) obj;
+    if (!this.equals(other)) {
+      return false;
     }
-
-    public Packet getPacket() {
-        return packet;
+    if (!packet.getHeader().equals(other.packet.getHeader())) {
+      return false;
     }
+    return true;
+  }
 
-    @Override
-    public int hashCode() {
-        return hashCode;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ReceivedMessageTask other = (ReceivedMessageTask) obj;
-        if (!this.equals(other)) {
-            return false;
-        }
-        if (!packet.getHeader().equals(other.packet.getHeader())) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "[sessionId: " + conn.getSessionId() + ", processing: " + processing.get() + "]";
-    }
-
+  @Override
+  public String toString() {
+    return "[sessionId: " + conn.getSessionId() + ", processing: " + processing.get() + "]";
+  }
 }

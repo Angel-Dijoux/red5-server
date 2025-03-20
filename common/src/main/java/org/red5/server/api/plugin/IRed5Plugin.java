@@ -17,43 +17,38 @@ import org.springframework.context.ApplicationContext;
  */
 public interface IRed5Plugin {
 
-    /**
-     * Returns a name / identifier for the plug-in.
-     *
-     * @return plug-in's name
-     */
-    String getName();
+  /**
+   * Returns a name / identifier for the plug-in.
+   *
+   * @return plug-in's name
+   */
+  String getName();
 
-    /**
-     * Sets the top-most ApplicationContext within Red5.
-     *
-     * @param context
-     *            application context
-     */
-    void setApplicationContext(ApplicationContext context);
+  /**
+   * Sets the top-most ApplicationContext within Red5.
+   *
+   * @param context application context
+   */
+  void setApplicationContext(ApplicationContext context);
 
-    /**
-     * Sets a reference to the server.
-     *
-     * @param server
-     *            server
-     */
-    void setServer(Server server);
+  /**
+   * Sets a reference to the server.
+   *
+   * @param server server
+   */
+  void setServer(Server server);
 
-    /**
-     * Lifecycle method called when the plug-in is started.
-     *
-     * @throws Exception
-     *             on start error
-     */
-    void doStart() throws Exception;
+  /**
+   * Lifecycle method called when the plug-in is started.
+   *
+   * @throws Exception on start error
+   */
+  void doStart() throws Exception;
 
-    /**
-     * Lifecycle method called when the plug-in is stopped.
-     *
-     * @throws Exception
-     *             on stop error
-     */
-    void doStop() throws Exception;
-
+  /**
+   * Lifecycle method called when the plug-in is stopped.
+   *
+   * @throws Exception on stop error
+   */
+  void doStop() throws Exception;
 }

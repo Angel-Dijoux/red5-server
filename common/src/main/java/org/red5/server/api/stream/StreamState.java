@@ -13,7 +13,16 @@ package org.red5.server.api.stream;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public enum StreamState {
-
-    INIT, UNINIT, OPEN, CLOSED, STARTED, STOPPED, PUBLISHING, PLAYING, PAUSED, RESUMED, END, SEEK;
-
+  INIT,
+  UNINIT,
+  OPEN,
+  CLOSED,
+  STARTED,
+  STOPPED,
+  PUBLISHING,
+  PLAYING,
+  PAUSED,
+  RESUMED,
+  END,
+  SEEK;
 }

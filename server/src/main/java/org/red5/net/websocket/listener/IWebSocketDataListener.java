@@ -10,51 +10,44 @@ package org.red5.net.websocket.listener;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.model.WSMessage;
 
-/**
- * Listener for WebSocket events.
- */
+/** Listener for WebSocket events. */
 public interface IWebSocketDataListener {
 
-    /**
-     * Returns the protocol for which this listener is interested.
-     *
-     * @return protocol
-     */
-    public String getProtocol();
+  /**
+   * Returns the protocol for which this listener is interested.
+   *
+   * @return protocol
+   */
+  public String getProtocol();
 
-    /**
-     * Sets the protocol for which this listener is interested.
-     *
-     * @param protocol
-     */
-    public void setProtocol(String protocol);
+  /**
+   * Sets the protocol for which this listener is interested.
+   *
+   * @param protocol
+   */
+  public void setProtocol(String protocol);
 
-    /**
-     * Dispatch message.
-     *
-     * @param message
-     */
-    public void onWSMessage(WSMessage message);
+  /**
+   * Dispatch message.
+   *
+   * @param message
+   */
+  public void onWSMessage(WSMessage message);
 
-    /**
-     * Connect a WebSocket client.
-     *
-     * @param conn
-     *            WebSocketConnection
-     */
-    public void onWSConnect(WebSocketConnection conn);
+  /**
+   * Connect a WebSocket client.
+   *
+   * @param conn WebSocketConnection
+   */
+  public void onWSConnect(WebSocketConnection conn);
 
-    /**
-     * Disconnect WebSocket client.
-     *
-     * @param conn
-     *            WebSocketConnection
-     */
-    public void onWSDisconnect(WebSocketConnection conn);
+  /**
+   * Disconnect WebSocket client.
+   *
+   * @param conn WebSocketConnection
+   */
+  public void onWSDisconnect(WebSocketConnection conn);
 
-    /**
-     * Stops the listener.
-     */
-    public void stop();
-
+  /** Stops the listener. */
+  public void stop();
 }

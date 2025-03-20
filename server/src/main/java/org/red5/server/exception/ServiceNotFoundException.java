@@ -7,14 +7,9 @@
 
 package org.red5.server.exception;
 
-/**
- * Thrown when server can't be found
- */
+/** Thrown when server can't be found */
 public class ServiceNotFoundException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -2400159517485748708L;
-
+  /** */
+  private static final long serialVersionUID = -2400159517485748708L;
 }

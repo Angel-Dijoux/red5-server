@@ -6,7 +6,10 @@ package org.red5.server.api.scope;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public enum ScopeType {
-
-    UNDEFINED, GLOBAL, APPLICATION, ROOM, BROADCAST, SHARED_OBJECT;
-
+  UNDEFINED,
+  GLOBAL,
+  APPLICATION,
+  ROOM,
+  BROADCAST,
+  SHARED_OBJECT;
 }

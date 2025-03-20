@@ -8,7 +8,6 @@
 package org.red5.server.jmx.mxbeans;
 
 import javax.management.MXBean;
-
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.event.IEvent;
@@ -24,24 +23,23 @@ import org.red5.server.api.service.IServiceCall;
 @MXBean
 public interface CoreHandlerMXBean {
 
-    public boolean connect(IConnection conn, IScope scope);
+  public boolean connect(IConnection conn, IScope scope);
 
-    public boolean connect(IConnection conn, IScope scope, Object[] params);
+  public boolean connect(IConnection conn, IScope scope, Object[] params);
 
-    public void disconnect(IConnection conn, IScope scope);
+  public void disconnect(IConnection conn, IScope scope);
 
-    public boolean join(IClient client, IScope scope);
+  public boolean join(IClient client, IScope scope);
 
-    public void leave(IClient client, IScope scope);
+  public void leave(IClient client, IScope scope);
 
-    public void removeChildScope(IBasicScope scope);
+  public void removeChildScope(IBasicScope scope);
 
-    public boolean serviceCall(IConnection conn, IServiceCall call);
+  public boolean serviceCall(IConnection conn, IServiceCall call);
 
-    public boolean start(IScope scope);
+  public boolean start(IScope scope);
 
-    public void stop(IScope scope);
+  public void stop(IScope scope);
 
-    public boolean handleEvent(IEvent event);
-
+  public boolean handleEvent(IEvent event);
 }

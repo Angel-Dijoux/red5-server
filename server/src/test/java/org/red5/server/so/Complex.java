@@ -9,64 +9,61 @@ package org.red5.server.so;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.red5.io.amf3.IDataInput;
 import org.red5.io.amf3.IDataOutput;
 import org.red5.io.amf3.IExternalizable;
 
-@SuppressWarnings({ "rawtypes" })
+@SuppressWarnings({"rawtypes"})
 public class Complex implements IExternalizable {
 
-    private long x = System.currentTimeMillis();
+  private long x = System.currentTimeMillis();
 
-    private String s = "Complex object";
+  private String s = "Complex object";
 
-    private Map map = new HashMap();
+  private Map map = new HashMap();
 
-    public Complex() {
-    }
+  public Complex() {}
 
-    public long getX() {
-        return x;
-    }
+  public long getX() {
+    return x;
+  }
 
-    public void setX(long x) {
-        this.x = x;
-    }
+  public void setX(long x) {
+    this.x = x;
+  }
 
-    public String getS() {
-        return s;
-    }
+  public String getS() {
+    return s;
+  }
 
-    public void setS(String s) {
-        this.s = s;
-    }
+  public void setS(String s) {
+    this.s = s;
+  }
 
-    public Map getMap() {
-        return map;
-    }
+  public Map getMap() {
+    return map;
+  }
 
-    public void setMap(Map map) {
-        this.map = map;
-    }
+  public void setMap(Map map) {
+    this.map = map;
+  }
 
-    @Override
-    public String toString() {
-        return "Complex [x=" + x + ", s=" + s + ", map=" + map + "]";
-    }
+  @Override
+  public String toString() {
+    return "Complex [x=" + x + ", s=" + s + ", map=" + map + "]";
+  }
 
-    @Override
-    public void readExternal(IDataInput input) {
-        x = input.readUnsignedInt();
-        s = input.readUTF();
-        map = (HashMap) input.readObject();
-    }
+  @Override
+  public void readExternal(IDataInput input) {
+    x = input.readUnsignedInt();
+    s = input.readUTF();
+    map = (HashMap) input.readObject();
+  }
 
-    @Override
-    public void writeExternal(IDataOutput output) {
-        output.writeUnsignedInt(x);
-        output.writeUTF(s);
-        output.writeObject(map);
-    }
-
+  @Override
+  public void writeExternal(IDataOutput output) {
+    output.writeUnsignedInt(x);
+    output.writeUTF(s);
+    output.writeObject(map);
+  }
 }

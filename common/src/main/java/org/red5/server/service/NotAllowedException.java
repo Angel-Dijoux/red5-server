@@ -15,17 +15,14 @@ package org.red5.server.service;
  */
 public class NotAllowedException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -7552833324276839926L;
+  /** */
+  private static final long serialVersionUID = -7552833324276839926L;
 
-    public NotAllowedException() {
-        super();
-    }
+  public NotAllowedException() {
+    super();
+  }
 
-    public NotAllowedException(String message) {
-        super(message);
-    }
-
+  public NotAllowedException(String message) {
+    super(message);
+  }
 }

@@ -8,40 +8,38 @@
 package org.red5.server.jmx.mxbeans;
 
 import java.util.List;
-
 import javax.management.MXBean;
 
 @MXBean
 public interface RTMPConnectionMXBean extends AttributeStoreMXBean {
 
-    public String getType();
+  public String getType();
 
-    public String getHost();
+  public String getHost();
 
-    public String getRemoteAddress();
+  public String getRemoteAddress();
 
-    public List<String> getRemoteAddresses();
+  public List<String> getRemoteAddresses();
 
-    public int getRemotePort();
+  public int getRemotePort();
 
-    public String getPath();
+  public String getPath();
 
-    public String getSessionId();
+  public String getSessionId();
 
-    public boolean isConnected();
+  public boolean isConnected();
 
-    public void close();
+  public void close();
 
-    public long getReadBytes();
+  public long getReadBytes();
 
-    public long getWrittenBytes();
+  public long getWrittenBytes();
 
-    public long getReadMessages();
+  public long getReadMessages();
 
-    public long getWrittenMessages();
+  public long getWrittenMessages();
 
-    public long getDroppedMessages();
+  public long getDroppedMessages();
 
-    public long getPendingMessages();
-
+  public long getPendingMessages();
 }

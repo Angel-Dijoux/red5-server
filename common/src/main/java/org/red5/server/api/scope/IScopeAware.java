@@ -15,12 +15,10 @@ package org.red5.server.api.scope;
  */
 public interface IScopeAware {
 
-    /**
-     * Set the scope the object is located in.
-     *
-     * @param scope
-     *            Scope for this object
-     */
-    public void setScope(IScope scope);
-
+  /**
+   * Set the scope the object is located in.
+   *
+   * @param scope Scope for this object
+   */
+  public void setScope(IScope scope);
 }

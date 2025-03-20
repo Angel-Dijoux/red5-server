@@ -15,9 +15,6 @@ package org.red5.server.api;
  */
 public interface IApplicationContext {
 
-    /**
-     * Stop the web application.
-     */
-    public void stop();
-
+  /** Stop the web application. */
+  public void stop();
 }

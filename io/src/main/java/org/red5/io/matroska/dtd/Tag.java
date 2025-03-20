@@ -11,170 +11,148 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-
 import org.red5.io.matroska.ConverterException;
 import org.red5.io.matroska.ParserUtils;
 import org.red5.io.matroska.VINT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Base class for all webm tags
- *
- */
+/** Base class for all webm tags */
 public abstract class Tag {
-    static Logger log = LoggerFactory.getLogger(Tag.class);
+  static Logger log = LoggerFactory.getLogger(Tag.class);
 
-    private String name;
+  private String name;
 
-    VINT id;
+  VINT id;
 
-    VINT size;
+  VINT size;
 
-    private byte[] data;
+  private byte[] data;
 
-    /**
-     * Constructor, internally calls {@link Tag#Tag(String, VINT, VINT, InputStream)} to create tag with 0 size
-     *
-     * @param name
-     *            - the name of tag to be created
-     * @param id
-     *            - the id of tag to be created
-     * @throws IOException
-     *             - in case of IO error
-     */
-    public Tag(String name, VINT id) throws IOException {
-        this(name, id, new VINT(0L, (byte) 0, 0L), null);
+  /**
+   * Constructor, internally calls {@link Tag#Tag(String, VINT, VINT, InputStream)} to create tag
+   * with 0 size
+   *
+   * @param name - the name of tag to be created
+   * @param id - the id of tag to be created
+   * @throws IOException - in case of IO error
+   */
+  public Tag(String name, VINT id) throws IOException {
+    this(name, id, new VINT(0L, (byte) 0, 0L), null);
+  }
+
+  /**
+   * Constructor
+   *
+   * @param name - the name of tag to be created
+   * @param id - the id of tag to be created
+   * @param size - the size of tag to be created
+   * @param inputStream - stream to read tag data from
+   * @throws IOException - in case of any IO errors
+   */
+  public Tag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    this.name = name;
+    this.id = id;
+    this.size = size;
+    readData(inputStream);
+  }
+
+  /**
+   * method to read and to parse tag from inputStream given
+   *
+   * @param inputStream - stream to parse tag data from
+   * @throws IOException - in case of any IO errors
+   * @throws ConverterException - in case of any conversion errors
+   */
+  public abstract void parse(InputStream inputStream) throws IOException, ConverterException;
+
+  /**
+   * method to parse tag from inner bytes array - data
+   *
+   * @throws IOException - in case of any IO errors
+   * @throws ConverterException - in case of any conversion errors
+   */
+  public void parse() throws IOException, ConverterException {
+    parse(new ByteArrayInputStream(data));
+  }
+
+  /**
+   * method to read tag data from inputStream given
+   *
+   * @param inputStream InputStream
+   * @throws IOException - in case of any IO errors
+   */
+  public void readData(InputStream inputStream) throws IOException {
+    if (inputStream == null) {
+      return;
     }
 
-    /**
-     * Constructor
-     *
-     * @param name
-     *            - the name of tag to be created
-     * @param id
-     *            - the id of tag to be created
-     * @param size
-     *            - the size of tag to be created
-     * @param inputStream
-     *            - stream to read tag data from
-     * @throws IOException
-     *             - in case of any IO errors
-     */
-    public Tag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
-        this.name = name;
-        this.id = id;
-        this.size = size;
-        readData(inputStream);
-    }
+    data = ParserUtils.parseBinary(inputStream, (int) size.getValue());
+  }
 
-    /**
-     * method to read and to parse tag from inputStream given
-     *
-     * @param inputStream
-     *            - stream to parse tag data from
-     * @throws IOException
-     *             - in case of any IO errors
-     * @throws ConverterException
-     *             - in case of any conversion errors
-     */
-    public abstract void parse(InputStream inputStream) throws IOException, ConverterException;
+  /**
+   * method to store tag value to {@link ByteBuffer} given
+   *
+   * @param bb - {@link ByteBuffer} to store value
+   * @throws IOException - in case of any IO errors
+   */
+  protected abstract void putValue(ByteBuffer bb) throws IOException;
 
-    /**
-     * method to parse tag from inner bytes array - data
-     *
-     * @throws IOException
-     *             - in case of any IO errors
-     * @throws ConverterException
-     *             - in case of any conversion errors
-     */
-    public void parse() throws IOException, ConverterException {
-        parse(new ByteArrayInputStream(data));
-    }
+  /**
+   * getter for name
+   *
+   * @return name of this {@link Tag}
+   */
+  public String getName() {
+    return name;
+  }
 
-    /**
-     * method to read tag data from inputStream given
-     *
-     * @param inputStream InputStream
-     * @throws IOException
-     *             - in case of any IO errors
-     */
-    public void readData(InputStream inputStream) throws IOException {
-        if (inputStream == null) {
-            return;
-        }
+  /**
+   * getter for id
+   *
+   * @return id of this {@link Tag} as binary value of correspondent {@link VINT}
+   */
+  public long getId() {
+    return id.getBinary();
+  }
 
-        data = ParserUtils.parseBinary(inputStream, (int) size.getValue());
-    }
+  /**
+   * getter for size
+   *
+   * @return size of this {@link Tag} as value of correspondent {@link VINT}
+   */
+  public long getSize() {
+    return size.getValue();
+  }
 
-    /**
-     * method to store tag value to {@link ByteBuffer} given
-     *
-     * @param bb
-     *            - {@link ByteBuffer} to store value
-     * @throws IOException
-     *             - in case of any IO errors
-     */
-    protected abstract void putValue(ByteBuffer bb) throws IOException;
+  /**
+   * method to get total size of this tag: "header" + "contents"
+   *
+   * @return - total size as int
+   */
+  public int totalSize() {
+    return (int) (id.getLength() + size.getLength() + size.getValue());
+  }
 
-    /**
-     * getter for name
-     *
-     * @return name of this {@link Tag}
-     */
-    public String getName() {
-        return name;
-    }
+  /**
+   * method to encode {@link Tag} as sequence of bytes
+   *
+   * @return - encoded {@link Tag}
+   * @throws IOException - in case of any IO errors
+   */
+  public byte[] encode() throws IOException {
+    final ByteBuffer buf = ByteBuffer.allocate(totalSize());
+    log.debug("Tag: " + this);
+    buf.put(id.encode());
+    buf.put(size.encode());
+    putValue(buf);
+    buf.flip();
+    return buf.array();
+  }
 
-    /**
-     * getter for id
-     *
-     * @return id of this {@link Tag} as binary value of correspondent {@link VINT}
-     */
-    public long getId() {
-        return id.getBinary();
-    }
-
-    /**
-     * getter for size
-     *
-     * @return size of this {@link Tag} as value of correspondent {@link VINT}
-     */
-    public long getSize() {
-        return size.getValue();
-    }
-
-    /**
-     * method to get total size of this tag: "header" + "contents"
-     *
-     * @return - total size as int
-     */
-    public int totalSize() {
-        return (int) (id.getLength() + size.getLength() + size.getValue());
-    }
-
-    /**
-     * method to encode {@link Tag} as sequence of bytes
-     *
-     * @return - encoded {@link Tag}
-     * @throws IOException
-     *             - in case of any IO errors
-     */
-    public byte[] encode() throws IOException {
-        final ByteBuffer buf = ByteBuffer.allocate(totalSize());
-        log.debug("Tag: " + this);
-        buf.put(id.encode());
-        buf.put(size.encode());
-        putValue(buf);
-        buf.flip();
-        return buf.array();
-    }
-
-    /**
-     * method to get "pretty" represented {@link Tag}
-     */
-    @Override
-    public String toString() {
-        return String.format("%s [id: %s, size: %s]", name, id, size);
-    }
+  /** method to get "pretty" represented {@link Tag} */
+  @Override
+  public String toString() {
+    return String.format("%s [id: %s, size: %s]", name, id, size);
+  }
 }

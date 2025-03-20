@@ -14,36 +14,31 @@ import org.red5.server.messaging.IProvider;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 
-/**
- * Provides connection via pipe
- */
+/** Provides connection via pipe */
 public class ConnectionProvider implements IProvider, IPipeConnectionListener {
 
-    /**
-     * Pipe used by connection
-     */
-    private IPipe pipe;
+  /** Pipe used by connection */
+  private IPipe pipe;
 
-    /** {@inheritDoc} */
-    public void onOOBControlMessage(IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {
-    }
+  /** {@inheritDoc} */
+  public void onOOBControlMessage(
+      IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {}
 
-    /** {@inheritDoc} */
-    public void onPipeConnectionEvent(PipeConnectionEvent event) {
-        switch (event.getType()) {
-            case PROVIDER_CONNECT_PUSH:
-                if (event.getProvider() == this) {
-                    pipe = (IPipe) event.getSource();
-                }
-                break;
-            case PROVIDER_DISCONNECT:
-                if (pipe == event.getSource()) {
-                    pipe = null;
-                }
-                break;
-            default:
-                break;
+  /** {@inheritDoc} */
+  public void onPipeConnectionEvent(PipeConnectionEvent event) {
+    switch (event.getType()) {
+      case PROVIDER_CONNECT_PUSH:
+        if (event.getProvider() == this) {
+          pipe = (IPipe) event.getSource();
         }
+        break;
+      case PROVIDER_DISCONNECT:
+        if (pipe == event.getSource()) {
+          pipe = null;
+        }
+        break;
+      default:
+        break;
     }
-
+  }
 }

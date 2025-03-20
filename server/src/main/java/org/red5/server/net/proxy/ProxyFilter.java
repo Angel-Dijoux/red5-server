@@ -13,73 +13,62 @@ import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Proxy filter
- */
+/** Proxy filter */
 public class ProxyFilter extends IoFilterAdapter {
-    /**
-     * Forwarding key constant
-     */
-    public static final String FORWARD_KEY = "proxy_forward_key";
+  /** Forwarding key constant */
+  public static final String FORWARD_KEY = "proxy_forward_key";
 
-    /**
-     * Logger
-     */
-    protected static Logger log = LoggerFactory.getLogger(ProxyFilter.class);
+  /** Logger */
+  protected static Logger log = LoggerFactory.getLogger(ProxyFilter.class);
 
-    /**
-     * Filter name
-     */
-    protected String name;
+  /** Filter name */
+  protected String name;
 
-    /**
-     * Create proxy filter with given name
-     *
-     * @param name
-     *            name
-     */
-    public ProxyFilter(String name) {
-        this.name = name;
-    }
+  /**
+   * Create proxy filter with given name
+   *
+   * @param name name
+   */
+  public ProxyFilter(String name) {
+    this.name = name;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void messageReceived(NextFilter next, IoSession session, Object message) throws Exception {
-        // Create forwarding IO session
-        IoSession forward = (IoSession) session.getAttribute(FORWARD_KEY);
-        if (forward != null && forward.isConnected()) {
+  /** {@inheritDoc} */
+  @Override
+  public void messageReceived(NextFilter next, IoSession session, Object message) throws Exception {
+    // Create forwarding IO session
+    IoSession forward = (IoSession) session.getAttribute(FORWARD_KEY);
+    if (forward != null && forward.isConnected()) {
 
-            if (message instanceof IoBuffer) {
-                final IoBuffer buf = (IoBuffer) message;
-                if (log.isDebugEnabled()) {
-                    log.debug("[{}] RAW >> {}", name, buf.getHexDump());
-                }
-                IoBuffer copy = IoBuffer.allocate(buf.limit());
-                int limit = buf.limit();
-                copy.put(buf);
-                copy.flip();
-                forward.write(copy);
-                buf.flip();
-                buf.position(0);
-                buf.limit(limit);
-            }
-
+      if (message instanceof IoBuffer) {
+        final IoBuffer buf = (IoBuffer) message;
+        if (log.isDebugEnabled()) {
+          log.debug("[{}] RAW >> {}", name, buf.getHexDump());
         }
-        next.messageReceived(session, message);
+        IoBuffer copy = IoBuffer.allocate(buf.limit());
+        int limit = buf.limit();
+        copy.put(buf);
+        copy.flip();
+        forward.write(copy);
+        buf.flip();
+        buf.position(0);
+        buf.limit(limit);
+      }
     }
+    next.messageReceived(session, message);
+  }
 
-    /** {@inheritDoc} */
-    @SuppressWarnings("deprecation")
-    @Override
-    public void sessionClosed(NextFilter next, IoSession session) throws Exception {
-        IoSession forward = (IoSession) session.getAttribute(FORWARD_KEY);
-        if (forward != null && forward.isConnected() && !forward.isClosing()) {
-            if (log.isDebugEnabled()) {
-                log.debug("[{}] Closing: {}", name, forward);
-            }
-            forward.close(true);
-        }
-        next.sessionClosed(session);
+  /** {@inheritDoc} */
+  @SuppressWarnings("deprecation")
+  @Override
+  public void sessionClosed(NextFilter next, IoSession session) throws Exception {
+    IoSession forward = (IoSession) session.getAttribute(FORWARD_KEY);
+    if (forward != null && forward.isConnected() && !forward.isClosing()) {
+      if (log.isDebugEnabled()) {
+        log.debug("[{}] Closing: {}", name, forward);
+      }
+      forward.close(true);
     }
-
+    next.sessionClosed(session);
+  }
 }

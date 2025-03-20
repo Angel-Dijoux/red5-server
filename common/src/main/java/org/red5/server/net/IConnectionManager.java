@@ -11,64 +11,59 @@ import java.util.Collection;
 
 public interface IConnectionManager<T> {
 
-    /**
-     * Returns a connection matching the given session id.
-     *
-     * @param sessionId
-     *            session id
-     * @return connection
-     */
-    T getConnectionBySessionId(String sessionId);
+  /**
+   * Returns a connection matching the given session id.
+   *
+   * @param sessionId session id
+   * @return connection
+   */
+  T getConnectionBySessionId(String sessionId);
 
-    /**
-     * Returns all the current connections. It doesn't remove anything.
-     *
-     * @return list of connections
-     */
-    Collection<T> getAllConnections();
+  /**
+   * Returns all the current connections. It doesn't remove anything.
+   *
+   * @return list of connections
+   */
+  Collection<T> getAllConnections();
 
-    /**
-     * Creates a connection based on the given type class.
-     *
-     * @param connCls
-     *            class
-     * @return connection
-     */
-    T createConnection(Class<?> connCls);
+  /**
+   * Creates a connection based on the given type class.
+   *
+   * @param connCls class
+   * @return connection
+   */
+  T createConnection(Class<?> connCls);
 
-    /**
-     * Creates a connection of the type specified with associated session id.
-     *
-     * @param connCls
-     *            class
-     * @param sessionId
-     *            session id
-     * @return connection
-     */
-    T createConnection(Class<?> connCls, String sessionId);
+  /**
+   * Creates a connection of the type specified with associated session id.
+   *
+   * @param connCls class
+   * @param sessionId session id
+   * @return connection
+   */
+  T createConnection(Class<?> connCls, String sessionId);
 
-    /**
-     * Removes a connection matching the client id specified. If found, the connection will be returned.
-     *
-     * @param conn the connection to be removed
-     * @return connection
-     */
-    T removeConnection(T conn);
+  /**
+   * Removes a connection matching the client id specified. If found, the connection will be
+   * returned.
+   *
+   * @param conn the connection to be removed
+   * @return connection
+   */
+  T removeConnection(T conn);
 
-    /**
-     * Removes a connection by the given sessionId.
-     *
-     * @param sessionId
-     *            session id
-     * @return connection that was removed
-     */
-    T removeConnection(String sessionId);
+  /**
+   * Removes a connection by the given sessionId.
+   *
+   * @param sessionId session id
+   * @return connection that was removed
+   */
+  T removeConnection(String sessionId);
 
-    /**
-     * Removes all the connections from the set.
-     *
-     * @return connections
-     */
-    Collection<T> removeConnections();
-
+  /**
+   * Removes all the connections from the set.
+   *
+   * @return connections
+   */
+  Collection<T> removeConnections();
 }

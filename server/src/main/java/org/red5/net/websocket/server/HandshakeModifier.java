@@ -10,13 +10,11 @@ import javax.websocket.server.HandshakeRequest;
  */
 public class HandshakeModifier {
 
-    /**
-     * Modifies the handshake request and / or response.
-     *
-     * @param request
-     * @param response
-     */
-    public void modifyHandshake(HandshakeRequest request, HandshakeResponse response) {
-    }
-
+  /**
+   * Modifies the handshake request and / or response.
+   *
+   * @param request
+   * @param response
+   */
+  public void modifyHandshake(HandshakeRequest request, HandshakeResponse response) {}
 }

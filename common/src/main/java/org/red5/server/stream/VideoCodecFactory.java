@@ -9,7 +9,6 @@ package org.red5.server.stream;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.codec.IVideoStreamCodec;
 import org.slf4j.Logger;
@@ -22,107 +21,123 @@ import org.slf4j.LoggerFactory;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public class VideoCodecFactory {
-    /**
-     * Object key
-     */
-    public static final String KEY = "videoCodecFactory";
+  /** Object key */
+  public static final String KEY = "videoCodecFactory";
 
-    /**
-     * Logger for video factory
-     */
-    private static Logger log = LoggerFactory.getLogger(VideoCodecFactory.class);
+  /** Logger for video factory */
+  private static Logger log = LoggerFactory.getLogger(VideoCodecFactory.class);
 
-    /**
-     * List of available codecs
-     */
-    private static List<IVideoStreamCodec> codecs = new ArrayList<IVideoStreamCodec>(3);
+  /** List of available codecs */
+  private static List<IVideoStreamCodec> codecs = new ArrayList<IVideoStreamCodec>(3);
 
-    /**
-     * Setter for codecs
-     *
-     * @param codecs
-     *            List of codecs
-     */
-    public void setCodecs(List<IVideoStreamCodec> codecs) {
-        VideoCodecFactory.codecs = codecs;
+  /**
+   * Setter for codecs
+   *
+   * @param codecs List of codecs
+   */
+  public void setCodecs(List<IVideoStreamCodec> codecs) {
+    VideoCodecFactory.codecs = codecs;
+  }
+
+  /**
+   * Create and return new video codec applicable for byte buffer data
+   *
+   * @param data Byte buffer data
+   * @return Video codec
+   */
+  public static IVideoStreamCodec getVideoCodec(IoBuffer data) {
+    IVideoStreamCodec result = null;
+    // get the codec identifying byte
+    int codecId = data.get() & 0x0f;
+    try {
+      switch (codecId) {
+        case 2: // sorenson
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.SorensonVideo")
+                      .getDeclaredConstructor()
+                      .newInstance();
+          break;
+        case 3: // screen video
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.ScreenVideo")
+                      .getDeclaredConstructor()
+                      .newInstance();
+          break;
+        case 6: // screen video 2
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.ScreenVideo2")
+                      .getDeclaredConstructor()
+                      .newInstance();
+          break;
+        case 7: // avc/h.264 video
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.AVCVideo").getDeclaredConstructor().newInstance();
+          break;
+        case 8: // vp8
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.VP8Video").getDeclaredConstructor().newInstance();
+          break;
+        case 9: // vp9
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.VP9Video").getDeclaredConstructor().newInstance();
+          break;
+        case 10: // av1
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.AV1Video").getDeclaredConstructor().newInstance();
+          break;
+        case 11: // mpeg1video
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.MPEG1Video").getDeclaredConstructor().newInstance();
+          break;
+        case 12: // hevc
+          result =
+              (IVideoStreamCodec)
+                  Class.forName("org.red5.codec.HEVCVideo").getDeclaredConstructor().newInstance();
+          break;
+      }
+    } catch (Exception ex) {
+      log.error("Error creating codec instance", ex);
     }
-
-    /**
-     * Create and return new video codec applicable for byte buffer data
-     *
-     * @param data
-     *            Byte buffer data
-     * @return Video codec
-     */
-    public static IVideoStreamCodec getVideoCodec(IoBuffer data) {
-        IVideoStreamCodec result = null;
-        //get the codec identifying byte
-        int codecId = data.get() & 0x0f;
+    data.rewind();
+    // if codec is not found do the old-style loop
+    if (result == null) {
+      for (IVideoStreamCodec storedCodec : codecs) {
+        IVideoStreamCodec codec;
+        // XXX: this is a bit of a hack to create new instances of the
+        // configured video codec for each stream
         try {
-            switch (codecId) {
-                case 2: // sorenson
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.SorensonVideo").getDeclaredConstructor().newInstance();
-                    break;
-                case 3: // screen video
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.ScreenVideo").getDeclaredConstructor().newInstance();
-                    break;
-                case 6: // screen video 2
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.ScreenVideo2").getDeclaredConstructor().newInstance();
-                    break;
-                case 7: // avc/h.264 video
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.AVCVideo").getDeclaredConstructor().newInstance();
-                    break;
-                case 8: // vp8
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.VP8Video").getDeclaredConstructor().newInstance();
-                    break;
-                case 9: // vp9
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.VP9Video").getDeclaredConstructor().newInstance();
-                    break;
-                case 10: // av1
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.AV1Video").getDeclaredConstructor().newInstance();
-                    break;
-                case 11: // mpeg1video
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.MPEG1Video").getDeclaredConstructor().newInstance();
-                    break;
-                case 12: // hevc
-                    result = (IVideoStreamCodec) Class.forName("org.red5.codec.HEVCVideo").getDeclaredConstructor().newInstance();
-                    break;
-            }
-        } catch (Exception ex) {
-            log.error("Error creating codec instance", ex);
+          codec = storedCodec.getClass().getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+          log.error("Could not create video codec instance", e);
+          continue;
         }
-        data.rewind();
-        //if codec is not found do the old-style loop
-        if (result == null) {
-            for (IVideoStreamCodec storedCodec : codecs) {
-                IVideoStreamCodec codec;
-                // XXX: this is a bit of a hack to create new instances of the
-                // configured video codec for each stream
-                try {
-                    codec = storedCodec.getClass().getDeclaredConstructor().newInstance();
-                } catch (Exception e) {
-                    log.error("Could not create video codec instance", e);
-                    continue;
-                }
-                if (codec.canHandleData(data)) {
-                    result = codec;
-                    break;
-                }
-            }
+        if (codec.canHandleData(data)) {
+          result = codec;
+          break;
         }
-        return result;
+      }
     }
+    return result;
+  }
 
-    //	private boolean isScreenVideo(byte first) {
-    //    	log.debug("Trying ScreenVideo");
-    //		boolean result = ((first & 0x0f) == 3);
-    //		return result;
-    //	}
-    //
-    //	private boolean isSorenson(byte first) {
-    //    	log.debug("Trying Sorenson");
-    //		boolean result = ((first & 0x0f) == 2);
-    //		return result;
-    //	}
+  //	private boolean isScreenVideo(byte first) {
+  //    	log.debug("Trying ScreenVideo");
+  //		boolean result = ((first & 0x0f) == 3);
+  //		return result;
+  //	}
+  //
+  //	private boolean isSorenson(byte first) {
+  //    	log.debug("Trying Sorenson");
+  //		boolean result = ((first & 0x0f) == 2);
+  //		return result;
+  //	}
 
 }

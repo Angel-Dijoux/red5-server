@@ -8,7 +8,6 @@
 package org.red5.server.jmx.mxbeans;
 
 import java.util.Set;
-
 import javax.management.MXBean;
 
 /**
@@ -20,12 +19,11 @@ import javax.management.MXBean;
 @MXBean
 public interface AttributeStoreMXBean {
 
-    public Set<String> getAttributeNames();
+  public Set<String> getAttributeNames();
 
-    public boolean hasAttribute(String name);
+  public boolean hasAttribute(String name);
 
-    public boolean removeAttribute(String name);
+  public boolean removeAttribute(String name);
 
-    public void removeAttributes();
-
+  public void removeAttributes();
 }

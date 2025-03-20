@@ -15,6 +15,4 @@ import org.red5.server.api.service.IStreamableFileService;
  * @author The Red5 Project
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public interface IMP4Service extends IStreamableFileService {
-
-}
+public interface IMP4Service extends IStreamableFileService {}

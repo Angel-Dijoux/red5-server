@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.red5.server.api.IAttributeStore;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
@@ -23,312 +22,300 @@ import org.red5.server.plugin.PluginDescriptor;
 import org.springframework.core.io.Resource;
 
 /**
- * StatefulScopeWrappingAdapter class wraps stateful IScope functionality. That is, it has attributes that you can work with, subscopes, associated resources and connections.
- *
+ * StatefulScopeWrappingAdapter class wraps stateful IScope functionality. That is, it has
+ * attributes that you can work with, subscopes, associated resources and connections.
  */
-public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter implements IScopeAware, IAttributeStore {
+public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
+    implements IScopeAware, IAttributeStore {
 
-    //private static Logger log = LoggerFactory.getLogger(StatefulScopeWrappingAdapter.class);
+  // private static Logger log = LoggerFactory.getLogger(StatefulScopeWrappingAdapter.class);
 
-    /**
-     * Wrapped scope
-     */
-    protected volatile IScope scope;
+  /** Wrapped scope */
+  protected volatile IScope scope;
 
-    /**
-     * List of plug-in descriptors
-     */
-    protected List<PluginDescriptor> plugins;
+  /** List of plug-in descriptors */
+  protected List<PluginDescriptor> plugins;
 
-    /** {@inheritDoc} */
-    public void setScope(IScope scope) {
-        //log.trace("setScope: {}", scope.getName());
-        this.scope = scope;
+  /** {@inheritDoc} */
+  public void setScope(IScope scope) {
+    // log.trace("setScope: {}", scope.getName());
+    this.scope = scope;
+  }
+
+  /**
+   * Getter for wrapped scope
+   *
+   * @return Wrapped scope
+   */
+  public IScope getScope() {
+    // log.trace("getScope: {}", scope.getName());
+    return scope;
+  }
+
+  /**
+   * Returns any plug-ins descriptors added
+   *
+   * @return plug-in descriptor list
+   */
+  public List<PluginDescriptor> getPlugins() {
+    return plugins;
+  }
+
+  /**
+   * Adds a list of plug-in descriptors
+   *
+   * @param plugins plugins
+   */
+  public void setPlugins(List<PluginDescriptor> plugins) {
+    this.plugins = plugins;
+  }
+
+  /** {@inheritDoc} */
+  public Object getAttribute(String name) {
+    return scope.getAttribute(name);
+  }
+
+  /** {@inheritDoc} */
+  public Object getAttribute(Enum<?> enm) {
+    return getAttribute(enm.name());
+  }
+
+  /** {@inheritDoc} */
+  public Object getAttribute(String name, Object defaultValue) {
+    Object value = scope.getAttribute(name);
+    if (value == null) {
+      value = defaultValue;
     }
+    return value;
+  }
 
-    /**
-     * Getter for wrapped scope
-     *
-     * @return Wrapped scope
-     */
-    public IScope getScope() {
-        //log.trace("getScope: {}", scope.getName());
-        return scope;
+  /** {@inheritDoc} */
+  public Set<String> getAttributeNames() {
+    return scope.getAttributeNames();
+  }
+
+  /**
+   * Wrapper for Scope#getAttributes
+   *
+   * @return Scope attributes map
+   */
+  public Map<String, Object> getAttributes() {
+    return scope.getAttributes();
+  }
+
+  /** {@inheritDoc} */
+  public boolean hasAttribute(String name) {
+    return scope.hasAttribute(name);
+  }
+
+  /** {@inheritDoc} */
+  public boolean hasAttribute(Enum<?> enm) {
+    return hasAttribute(enm.name());
+  }
+
+  /** {@inheritDoc} */
+  public boolean removeAttribute(String name) {
+    return scope.removeAttribute(name);
+  }
+
+  /** {@inheritDoc} */
+  public boolean removeAttribute(Enum<?> enm) {
+    return removeAttribute(enm.name());
+  }
+
+  /** {@inheritDoc} */
+  public void removeAttributes() {
+    Set<String> names = scope.getAttributeNames();
+    for (String name : names) {
+      scope.removeAttribute(name);
     }
+  }
 
-    /**
-     * Returns any plug-ins descriptors added
-     *
-     * @return plug-in descriptor list
-     */
-    public List<PluginDescriptor> getPlugins() {
-        return plugins;
+  /** {@inheritDoc} */
+  public int size() {
+    return scope != null ? scope.getAttributeNames().size() : 0;
+  }
+
+  /** {@inheritDoc} */
+  public boolean setAttribute(String name, Object value) {
+    return scope.setAttribute(name, value);
+  }
+
+  /** {@inheritDoc} */
+  public boolean setAttribute(Enum<?> enm, Object value) {
+    return setAttribute(enm.name(), value);
+  }
+
+  /** {@inheritDoc} */
+  public boolean setAttributes(IAttributeStore attributes) {
+    int successes = 0;
+    for (Map.Entry<String, Object> entry : attributes.getAttributes().entrySet()) {
+      if (scope.setAttribute(entry.getKey(), entry.getValue())) {
+        successes++;
+      }
     }
+    // expect every value to have been added
+    return (successes == attributes.size());
+  }
 
-    /**
-     * Adds a list of plug-in descriptors
-     *
-     * @param plugins
-     *            plugins
-     */
-    public void setPlugins(List<PluginDescriptor> plugins) {
-        this.plugins = plugins;
+  /** {@inheritDoc} */
+  public boolean setAttributes(Map<String, Object> attributes) {
+    int successes = 0;
+    for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+      if (scope.setAttribute(entry.getKey(), entry.getValue())) {
+        successes++;
+      }
     }
+    // expect every value to have been added
+    return (successes == attributes.size());
+  }
 
-    /** {@inheritDoc} */
-    public Object getAttribute(String name) {
-        return scope.getAttribute(name);
+  /**
+   * Creates child scope
+   *
+   * @param name Child scope name
+   * @return true on success, false otherwise
+   */
+  public boolean createChildScope(String name) {
+    if (!scope.hasChildScope(name)) {
+      return scope.createChildScope(name);
     }
+    return false;
+  }
 
-    /** {@inheritDoc} */
-    public Object getAttribute(Enum<?> enm) {
-        return getAttribute(enm.name());
-    }
+  /**
+   * Return child scope
+   *
+   * @param name Child scope name
+   * @return Child scope with given name
+   */
+  public IScope getChildScope(String name) {
+    return scope.getScope(name);
+  }
 
-    /** {@inheritDoc} */
-    public Object getAttribute(String name, Object defaultValue) {
-        Object value = scope.getAttribute(name);
-        if (value == null) {
-            value = defaultValue;
-        }
-        return value;
-    }
+  /**
+   * Iterator for child scope names
+   *
+   * @return collection of child scope names
+   */
+  public Set<String> getChildScopeNames() {
+    return scope.getScopeNames();
+  }
 
-    /** {@inheritDoc} */
-    public Set<String> getAttributeNames() {
-        return scope.getAttributeNames();
-    }
+  /**
+   * Getter for set of clients
+   *
+   * @return Set of clients
+   */
+  public Set<IClient> getClients() {
+    return scope.getClients();
+  }
 
-    /**
-     * Wrapper for Scope#getAttributes
-     *
-     * @return Scope attributes map
-     */
-    public Map<String, Object> getAttributes() {
-        return scope.getAttributes();
-    }
+  /**
+   * Returns all connections in the scope
+   *
+   * @return collection of a set of connections
+   */
+  @SuppressWarnings("deprecation")
+  public Collection<Set<IConnection>> getConnections() {
+    return scope.getConnections();
+  }
 
-    /** {@inheritDoc} */
-    public boolean hasAttribute(String name) {
-        return scope.hasAttribute(name);
-    }
+  /**
+   * Returns all connections for a given client
+   *
+   * @param client client
+   * @return set of connections
+   */
+  @SuppressWarnings("deprecation")
+  public Set<IConnection> lookupConnections(IClient client) {
+    return scope.lookupConnections(client);
+  }
 
-    /** {@inheritDoc} */
-    public boolean hasAttribute(Enum<?> enm) {
-        return hasAttribute(enm.name());
-    }
+  /**
+   * Getter for context
+   *
+   * @return Value for context
+   */
+  public IContext getContext() {
+    return scope.getContext();
+  }
 
-    /** {@inheritDoc} */
-    public boolean removeAttribute(String name) {
-        return scope.removeAttribute(name);
-    }
+  /**
+   * Getter for depth
+   *
+   * @return Value for depth
+   */
+  public int getDepth() {
+    return scope.getDepth();
+  }
 
-    /** {@inheritDoc} */
-    public boolean removeAttribute(Enum<?> enm) {
-        return removeAttribute(enm.name());
-    }
+  /**
+   * Getter for name
+   *
+   * @return Value for name
+   */
+  public String getName() {
+    return scope.getName();
+  }
 
-    /** {@inheritDoc} */
-    public void removeAttributes() {
-        Set<String> names = scope.getAttributeNames();
-        for (String name : names) {
-            scope.removeAttribute(name);
-        }
-    }
+  /**
+   * Return parent scope
+   *
+   * @return Parent scope
+   */
+  public IScope getParent() {
+    return scope.getParent();
+  }
 
-    /** {@inheritDoc} */
-    public int size() {
-        return scope != null ? scope.getAttributeNames().size() : 0;
-    }
+  /**
+   * Getter for stateful scope path
+   *
+   * @return Value for path
+   */
+  public String getPath() {
+    return scope.getPath();
+  }
 
-    /** {@inheritDoc} */
-    public boolean setAttribute(String name, Object value) {
-        return scope.setAttribute(name, value);
-    }
+  /**
+   * Whether this scope has a child scope with given name
+   *
+   * @param name Child scope name
+   * @return true if it does have it, false otherwise
+   */
+  public boolean hasChildScope(String name) {
+    return scope.hasChildScope(name);
+  }
 
-    /** {@inheritDoc} */
-    public boolean setAttribute(Enum<?> enm, Object value) {
-        return setAttribute(enm.name(), value);
-    }
+  /**
+   * If this scope has a parent
+   *
+   * @return true if this scope has a parent scope, false otherwise
+   */
+  public boolean hasParent() {
+    return scope.hasParent();
+  }
 
-    /** {@inheritDoc} */
-    public boolean setAttributes(IAttributeStore attributes) {
-        int successes = 0;
-        for (Map.Entry<String, Object> entry : attributes.getAttributes().entrySet()) {
-            if (scope.setAttribute(entry.getKey(), entry.getValue())) {
-                successes++;
-            }
-        }
-        // expect every value to have been added
-        return (successes == attributes.size());
-    }
+  /**
+   * Returns array of resources (as Spring core Resource class instances)
+   *
+   * @param pattern Resource pattern
+   * @return Returns array of resources
+   * @throws IOException I/O exception
+   */
+  @SuppressWarnings("null")
+  public Resource[] getResources(String pattern) throws IOException {
+    return scope.getResources(pattern);
+  }
 
-    /** {@inheritDoc} */
-    public boolean setAttributes(Map<String, Object> attributes) {
-        int successes = 0;
-        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-            if (scope.setAttribute(entry.getKey(), entry.getValue())) {
-                successes++;
-            }
-        }
-        // expect every value to have been added
-        return (successes == attributes.size());
-    }
-
-    /**
-     * Creates child scope
-     *
-     * @param name
-     *            Child scope name
-     * @return true on success, false otherwise
-     */
-    public boolean createChildScope(String name) {
-        if (!scope.hasChildScope(name)) {
-            return scope.createChildScope(name);
-        }
-        return false;
-    }
-
-    /**
-     * Return child scope
-     *
-     * @param name
-     *            Child scope name
-     * @return Child scope with given name
-     */
-    public IScope getChildScope(String name) {
-        return scope.getScope(name);
-    }
-
-    /**
-     * Iterator for child scope names
-     *
-     * @return collection of child scope names
-     */
-    public Set<String> getChildScopeNames() {
-        return scope.getScopeNames();
-    }
-
-    /**
-     * Getter for set of clients
-     *
-     * @return Set of clients
-     */
-    public Set<IClient> getClients() {
-        return scope.getClients();
-    }
-
-    /**
-     * Returns all connections in the scope
-     *
-     * @return collection of a set of connections
-     */
-    @SuppressWarnings("deprecation")
-    public Collection<Set<IConnection>> getConnections() {
-        return scope.getConnections();
-    }
-
-    /**
-     * Returns all connections for a given client
-     *
-     * @param client
-     *            client
-     * @return set of connections
-     */
-    @SuppressWarnings("deprecation")
-    public Set<IConnection> lookupConnections(IClient client) {
-        return scope.lookupConnections(client);
-    }
-
-    /**
-     * Getter for context
-     *
-     * @return Value for context
-     */
-    public IContext getContext() {
-        return scope.getContext();
-    }
-
-    /**
-     * Getter for depth
-     *
-     * @return Value for depth
-     */
-    public int getDepth() {
-        return scope.getDepth();
-    }
-
-    /**
-     * Getter for name
-     *
-     * @return Value for name
-     */
-    public String getName() {
-        return scope.getName();
-    }
-
-    /**
-     * Return parent scope
-     *
-     * @return Parent scope
-     */
-    public IScope getParent() {
-        return scope.getParent();
-    }
-
-    /**
-     * Getter for stateful scope path
-     *
-     * @return Value for path
-     */
-    public String getPath() {
-        return scope.getPath();
-    }
-
-    /**
-     * Whether this scope has a child scope with given name
-     *
-     * @param name
-     *            Child scope name
-     * @return true if it does have it, false otherwise
-     */
-    public boolean hasChildScope(String name) {
-        return scope.hasChildScope(name);
-    }
-
-    /**
-     * If this scope has a parent
-     *
-     * @return true if this scope has a parent scope, false otherwise
-     */
-    public boolean hasParent() {
-        return scope.hasParent();
-    }
-
-    /**
-     * Returns array of resources (as Spring core Resource class instances)
-     *
-     * @param pattern
-     *            Resource pattern
-     * @return Returns array of resources
-     * @throws IOException
-     *             I/O exception
-     */
-    @SuppressWarnings("null")
-    public Resource[] getResources(String pattern) throws IOException {
-        return scope.getResources(pattern);
-    }
-
-    /**
-     * Return resource by name
-     *
-     * @param path
-     *            Resource name
-     * @return Resource with given name
-     */
-    @SuppressWarnings("null")
-    public Resource getResource(String path) {
-        return scope.getResource(path);
-    }
-
+  /**
+   * Return resource by name
+   *
+   * @param path Resource name
+   * @return Resource with given name
+   */
+  @SuppressWarnings("null")
+  public Resource getResource(String path) {
+    return scope.getResource(path);
+  }
 }

@@ -16,42 +16,36 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-/**
- * RTMP codec factory.
- */
-public class RTMPMinaCodecFactory implements ProtocolCodecFactory, ApplicationContextAware, InitializingBean {
+/** RTMP codec factory. */
+public class RTMPMinaCodecFactory
+    implements ProtocolCodecFactory, ApplicationContextAware, InitializingBean {
 
-    protected ApplicationContext appCtx;
+  protected ApplicationContext appCtx;
 
-    /**
-     * RTMP Mina protocol decoder.
-     */
-    protected RTMPMinaProtocolDecoder decoder = new RTMPMinaProtocolDecoder();
+  /** RTMP Mina protocol decoder. */
+  protected RTMPMinaProtocolDecoder decoder = new RTMPMinaProtocolDecoder();
 
-    /**
-     * RTMP Mina protocol encoder.
-     */
-    protected RTMPMinaProtocolEncoder encoder = new RTMPMinaProtocolEncoder();
+  /** RTMP Mina protocol encoder. */
+  protected RTMPMinaProtocolEncoder encoder = new RTMPMinaProtocolEncoder();
 
-    public void afterPropertiesSet() throws Exception {
-        decoder = (RTMPMinaProtocolDecoder) appCtx.getBean("minaDecoder");
-        encoder = (RTMPMinaProtocolEncoder) appCtx.getBean("minaEncoder");
-    }
+  public void afterPropertiesSet() throws Exception {
+    decoder = (RTMPMinaProtocolDecoder) appCtx.getBean("minaDecoder");
+    encoder = (RTMPMinaProtocolEncoder) appCtx.getBean("minaEncoder");
+  }
 
-    /** {@inheritDoc} */
-    public ProtocolDecoder getDecoder(IoSession session) {
-        return decoder;
-    }
+  /** {@inheritDoc} */
+  public ProtocolDecoder getDecoder(IoSession session) {
+    return decoder;
+  }
 
-    /** {@inheritDoc} */
-    public ProtocolEncoder getEncoder(IoSession session) {
-        return encoder;
-    }
+  /** {@inheritDoc} */
+  public ProtocolEncoder getEncoder(IoSession session) {
+    return encoder;
+  }
 
-    @SuppressWarnings("null")
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        appCtx = applicationContext;
-    }
-
+  @SuppressWarnings("null")
+  @Override
+  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    appCtx = applicationContext;
+  }
 }

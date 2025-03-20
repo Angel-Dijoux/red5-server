@@ -19,19 +19,18 @@ import org.slf4j.LoggerFactory;
  */
 public class RTMPTSClient extends RTMPTClient {
 
-    private static final Logger log = LoggerFactory.getLogger(RTMPTSClient.class);
+  private static final Logger log = LoggerFactory.getLogger(RTMPTSClient.class);
 
-    public RTMPTSClient() {
-        protocol = "rtmps";
-        codecFactory = new RTMPTCodecFactory();
-        codecFactory.init();
-    }
+  public RTMPTSClient() {
+    protocol = "rtmps";
+    codecFactory = new RTMPTCodecFactory();
+    codecFactory.init();
+  }
 
-    @Override
-    protected synchronized void startConnector(String server, int port) {
-        connector = new RTMPTSClientConnector(server, port, this);
-        log.debug("Created connector {}", connector);
-        connector.start();
-    }
-
+  @Override
+  protected synchronized void startConnector(String server, int port) {
+    connector = new RTMPTSClientConnector(server, port, this);
+    log.debug("Created connector {}", connector);
+    connector.start();
+  }
 }

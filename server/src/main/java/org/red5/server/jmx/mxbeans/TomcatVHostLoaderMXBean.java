@@ -9,7 +9,6 @@ package org.red5.server.jmx.mxbeans;
 
 import javax.management.MXBean;
 import javax.servlet.ServletException;
-
 import org.apache.catalina.Host;
 import org.apache.catalina.Valve;
 
@@ -22,48 +21,48 @@ import org.apache.catalina.Valve;
 @MXBean
 public interface TomcatVHostLoaderMXBean {
 
-    public boolean startWebApplication(String applicationName) throws ServletException;
+  public boolean startWebApplication(String applicationName) throws ServletException;
 
-    public boolean getAutoDeploy();
+  public boolean getAutoDeploy();
 
-    public void setAutoDeploy(boolean autoDeploy);
+  public void setAutoDeploy(boolean autoDeploy);
 
-    public Host getHost();
+  public Host getHost();
 
-    public String getDomain();
+  public String getDomain();
 
-    public void setDomain(String domain);
+  public void setDomain(String domain);
 
-    public void addAlias(String alias);
+  public void addAlias(String alias);
 
-    public void removeAlias(String alias);
+  public void removeAlias(String alias);
 
-    public org.apache.catalina.Context addContext(String path, String docBase) throws ServletException;
+  public org.apache.catalina.Context addContext(String path, String docBase)
+      throws ServletException;
 
-    public void removeContext(String path);
+  public void removeContext(String path);
 
-    public void addValve(Valve valve);
+  public void addValve(Valve valve);
 
-    public void removeValve(String valveInfo);
+  public void removeValve(String valveInfo);
 
-    public boolean getLiveDeploy();
+  public boolean getLiveDeploy();
 
-    public void setLiveDeploy(boolean liveDeploy);
+  public void setLiveDeploy(boolean liveDeploy);
 
-    public String getName();
+  public String getName();
 
-    public void setName(String name);
+  public void setName(String name);
 
-    public boolean getStartChildren();
+  public boolean getStartChildren();
 
-    public void setStartChildren(boolean startChildren);
+  public void setStartChildren(boolean startChildren);
 
-    public boolean getUnpackWARs();
+  public boolean getUnpackWARs();
 
-    public void setUnpackWARs(boolean unpackWARs);
+  public void setUnpackWARs(boolean unpackWARs);
 
-    public String getWebappRoot();
+  public String getWebappRoot();
 
-    public void setWebappRoot(String webappRoot);
-
+  public void setWebappRoot(String webappRoot);
 }

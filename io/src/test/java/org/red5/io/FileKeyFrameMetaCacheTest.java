@@ -11,7 +11,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,17 +18,22 @@ import org.red5.io.flv.IKeyFrameDataAnalyzer.KeyFrameMeta;
 
 public class FileKeyFrameMetaCacheTest {
 
-    @Test
-    public void testSerialization() throws IOException {
-        FileKeyFrameMetaCache cache = new FileKeyFrameMetaCache();
-        File f = File.createTempFile("red5", "MetaCacheTest");
-        f.setLastModified(1481275039000L);
-        KeyFrameMeta meta = new KeyFrameMeta();
-        meta.positions = new long[] { -666, 0, 666 };
-        meta.timestamps = new int[] { 0, 666, 666 * 2 };
-        cache.saveKeyFrameMeta(f, meta);
-        try (InputStreamReader ir1 = new InputStreamReader(FileKeyFrameMetaCacheTest.class.getResourceAsStream("Red5MetaCacheTest1.xml"), StandardCharsets.UTF_8); FileReader fr2 = new FileReader(f.getCanonicalPath() + ".meta")) {
-            Assert.assertTrue("Generated file has bad contents", IOUtils.contentEqualsIgnoreEOL(ir1, fr2));
-        }
+  @Test
+  public void testSerialization() throws IOException {
+    FileKeyFrameMetaCache cache = new FileKeyFrameMetaCache();
+    File f = File.createTempFile("red5", "MetaCacheTest");
+    f.setLastModified(1481275039000L);
+    KeyFrameMeta meta = new KeyFrameMeta();
+    meta.positions = new long[] {-666, 0, 666};
+    meta.timestamps = new int[] {0, 666, 666 * 2};
+    cache.saveKeyFrameMeta(f, meta);
+    try (InputStreamReader ir1 =
+            new InputStreamReader(
+                FileKeyFrameMetaCacheTest.class.getResourceAsStream("Red5MetaCacheTest1.xml"),
+                StandardCharsets.UTF_8);
+        FileReader fr2 = new FileReader(f.getCanonicalPath() + ".meta")) {
+      Assert.assertTrue(
+          "Generated file has bad contents", IOUtils.contentEqualsIgnoreEOL(ir1, fr2));
     }
+  }
 }

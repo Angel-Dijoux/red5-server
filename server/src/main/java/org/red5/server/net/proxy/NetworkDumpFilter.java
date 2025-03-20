@@ -8,72 +8,62 @@
 package org.red5.server.net.proxy;
 
 import java.nio.channels.WritableByteChannel;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Network dump filter, performs raw data and headers dump on message receive
- */
+/** Network dump filter, performs raw data and headers dump on message receive */
 public class NetworkDumpFilter extends IoFilterAdapter {
 
-    protected static Logger log = LoggerFactory.getLogger(ProxyFilter.class);
+  protected static Logger log = LoggerFactory.getLogger(ProxyFilter.class);
 
-    /**
-     * Raw data byte channel
-     */
-    protected WritableByteChannel raw;
+  /** Raw data byte channel */
+  protected WritableByteChannel raw;
 
-    /**
-     * Headers byte channel
-     */
-    protected WritableByteChannel headers;
+  /** Headers byte channel */
+  protected WritableByteChannel headers;
 
-    /**
-     * Create network dump filter from given dump channels
-     *
-     * @param headers
-     *            Channel to dump headers
-     * @param raw
-     *            Channel to dump raw data
-     */
-    public NetworkDumpFilter(WritableByteChannel headers, WritableByteChannel raw) {
-        this.raw = raw;
-        this.headers = headers;
+  /**
+   * Create network dump filter from given dump channels
+   *
+   * @param headers Channel to dump headers
+   * @param raw Channel to dump raw data
+   */
+  public NetworkDumpFilter(WritableByteChannel headers, WritableByteChannel raw) {
+    this.raw = raw;
+    this.headers = headers;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void messageReceived(NextFilter next, IoSession session, Object message) throws Exception {
+    if (message instanceof IoBuffer) {
+      IoBuffer out = (IoBuffer) message;
+      if (headers != null) {
+        IoBuffer header = IoBuffer.allocate(12);
+        header.putLong(System.currentTimeMillis());
+        header.putInt(out.limit() - out.position());
+        header.flip();
+        headers.write(header.buf());
+      }
+      if (raw != null) {
+        raw.write(out.asReadOnlyBuffer().buf());
+      }
     }
+    next.messageReceived(session, message);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void messageReceived(NextFilter next, IoSession session, Object message) throws Exception {
-        if (message instanceof IoBuffer) {
-            IoBuffer out = (IoBuffer) message;
-            if (headers != null) {
-                IoBuffer header = IoBuffer.allocate(12);
-                header.putLong(System.currentTimeMillis());
-                header.putInt(out.limit() - out.position());
-                header.flip();
-                headers.write(header.buf());
-            }
-            if (raw != null) {
-                raw.write(out.asReadOnlyBuffer().buf());
-            }
-        }
-        next.messageReceived(session, message);
+  /** {@inheritDoc} */
+  @Override
+  public void sessionClosed(NextFilter next, IoSession session) throws Exception {
+    if (headers.isOpen()) {
+      headers.close();
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public void sessionClosed(NextFilter next, IoSession session) throws Exception {
-        if (headers.isOpen()) {
-            headers.close();
-        }
-        if (raw.isOpen()) {
-            raw.close();
-        }
-        next.sessionClosed(session);
+    if (raw.isOpen()) {
+      raw.close();
     }
-
+    next.sessionClosed(session);
+  }
 }

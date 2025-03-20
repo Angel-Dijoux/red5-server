@@ -9,7 +9,6 @@ package org.red5.server.net.rtmp.codec;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecException;
@@ -21,105 +20,115 @@ import org.red5.server.net.rtmp.RTMPConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * RTMP protocol decoder.
- */
+/** RTMP protocol decoder. */
 public class RTMPMinaProtocolDecoder extends ProtocolDecoderAdapter {
 
-    protected static Logger log = LoggerFactory.getLogger(RTMPMinaProtocolDecoder.class);
+  protected static Logger log = LoggerFactory.getLogger(RTMPMinaProtocolDecoder.class);
 
-    private RTMPProtocolDecoder decoder = new RTMPProtocolDecoder();
+  private RTMPProtocolDecoder decoder = new RTMPProtocolDecoder();
 
-    /** {@inheritDoc} */
-    public void decode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws ProtocolCodecException {
-        // get the connection from the session
-        String sessionId = (String) session.getAttribute(RTMPConnection.RTMP_SESSION_ID);
-        log.trace("Session id: {}", sessionId);
-        // no decode if there is a handshake present
-        if (!session.containsAttribute(RTMPConnection.RTMP_HANDSHAKE)) {
-            // connection verification routine
-            @SuppressWarnings("unchecked")
-            IConnectionManager<RTMPConnection> connManager = (IConnectionManager<RTMPConnection>) ((WeakReference<?>) session.getAttribute(RTMPConnection.RTMP_CONN_MANAGER)).get();
-            RTMPConnection conn = (RTMPConnection) connManager.getConnectionBySessionId(sessionId);
-            RTMPConnection connLocal = (RTMPConnection) Red5.getConnectionLocal();
-            if (connLocal == null || !conn.getSessionId().equals(connLocal.getSessionId())) {
-                if (log.isDebugEnabled() && connLocal != null) {
-                    log.debug("Connection local didn't match session");
-                }
-            }
-            if (conn != null) {
-                // set the connection to local if its referred to by this session
-                Red5.setConnectionLocal(conn);
-                // copy data range from incoming
-                if (log.isTraceEnabled()) {
-                    log.trace("Incomming: position {}, limit {}, remaining {}", new Object[] { in.position(), in.limit(), in.remaining() });
-                }
-                byte[] arr = new byte[in.remaining()];
-                in.get(arr);
-                // create a buffer and store it on the session
-                IoBuffer buf = (IoBuffer) session.getAttribute("buffer");
-                if (buf == null) {
-                    buf = IoBuffer.allocate(arr.length);
-                    buf.setAutoExpand(true);
-                    session.setAttribute("buffer", buf);
-                }
-                // copy incoming into buffer
-                buf.put(arr);
-                // flip so we can read
-                buf.flip();
-                if (log.isTraceEnabled()) {
-                    //log.trace("Buffer before: {}", Hex.encodeHexString(arr));
-                    log.trace("Buffers info before: position {}, limit {}, remaining {}", new Object[] { buf.position(), buf.limit(), buf.remaining() });
-                }
-                try {
-                    // construct any objects from the decoded buffer
-                    List<?> objects = decoder.decodeBuffer(conn, buf);
-                    log.trace("Decoded: {}", objects);
-                    if (objects != null) {
-                        int writeCount = 0;
-                        for (Object object : objects) {
-                            out.write(object);
-                            writeCount++;
-                        }
-                        log.trace("Wrote {} objects", writeCount);
-                    }
-                } catch (Exception e) {
-                    log.error("Error during decode", e);
-                } finally {
-                    // clear local
-                    Red5.setConnectionLocal(null);
-                }
-                if (log.isTraceEnabled()) {
-                    //log.trace("Buffer after: {}", Hex.encodeHexString(Arrays.copyOfRange(buf.array(), buf.position(), buf.limit())));
-                    log.trace("Buffers info after: position {}, limit {}, remaining {}", new Object[] { buf.position(), buf.limit(), buf.remaining() });
-                }
-            } else {
-                log.debug("Closing and skipping decode for unregistered connection: {}", sessionId);
-                session.closeNow();
-                log.debug("Session closing: {} reading: {} writing: {}", session.isClosing(), session.isReadSuspended(), session.isWriteSuspended());
-            }
-        } else {
-            log.debug("No-op due to handshake presence");
+  /** {@inheritDoc} */
+  public void decode(IoSession session, IoBuffer in, ProtocolDecoderOutput out)
+      throws ProtocolCodecException {
+    // get the connection from the session
+    String sessionId = (String) session.getAttribute(RTMPConnection.RTMP_SESSION_ID);
+    log.trace("Session id: {}", sessionId);
+    // no decode if there is a handshake present
+    if (!session.containsAttribute(RTMPConnection.RTMP_HANDSHAKE)) {
+      // connection verification routine
+      @SuppressWarnings("unchecked")
+      IConnectionManager<RTMPConnection> connManager =
+          (IConnectionManager<RTMPConnection>)
+              ((WeakReference<?>) session.getAttribute(RTMPConnection.RTMP_CONN_MANAGER)).get();
+      RTMPConnection conn = (RTMPConnection) connManager.getConnectionBySessionId(sessionId);
+      RTMPConnection connLocal = (RTMPConnection) Red5.getConnectionLocal();
+      if (connLocal == null || !conn.getSessionId().equals(connLocal.getSessionId())) {
+        if (log.isDebugEnabled() && connLocal != null) {
+          log.debug("Connection local didn't match session");
         }
+      }
+      if (conn != null) {
+        // set the connection to local if its referred to by this session
+        Red5.setConnectionLocal(conn);
+        // copy data range from incoming
+        if (log.isTraceEnabled()) {
+          log.trace(
+              "Incomming: position {}, limit {}, remaining {}",
+              new Object[] {in.position(), in.limit(), in.remaining()});
+        }
+        byte[] arr = new byte[in.remaining()];
+        in.get(arr);
+        // create a buffer and store it on the session
+        IoBuffer buf = (IoBuffer) session.getAttribute("buffer");
+        if (buf == null) {
+          buf = IoBuffer.allocate(arr.length);
+          buf.setAutoExpand(true);
+          session.setAttribute("buffer", buf);
+        }
+        // copy incoming into buffer
+        buf.put(arr);
+        // flip so we can read
+        buf.flip();
+        if (log.isTraceEnabled()) {
+          // log.trace("Buffer before: {}", Hex.encodeHexString(arr));
+          log.trace(
+              "Buffers info before: position {}, limit {}, remaining {}",
+              new Object[] {buf.position(), buf.limit(), buf.remaining()});
+        }
+        try {
+          // construct any objects from the decoded buffer
+          List<?> objects = decoder.decodeBuffer(conn, buf);
+          log.trace("Decoded: {}", objects);
+          if (objects != null) {
+            int writeCount = 0;
+            for (Object object : objects) {
+              out.write(object);
+              writeCount++;
+            }
+            log.trace("Wrote {} objects", writeCount);
+          }
+        } catch (Exception e) {
+          log.error("Error during decode", e);
+        } finally {
+          // clear local
+          Red5.setConnectionLocal(null);
+        }
+        if (log.isTraceEnabled()) {
+          // log.trace("Buffer after: {}", Hex.encodeHexString(Arrays.copyOfRange(buf.array(),
+          // buf.position(), buf.limit())));
+          log.trace(
+              "Buffers info after: position {}, limit {}, remaining {}",
+              new Object[] {buf.position(), buf.limit(), buf.remaining()});
+        }
+      } else {
+        log.debug("Closing and skipping decode for unregistered connection: {}", sessionId);
+        session.closeNow();
+        log.debug(
+            "Session closing: {} reading: {} writing: {}",
+            session.isClosing(),
+            session.isReadSuspended(),
+            session.isWriteSuspended());
+      }
+    } else {
+      log.debug("No-op due to handshake presence");
     }
+  }
 
-    /**
-     * Sets the RTMP protocol decoder.
-     *
-     * @param decoder
-     *            RTMP decoder
-     */
-    public void setDecoder(RTMPProtocolDecoder decoder) {
-        this.decoder = decoder;
-    }
+  /**
+   * Sets the RTMP protocol decoder.
+   *
+   * @param decoder RTMP decoder
+   */
+  public void setDecoder(RTMPProtocolDecoder decoder) {
+    this.decoder = decoder;
+  }
 
-    /**
-     * Returns an RTMP decoder.
-     *
-     * @return RTMP decoder
-     */
-    public RTMPProtocolDecoder getDecoder() {
-        return decoder;
-    }
-
+  /**
+   * Returns an RTMP decoder.
+   *
+   * @return RTMP decoder
+   */
+  public RTMPProtocolDecoder getDecoder() {
+    return decoder;
+  }
 }

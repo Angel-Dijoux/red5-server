@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-
 import org.red5.io.amf3.IDataInput;
 import org.red5.io.amf3.IDataOutput;
 import org.red5.io.amf3.IExternalizable;
@@ -23,169 +22,167 @@ import org.slf4j.LoggerFactory;
 /**
  * Flex <code>ArrayCollection</code> compatibility class.
  *
- * @see <a href="http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/mx/collections/ArrayCollection.html">ArrayCollection</a>
- *
+ * @see <a
+ *     href="http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/mx/collections/ArrayCollection.html">ArrayCollection</a>
  * @author The Red5 Project
  * @author Joachim Bauch (jojo@struktur.de)
  * @author Paul Gregoire (mondain@gmail.com)
- * @param <T>
- *            type of collection elements
+ * @param <T> type of collection elements
  */
 public class ArrayCollection<T> implements List<T>, IExternalizable {
 
-    private static final Logger log = LoggerFactory.getLogger(ArrayCollection.class);
+  private static final Logger log = LoggerFactory.getLogger(ArrayCollection.class);
 
-    private ArrayList<T> source;
+  private ArrayList<T> source;
 
-    public ArrayCollection() {
-        this.source = new ArrayList<T>();
+  public ArrayCollection() {
+    this.source = new ArrayList<T>();
+  }
+
+  public ArrayCollection(T[] source) {
+    this.source = new ArrayList<T>(source.length);
+    this.source.addAll(Arrays.asList(source));
+  }
+
+  public void setSource(T[] source) {
+    this.source = new ArrayList<T>(source.length);
+    this.source.addAll(Arrays.asList(source));
+  }
+
+  @Override
+  public int size() {
+    return source.size();
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return source == null ? true : source.isEmpty();
+  }
+
+  @Override
+  public boolean contains(Object o) {
+    return source.contains(o);
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return source.iterator();
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public T[] toArray() {
+    return (T[]) source.toArray();
+  }
+
+  @Override
+  @SuppressWarnings("hiding")
+  public <T> T[] toArray(T[] a) {
+    return source.toArray(a);
+  }
+
+  @Override
+  public boolean add(T e) {
+    return source.add(e);
+  }
+
+  @Override
+  public boolean remove(Object o) {
+    return source.remove(o);
+  }
+
+  @Override
+  public boolean containsAll(Collection<?> c) {
+    return source.containsAll(c);
+  }
+
+  @Override
+  public boolean addAll(Collection<? extends T> c) {
+    return source.addAll(c);
+  }
+
+  @Override
+  public boolean removeAll(Collection<?> c) {
+    return source.removeAll(c);
+  }
+
+  @Override
+  public boolean retainAll(Collection<?> c) {
+    return source.retainAll(c);
+  }
+
+  @Override
+  public void clear() {
+    if (source != null) {
+      source.clear();
     }
+  }
 
-    public ArrayCollection(T[] source) {
-        this.source = new ArrayList<T>(source.length);
-        this.source.addAll(Arrays.asList(source));
+  @Override
+  public boolean addAll(int index, Collection<? extends T> c) {
+    return source.addAll(index, c);
+  }
+
+  @Override
+  public T get(int index) {
+    return source.get(index);
+  }
+
+  @Override
+  public T set(int index, T element) {
+    return source.set(index, element);
+  }
+
+  @Override
+  public void add(int index, T element) {
+    source.add(index, element);
+  }
+
+  @Override
+  public T remove(int index) {
+    return source.remove(index);
+  }
+
+  @Override
+  public int indexOf(Object o) {
+    return source.indexOf(o);
+  }
+
+  @Override
+  public int lastIndexOf(Object o) {
+    return source.lastIndexOf(o);
+  }
+
+  @Override
+  public ListIterator<T> listIterator() {
+    return source.listIterator();
+  }
+
+  @Override
+  public ListIterator<T> listIterator(int index) {
+    return source.listIterator(index);
+  }
+
+  @Override
+  public List<T> subList(int fromIndex, int toIndex) {
+    return source.subList(fromIndex, toIndex);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public void readExternal(IDataInput input) {
+    log.debug("readExternal");
+    if (source == null) {
+      source = (ArrayList<T>) input.readObject();
+    } else {
+      source.clear();
+      source.addAll((ArrayList<T>) input.readObject());
     }
+  }
 
-    public void setSource(T[] source) {
-        this.source = new ArrayList<T>(source.length);
-        this.source.addAll(Arrays.asList(source));
-    }
-
-    @Override
-    public int size() {
-        return source.size();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return source == null ? true : source.isEmpty();
-    }
-
-    @Override
-    public boolean contains(Object o) {
-        return source.contains(o);
-    }
-
-    @Override
-    public Iterator<T> iterator() {
-        return source.iterator();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public T[] toArray() {
-        return (T[]) source.toArray();
-    }
-
-    @Override
-    @SuppressWarnings("hiding")
-    public <T> T[] toArray(T[] a) {
-        return source.toArray(a);
-    }
-
-    @Override
-    public boolean add(T e) {
-        return source.add(e);
-    }
-
-    @Override
-    public boolean remove(Object o) {
-        return source.remove(o);
-    }
-
-    @Override
-    public boolean containsAll(Collection<?> c) {
-        return source.containsAll(c);
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends T> c) {
-        return source.addAll(c);
-    }
-
-    @Override
-    public boolean removeAll(Collection<?> c) {
-        return source.removeAll(c);
-    }
-
-    @Override
-    public boolean retainAll(Collection<?> c) {
-        return source.retainAll(c);
-    }
-
-    @Override
-    public void clear() {
-        if (source != null) {
-            source.clear();
-        }
-    }
-
-    @Override
-    public boolean addAll(int index, Collection<? extends T> c) {
-        return source.addAll(index, c);
-    }
-
-    @Override
-    public T get(int index) {
-        return source.get(index);
-    }
-
-    @Override
-    public T set(int index, T element) {
-        return source.set(index, element);
-    }
-
-    @Override
-    public void add(int index, T element) {
-        source.add(index, element);
-    }
-
-    @Override
-    public T remove(int index) {
-        return source.remove(index);
-    }
-
-    @Override
-    public int indexOf(Object o) {
-        return source.indexOf(o);
-    }
-
-    @Override
-    public int lastIndexOf(Object o) {
-        return source.lastIndexOf(o);
-    }
-
-    @Override
-    public ListIterator<T> listIterator() {
-        return source.listIterator();
-    }
-
-    @Override
-    public ListIterator<T> listIterator(int index) {
-        return source.listIterator(index);
-    }
-
-    @Override
-    public List<T> subList(int fromIndex, int toIndex) {
-        return source.subList(fromIndex, toIndex);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void readExternal(IDataInput input) {
-        log.debug("readExternal");
-        if (source == null) {
-            source = (ArrayList<T>) input.readObject();
-        } else {
-            source.clear();
-            source.addAll((ArrayList<T>) input.readObject());
-        }
-    }
-
-    @Override
-    public void writeExternal(IDataOutput output) {
-        log.debug("writeExternal");
-        output.writeObject(source);
-    }
-
+  @Override
+  public void writeExternal(IDataOutput output) {
+    log.debug("writeExternal");
+    output.writeObject(source);
+  }
 }

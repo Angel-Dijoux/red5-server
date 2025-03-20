@@ -11,23 +11,22 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.Random;
-
 import javax.crypto.Mac;
-
 import org.red5.io.sctp.packet.SctpPacket;
 
 public interface IServerChannelControl {
-    void removePendingChannel(InetSocketAddress address);
+  void removePendingChannel(InetSocketAddress address);
 
-    boolean addPendingChannel(InetSocketAddress address, int initialTSN, int verificationTag) throws SocketException;
+  boolean addPendingChannel(InetSocketAddress address, int initialTSN, int verificationTag)
+      throws SocketException;
 
-    IAssociationControl getPendingChannel(InetSocketAddress address);
+  IAssociationControl getPendingChannel(InetSocketAddress address);
 
-    Mac getMac();
+  Mac getMac();
 
-    Random getRandom();
+  Random getRandom();
 
-    int getPort();
+  int getPort();
 
-    void send(SctpPacket packet, InetSocketAddress address) throws IOException;
+  void send(SctpPacket packet, InetSocketAddress address) throws IOException;
 }

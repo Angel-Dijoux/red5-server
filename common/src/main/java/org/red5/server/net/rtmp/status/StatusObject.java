@@ -9,7 +9,6 @@ package org.red5.server.net.rtmp.status;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.red5.annotations.Anonymous;
 import org.red5.io.amf3.IDataInput;
 import org.red5.io.amf3.IDataOutput;
@@ -24,160 +23,153 @@ import org.red5.io.amf3.IExternalizable;
 @Anonymous
 public class StatusObject implements IExternalizable {
 
-    public static final String ERROR = "error", STATUS = "status", WARNING = "warning";
+  public static final String ERROR = "error", STATUS = "status", WARNING = "warning";
 
-    protected String code;
+  protected String code;
 
-    protected String level;
+  protected String level;
 
-    protected String description = "";
+  protected String description = "";
 
-    protected Object application;
+  protected Object application;
 
-    protected Map<String, Object> additional;
+  protected Map<String, Object> additional;
 
-    /** Constructs a new StatusObject. */
-    public StatusObject() {
+  /** Constructs a new StatusObject. */
+  public StatusObject() {}
 
+  public StatusObject(String code, String level) {
+    this.code = code;
+    this.level = level;
+  }
+
+  public StatusObject(String code, String level, String description) {
+    this.code = code;
+    this.level = level;
+    this.description = description;
+  }
+
+  /**
+   * Getter for property 'code'.
+   *
+   * @return Value for property 'code'.
+   */
+  public String getCode() {
+    return code;
+  }
+
+  /**
+   * Setter for property 'code'.
+   *
+   * @param code Value to set for property 'code'.
+   */
+  public void setCode(String code) {
+    this.code = code;
+  }
+
+  /**
+   * Getter for property 'description'.
+   *
+   * @return Value for property 'description'.
+   */
+  public String getDescription() {
+    return description;
+  }
+
+  /**
+   * Setter for property 'description'.
+   *
+   * @param description Value to set for property 'description'.
+   */
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  /**
+   * Getter for property 'level'.
+   *
+   * @return Value for property 'level'.
+   */
+  public String getLevel() {
+    return level;
+  }
+
+  /**
+   * Setter for property 'level'.
+   *
+   * @param level Value to set for property 'level'.
+   */
+  public void setLevel(String level) {
+    this.level = level;
+  }
+
+  /**
+   * Setter for property 'application'.
+   *
+   * @param application Value to set for property 'application'.
+   */
+  public void setApplication(Object application) {
+    this.application = application;
+  }
+
+  /**
+   * Getter for property 'application'.
+   *
+   * @return Value for property 'application'.
+   */
+  public Object getApplication() {
+    return application;
+  }
+
+  public void setAdditional(String name, Object value) {
+    if ("code,level,description,application".indexOf(name) != -1) {
+      throw new RuntimeException("the name \"" + name + "\" is reserved");
     }
-
-    public StatusObject(String code, String level) {
-        this.code = code;
-        this.level = level;
+    if (additional == null) {
+      additional = new HashMap<>();
     }
+    additional.put(name, value);
+  }
 
-    public StatusObject(String code, String level, String description) {
-        this.code = code;
-        this.level = level;
-        this.description = description;
+  /**
+   * Generate Status object that can be returned through a RTMP channel.
+   *
+   * @return status
+   */
+  public Status asStatus() {
+    return new Status(getCode(), getLevel(), getDescription());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String toString() {
+    return String.format("Status code: %s level: %s description: %s", code, level, description);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public void readExternal(IDataInput in) {
+    code = (String) in.readUTF();
+    description = (String) in.readUTF();
+    level = (String) in.readUTF();
+    application = in.readObject();
+    additional = (Map<String, Object>) in.readObject();
+  }
+
+  @Override
+  public void writeExternal(IDataOutput out) {
+    out.writeUTF(code);
+    out.writeUTF(description);
+    out.writeUTF(level);
+    if (application != null) {
+      out.writeObject(application);
+    } else {
+      out.writeObject(null);
     }
-
-    /**
-     * Getter for property 'code'.
-     *
-     * @return Value for property 'code'.
-     */
-    public String getCode() {
-        return code;
+    if (additional != null) {
+      out.writeObject(additional);
+    } else {
+      out.writeObject(null);
     }
-
-    /**
-     * Setter for property 'code'.
-     *
-     * @param code
-     *            Value to set for property 'code'.
-     */
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    /**
-     * Getter for property 'description'.
-     *
-     * @return Value for property 'description'.
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Setter for property 'description'.
-     *
-     * @param description
-     *            Value to set for property 'description'.
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * Getter for property 'level'.
-     *
-     * @return Value for property 'level'.
-     */
-    public String getLevel() {
-        return level;
-    }
-
-    /**
-     * Setter for property 'level'.
-     *
-     * @param level
-     *            Value to set for property 'level'.
-     */
-    public void setLevel(String level) {
-        this.level = level;
-    }
-
-    /**
-     * Setter for property 'application'.
-     *
-     * @param application
-     *            Value to set for property 'application'.
-     */
-    public void setApplication(Object application) {
-        this.application = application;
-    }
-
-    /**
-     * Getter for property 'application'.
-     *
-     * @return Value for property 'application'.
-     */
-    public Object getApplication() {
-        return application;
-    }
-
-    public void setAdditional(String name, Object value) {
-        if ("code,level,description,application".indexOf(name) != -1) {
-            throw new RuntimeException("the name \"" + name + "\" is reserved");
-        }
-        if (additional == null) {
-            additional = new HashMap<>();
-        }
-        additional.put(name, value);
-    }
-
-    /**
-     * Generate Status object that can be returned through a RTMP channel.
-     *
-     * @return status
-     */
-    public Status asStatus() {
-        return new Status(getCode(), getLevel(), getDescription());
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return String.format("Status code: %s level: %s description: %s", code, level, description);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void readExternal(IDataInput in) {
-        code = (String) in.readUTF();
-        description = (String) in.readUTF();
-        level = (String) in.readUTF();
-        application = in.readObject();
-        additional = (Map<String, Object>) in.readObject();
-    }
-
-    @Override
-    public void writeExternal(IDataOutput out) {
-        out.writeUTF(code);
-        out.writeUTF(description);
-        out.writeUTF(level);
-        if (application != null) {
-            out.writeObject(application);
-        } else {
-            out.writeObject(null);
-        }
-        if (additional != null) {
-            out.writeObject(additional);
-        } else {
-            out.writeObject(null);
-        }
-    }
-
+  }
 }

@@ -8,30 +8,24 @@
 package org.red5.server.stream;
 
 import java.io.IOException;
-
 import org.apache.mina.core.buffer.IoBuffer;
 
-/**
- * Stream data packet
- */
+/** Stream data packet */
 public interface IStreamData<T> {
 
-    /**
-     * Getter for property 'data'.
-     *
-     * @return Value for property 'data'
-     */
-    public IoBuffer getData();
+  /**
+   * Getter for property 'data'.
+   *
+   * @return Value for property 'data'
+   */
+  public IoBuffer getData();
 
-    /**
-     * Creates a byte accurate copy.
-     *
-     * @return duplicate of the current data item
-     * @throws IOException
-     *             on error
-     * @throws ClassNotFoundException
-     *             on class not found
-     */
-    public IStreamData<T> duplicate() throws IOException, ClassNotFoundException;
-
+  /**
+   * Creates a byte accurate copy.
+   *
+   * @return duplicate of the current data item
+   * @throws IOException on error
+   * @throws ClassNotFoundException on class not found
+   */
+  public IStreamData<T> duplicate() throws IOException, ClassNotFoundException;
 }

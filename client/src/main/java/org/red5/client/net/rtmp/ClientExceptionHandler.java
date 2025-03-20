@@ -7,11 +7,8 @@
 
 package org.red5.client.net.rtmp;
 
-/**
- * Client connection exception handler
- */
+/** Client connection exception handler */
 public interface ClientExceptionHandler {
 
-    void handleException(Throwable throwable);
-
+  void handleException(Throwable throwable);
 }

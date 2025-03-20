@@ -23,43 +23,49 @@ import java.nio.file.Paths;
  */
 public class Shutdown {
 
-    /**
-     * Connects to the given port (default: 9999) and invokes shutdown.
-     * <ul>
-     * <li>Arg 0 = port number</li>
-     * <li>Arg 1 = token</li>
-     * </ul>
-     *
-     * @param args
-     *            see args list
-     */
-    public static void main(String[] args) {
-        String host = System.getProperty("red5.shutdown.host", "127.0.0.1");
-        try (Socket clientSocket = new Socket(host, Integer.valueOf(args[0])); PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true); BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));) {
-            System.out.printf("Connected - local: %s remote: %s%n", clientSocket.getLocalSocketAddress().toString(), clientSocket.getRemoteSocketAddress().toString());
-            // send the token
-            String token = "cafebeef";
-            if (args.length > 1) {
-                token = args[1];
-            } else {
-                // read the token from the file
-                try {
-                    File tokenFile = Paths.get("shutdown.token").toFile();
-                    RandomAccessFile raf = new RandomAccessFile(tokenFile, "r");
-                    byte[] buf = new byte[36];
-                    raf.readFully(buf);
-                    token = new String(buf);
-                    System.out.printf("Token loaded: %s%n", token);
-                    raf.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            out.println(token);
+  /**
+   * Connects to the given port (default: 9999) and invokes shutdown.
+   *
+   * <ul>
+   *   <li>Arg 0 = port number
+   *   <li>Arg 1 = token
+   * </ul>
+   *
+   * @param args see args list
+   */
+  public static void main(String[] args) {
+    String host = System.getProperty("red5.shutdown.host", "127.0.0.1");
+    try (Socket clientSocket = new Socket(host, Integer.valueOf(args[0]));
+        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        BufferedReader in =
+            new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); ) {
+      System.out.printf(
+          "Connected - local: %s remote: %s%n",
+          clientSocket.getLocalSocketAddress().toString(),
+          clientSocket.getRemoteSocketAddress().toString());
+      // send the token
+      String token = "cafebeef";
+      if (args.length > 1) {
+        token = args[1];
+      } else {
+        // read the token from the file
+        try {
+          File tokenFile = Paths.get("shutdown.token").toFile();
+          RandomAccessFile raf = new RandomAccessFile(tokenFile, "r");
+          byte[] buf = new byte[36];
+          raf.readFully(buf);
+          token = new String(buf);
+          System.out.printf("Token loaded: %s%n", token);
+          raf.close();
         } catch (Exception e) {
-            System.err.printf("Exception connecting to %s%n", host);
-            e.printStackTrace();
-            System.exit(1);
+          e.printStackTrace();
         }
+      }
+      out.println(token);
+    } catch (Exception e) {
+      System.err.printf("Exception connecting to %s%n", host);
+      e.printStackTrace();
+      System.exit(1);
     }
+  }
 }

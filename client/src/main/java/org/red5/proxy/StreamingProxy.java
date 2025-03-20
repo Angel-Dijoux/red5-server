@@ -13,7 +13,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
-
 import org.red5.client.net.rtmp.ClientExceptionHandler;
 import org.red5.client.net.rtmp.INetStreamEventHandler;
 import org.red5.client.net.rtmp.RTMPClient;
@@ -38,231 +37,230 @@ import org.slf4j.LoggerFactory;
 /**
  * A proxy to publish stream from server to server.
  *
- * TODO: Use timer to monitor the connect/stream creation.
+ * <p>TODO: Use timer to monitor the connect/stream creation.
  *
  * @author Steven Gong (steven.gong@gmail.com)
  * @author Andy Shaules (bowljoman@hotmail.com)
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public class StreamingProxy implements IPushableConsumer, IPipeConnectionListener, INetStreamEventHandler, IPendingServiceCallback {
+public class StreamingProxy
+    implements IPushableConsumer,
+        IPipeConnectionListener,
+        INetStreamEventHandler,
+        IPendingServiceCallback {
 
-    private static Logger log = LoggerFactory.getLogger(StreamingProxy.class);
+  private static Logger log = LoggerFactory.getLogger(StreamingProxy.class);
 
-    private ConcurrentLinkedQueue<IMessage> frameBuffer = new ConcurrentLinkedQueue<>();
+  private ConcurrentLinkedQueue<IMessage> frameBuffer = new ConcurrentLinkedQueue<>();
 
-    private String host;
+  private String host;
 
-    private int port;
+  private int port;
 
-    private String app;
+  private String app;
 
-    private RTMPClient rtmpClient;
+  private RTMPClient rtmpClient;
 
-    private StreamState state = StreamState.UNINITIALIZED;
+  private StreamState state = StreamState.UNINITIALIZED;
 
-    private String publishName;
+  private String publishName;
 
-    private Number streamId;
+  private Number streamId;
 
-    private String publishMode;
+  private String publishMode;
 
-    private final Semaphore lock = new Semaphore(1, true);
+  private final Semaphore lock = new Semaphore(1, true);
 
-    // task timer
-    private static Timer timer;
+  // task timer
+  private static Timer timer;
 
-    public void init() {
-        init(ClientType.RTMP);
+  public void init() {
+    init(ClientType.RTMP);
+  }
+
+  public void init(ClientType clientType) {
+    switch (clientType) {
+      case RTMPE:
+        rtmpClient = new RTMPEClient();
+        break;
+      case RTMPS:
+        rtmpClient = new RTMPSClient();
+        break;
+      case RTMP:
+      default:
+        rtmpClient = new RTMPClient();
+        break;
     }
+    log.debug("Initialized: {}", rtmpClient);
+    setState(StreamState.STOPPED);
+    // create a timer
+    timer = new Timer();
+  }
 
-    public void init(ClientType clientType) {
-        switch (clientType) {
-            case RTMPE:
-                rtmpClient = new RTMPEClient();
-                break;
-            case RTMPS:
-                rtmpClient = new RTMPSClient();
-                break;
-            case RTMP:
-            default:
-                rtmpClient = new RTMPClient();
-                break;
-        }
-        log.debug("Initialized: {}", rtmpClient);
+  public void start(String publishName, String publishMode, Object[] params) {
+    setState(StreamState.CONNECTING);
+    this.publishName = publishName;
+    this.publishMode = publishMode;
+    // construct the default params
+    Map<String, Object> defParams = rtmpClient.makeDefaultConnectionParams(host, port, app);
+    defParams.put("swfUrl", "app:/Red5-StreamProxy.swf");
+    // defParams.put("pageUrl", String.format("http://%s:%d/%s", host, port, app));
+    defParams.put("pageUrl", "");
+    rtmpClient.setSwfVerification(true);
+    // set this as the netstream handler
+    rtmpClient.setStreamEventHandler(this);
+    // connect the client
+    rtmpClient.connect(host, port, defParams, this, params);
+  }
+
+  public void stop() {
+    timer.cancel();
+    if (state != StreamState.STOPPED) {
+      rtmpClient.disconnect();
+    }
+    setState(StreamState.STOPPED);
+    frameBuffer.clear();
+  }
+
+  private void createStream() {
+    setState(StreamState.STREAM_CREATING);
+    rtmpClient.createStream(this);
+  }
+
+  @Override
+  public void onPipeConnectionEvent(PipeConnectionEvent event) {
+    log.debug("onPipeConnectionEvent: {}", event);
+  }
+
+  @Override
+  public void pushMessage(IPipe pipe, IMessage message) throws IOException {
+    if (isPublished() && message instanceof RTMPMessage) {
+      RTMPMessage rtmpMsg = (RTMPMessage) message;
+      rtmpClient.publishStreamData(streamId, rtmpMsg);
+    } else {
+      log.trace("Adding message to buffer. Current size: {}", frameBuffer.size());
+      frameBuffer.add(message);
+    }
+  }
+
+  @Override
+  public void onOOBControlMessage(
+      IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {
+    log.debug("onOOBControlMessage: {}", oobCtrlMsg);
+  }
+
+  /** Called when bandwidth has been configured. */
+  public void onBWDone() {
+    log.debug("onBWDone");
+    rtmpClient.onBWDone(null);
+  }
+
+  public void setHost(String host) {
+    this.host = host;
+  }
+
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  public void setApp(String app) {
+    this.app = app;
+  }
+
+  @Override
+  public void onStreamEvent(Notify notify) {
+    log.debug("onStreamEvent: {}", notify);
+    ObjectMap<?, ?> map = (ObjectMap<?, ?>) notify.getCall().getArguments()[0];
+    String code = (String) map.get("code");
+    log.debug("<:{}", code);
+    if (StatusCodes.NS_PUBLISH_START.equals(code)) {
+      setState(StreamState.PUBLISHED);
+      IMessage message = null;
+      while ((message = frameBuffer.poll()) != null) {
+        rtmpClient.publishStreamData(streamId, message);
+      }
+    } else if (StatusCodes.NS_UNPUBLISHED_SUCCESS.equals(code)) {
+      setState(StreamState.UNPUBLISHED);
+    }
+  }
+
+  @Override
+  public void resultReceived(IPendingServiceCall call) {
+    String method = call.getServiceMethodName();
+    log.debug("resultReceived: {}", method);
+    if ("connect".equals(method)) {
+      // rtmpClient.releaseStream(this, new Object[] { publishName });
+      timer.schedule(new BandwidthStatusTask(), 2000L);
+    } else if ("releaseStream".equals(method)) {
+      // rtmpClient.invoke("FCPublish", new Object[] { publishName }, this);
+    } else if ("createStream".equals(method)) {
+      setState(StreamState.PUBLISHING);
+      Object result = call.getResult();
+      if (result instanceof Number) {
+        streamId = (Number) result;
+        log.debug("Publishing: {}", state);
+        rtmpClient.publish(streamId, publishName, publishMode, this);
+      } else {
+        rtmpClient.disconnect();
         setState(StreamState.STOPPED);
-        // create a timer
-        timer = new Timer();
-    }
+      }
+    } else if ("FCPublish".equals(method)) {
 
-    public void start(String publishName, String publishMode, Object[] params) {
-        setState(StreamState.CONNECTING);
-        this.publishName = publishName;
-        this.publishMode = publishMode;
-        // construct the default params
-        Map<String, Object> defParams = rtmpClient.makeDefaultConnectionParams(host, port, app);
-        defParams.put("swfUrl", "app:/Red5-StreamProxy.swf");
-        //defParams.put("pageUrl", String.format("http://%s:%d/%s", host, port, app));
-        defParams.put("pageUrl", "");
-        rtmpClient.setSwfVerification(true);
-        // set this as the netstream handler
-        rtmpClient.setStreamEventHandler(this);
-        // connect the client
-        rtmpClient.connect(host, port, defParams, this, params);
     }
+  }
 
-    public void stop() {
-        timer.cancel();
-        if (state != StreamState.STOPPED) {
-            rtmpClient.disconnect();
-        }
-        setState(StreamState.STOPPED);
-        frameBuffer.clear();
+  protected void setState(StreamState state) {
+    try {
+      lock.acquire();
+      this.state = state;
+    } catch (InterruptedException e) {
+      log.warn("Exception setting state", e);
+    } finally {
+      lock.release();
     }
+  }
 
-    private void createStream() {
-        setState(StreamState.STREAM_CREATING);
-        rtmpClient.createStream(this);
+  protected StreamState getState() {
+    return state;
+  }
+
+  public void setConnectionClosedHandler(Runnable connectionClosedHandler) {
+    log.debug("setConnectionClosedHandler: {}", connectionClosedHandler);
+    if (rtmpClient != null) {
+      rtmpClient.setConnectionClosedHandler(connectionClosedHandler);
+    } else {
+      log.warn("Internal client is null, ensure that init() is called before adding handlers");
     }
+  }
+
+  public void setExceptionHandler(ClientExceptionHandler exceptionHandler) {
+    log.debug("setExceptionHandler: {}", exceptionHandler);
+    if (rtmpClient != null) {
+      rtmpClient.setExceptionHandler(exceptionHandler);
+    } else {
+      log.warn("Internal client is null, ensure that init() is called before adding handlers");
+    }
+  }
+
+  public boolean isPublished() {
+    return getState().equals(StreamState.PUBLISHED);
+  }
+
+  public boolean isRunning() {
+    return !getState().equals(StreamState.STOPPED);
+  }
+
+  /** Continues to check for onBWDone */
+  private final class BandwidthStatusTask extends TimerTask {
 
     @Override
-    public void onPipeConnectionEvent(PipeConnectionEvent event) {
-        log.debug("onPipeConnectionEvent: {}", event);
+    public void run() {
+      // check for onBWDone
+      log.debug("Bandwidth check done: {}", rtmpClient.isBandwidthCheckDone());
+      // cancel this task
+      this.cancel();
+      // initiate the stream creation
+      createStream();
     }
-
-    @Override
-    public void pushMessage(IPipe pipe, IMessage message) throws IOException {
-        if (isPublished() && message instanceof RTMPMessage) {
-            RTMPMessage rtmpMsg = (RTMPMessage) message;
-            rtmpClient.publishStreamData(streamId, rtmpMsg);
-        } else {
-            log.trace("Adding message to buffer. Current size: {}", frameBuffer.size());
-            frameBuffer.add(message);
-        }
-    }
-
-    @Override
-    public void onOOBControlMessage(IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {
-        log.debug("onOOBControlMessage: {}", oobCtrlMsg);
-    }
-
-    /**
-     * Called when bandwidth has been configured.
-     */
-    public void onBWDone() {
-        log.debug("onBWDone");
-        rtmpClient.onBWDone(null);
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public void setApp(String app) {
-        this.app = app;
-    }
-
-    @Override
-    public void onStreamEvent(Notify notify) {
-        log.debug("onStreamEvent: {}", notify);
-        ObjectMap<?, ?> map = (ObjectMap<?, ?>) notify.getCall().getArguments()[0];
-        String code = (String) map.get("code");
-        log.debug("<:{}", code);
-        if (StatusCodes.NS_PUBLISH_START.equals(code)) {
-            setState(StreamState.PUBLISHED);
-            IMessage message = null;
-            while ((message = frameBuffer.poll()) != null) {
-                rtmpClient.publishStreamData(streamId, message);
-            }
-        } else if (StatusCodes.NS_UNPUBLISHED_SUCCESS.equals(code)) {
-            setState(StreamState.UNPUBLISHED);
-        }
-    }
-
-    @Override
-    public void resultReceived(IPendingServiceCall call) {
-        String method = call.getServiceMethodName();
-        log.debug("resultReceived: {}", method);
-        if ("connect".equals(method)) {
-            //rtmpClient.releaseStream(this, new Object[] { publishName });
-            timer.schedule(new BandwidthStatusTask(), 2000L);
-        } else if ("releaseStream".equals(method)) {
-            //rtmpClient.invoke("FCPublish", new Object[] { publishName }, this);
-        } else if ("createStream".equals(method)) {
-            setState(StreamState.PUBLISHING);
-            Object result = call.getResult();
-            if (result instanceof Number) {
-                streamId = (Number) result;
-                log.debug("Publishing: {}", state);
-                rtmpClient.publish(streamId, publishName, publishMode, this);
-            } else {
-                rtmpClient.disconnect();
-                setState(StreamState.STOPPED);
-            }
-        } else if ("FCPublish".equals(method)) {
-
-        }
-    }
-
-    protected void setState(StreamState state) {
-        try {
-            lock.acquire();
-            this.state = state;
-        } catch (InterruptedException e) {
-            log.warn("Exception setting state", e);
-        } finally {
-            lock.release();
-        }
-    }
-
-    protected StreamState getState() {
-        return state;
-    }
-
-    public void setConnectionClosedHandler(Runnable connectionClosedHandler) {
-        log.debug("setConnectionClosedHandler: {}", connectionClosedHandler);
-        if (rtmpClient != null) {
-            rtmpClient.setConnectionClosedHandler(connectionClosedHandler);
-        } else {
-            log.warn("Internal client is null, ensure that init() is called before adding handlers");
-        }
-    }
-
-    public void setExceptionHandler(ClientExceptionHandler exceptionHandler) {
-        log.debug("setExceptionHandler: {}", exceptionHandler);
-        if (rtmpClient != null) {
-            rtmpClient.setExceptionHandler(exceptionHandler);
-        } else {
-            log.warn("Internal client is null, ensure that init() is called before adding handlers");
-        }
-    }
-
-    public boolean isPublished() {
-        return getState().equals(StreamState.PUBLISHED);
-    }
-
-    public boolean isRunning() {
-        return !getState().equals(StreamState.STOPPED);
-    }
-
-    /**
-     * Continues to check for onBWDone
-     */
-    private final class BandwidthStatusTask extends TimerTask {
-
-        @Override
-        public void run() {
-            // check for onBWDone
-            log.debug("Bandwidth check done: {}", rtmpClient.isBandwidthCheckDone());
-            // cancel this task
-            this.cancel();
-            // initiate the stream creation
-            createStream();
-        }
-
-    }
-
+  }
 }

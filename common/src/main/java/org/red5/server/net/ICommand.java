@@ -1,7 +1,6 @@
 package org.red5.server.net;
 
 import java.util.Map;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.server.api.service.IServiceCall;
 
@@ -12,12 +11,11 @@ import org.red5.server.api.service.IServiceCall;
  */
 public interface ICommand {
 
-    int getTransactionId();
+  int getTransactionId();
 
-    IServiceCall getCall();
+  IServiceCall getCall();
 
-    Map<String, Object> getConnectionParams();
+  Map<String, Object> getConnectionParams();
 
-    IoBuffer getData();
-
+  IoBuffer getData();
 }

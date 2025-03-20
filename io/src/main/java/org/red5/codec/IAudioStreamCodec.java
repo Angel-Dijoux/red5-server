@@ -16,56 +16,52 @@ import org.apache.mina.core.buffer.IoBuffer;
  */
 public interface IAudioStreamCodec {
 
-    /**
-     * @return the codec type.
-     */
-    AudioCodec getCodec();
+  /**
+   * @return the codec type.
+   */
+  AudioCodec getCodec();
 
-    /**
-     * @return the name of the audio codec.
-     */
-    String getName();
+  /**
+   * @return the name of the audio codec.
+   */
+  String getName();
 
-    /**
-     * Reset the codec to its initial state.
-     */
-    void reset();
+  /** Reset the codec to its initial state. */
+  void reset();
 
-    /**
-     * Returns true if the codec knows how to handle the passed stream data.
-     *
-     * @param data
-     *            some sample data to see if this codec can handle it.
-     * @return can this code handle the data.
-     */
-    boolean canHandleData(IoBuffer data);
+  /**
+   * Returns true if the codec knows how to handle the passed stream data.
+   *
+   * @param data some sample data to see if this codec can handle it.
+   * @return can this code handle the data.
+   */
+  boolean canHandleData(IoBuffer data);
 
-    /**
-     * Update the state of the codec with the passed data.
-     *
-     * @param data
-     *            data to tell the codec we're adding
-     * @return true for success. false for error.
-     */
-    boolean addData(IoBuffer data);
+  /**
+   * Update the state of the codec with the passed data.
+   *
+   * @param data data to tell the codec we're adding
+   * @return true for success. false for error.
+   */
+  boolean addData(IoBuffer data);
 
-    /**
-     * Add audio data with a time stamp and a flag identifying the content as AMF or not.
-     *
-     * @param data
-     * @param timestamp
-     * @param amf if true, data is in AMF format otherwise its most likely from non-AMF source like RTP
-     * @return true if data is added and false otherwise
-     */
-    boolean addData(IoBuffer data, int timestamp, boolean amf);
+  /**
+   * Add audio data with a time stamp and a flag identifying the content as AMF or not.
+   *
+   * @param data
+   * @param timestamp
+   * @param amf if true, data is in AMF format otherwise its most likely from non-AMF source like
+   *     RTP
+   * @return true if data is added and false otherwise
+   */
+  boolean addData(IoBuffer data, int timestamp, boolean amf);
 
-    /**
-     * Returns information used to configure the decoder.
-     *
-     * @return the data for decoder setup.
-     */
-    default IoBuffer getDecoderConfiguration() {
-        return null;
-    }
-
+  /**
+   * Returns information used to configure the decoder.
+   *
+   * @return the data for decoder setup.
+   */
+  default IoBuffer getDecoderConfiguration() {
+    return null;
+  }
 }

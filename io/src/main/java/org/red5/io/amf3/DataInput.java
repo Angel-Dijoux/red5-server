@@ -10,7 +10,6 @@ package org.red5.io.amf3;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.amf.AMF;
 import org.red5.io.object.Deserializer;
@@ -20,145 +19,142 @@ import org.red5.io.object.Deserializer;
  *
  * @author The Red5 Project
  * @author Joachim Bauch (jojo@struktur.de)
- *
  */
 public class DataInput implements IDataInput {
 
-    /** The input stream. */
-    private Input input;
+  /** The input stream. */
+  private Input input;
 
-    /** Raw data of input source. */
-    private IoBuffer buffer;
+  /** Raw data of input source. */
+  private IoBuffer buffer;
 
-    /**
-     * Create a new DataInput.
-     *
-     * @param input
-     *            input to use
-     */
-    protected DataInput(Input input) {
-        this.input = input;
-        buffer = input.getBuffer();
-    }
+  /**
+   * Create a new DataInput.
+   *
+   * @param input input to use
+   */
+  protected DataInput(Input input) {
+    this.input = input;
+    buffer = input.getBuffer();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public ByteOrder getEndian() {
-        return buffer.order();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public ByteOrder getEndian() {
+    return buffer.order();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setEndian(ByteOrder endian) {
-        buffer.order(endian);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void setEndian(ByteOrder endian) {
+    buffer.order(endian);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean readBoolean() {
-        return (buffer.get() != 0);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean readBoolean() {
+    return (buffer.get() != 0);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public byte readByte() {
-        return buffer.get();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public byte readByte() {
+    return buffer.get();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void readBytes(byte[] bytes) {
-        buffer.get(bytes);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void readBytes(byte[] bytes) {
+    buffer.get(bytes);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void readBytes(byte[] bytes, int offset) {
-        buffer.get(bytes, offset, bytes.length - offset);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void readBytes(byte[] bytes, int offset) {
+    buffer.get(bytes, offset, bytes.length - offset);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void readBytes(byte[] bytes, int offset, int length) {
-        buffer.get(bytes, offset, length);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void readBytes(byte[] bytes, int offset, int length) {
+    buffer.get(bytes, offset, length);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public double readDouble() {
-        return buffer.getDouble();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public double readDouble() {
+    return buffer.getDouble();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public float readFloat() {
-        return buffer.getFloat();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public float readFloat() {
+    return buffer.getFloat();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public int readInt() {
-        return buffer.getInt();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public int readInt() {
+    return buffer.getInt();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public String readMultiByte(int length, String charSet) {
-        final Charset cs = Charset.forName(charSet);
-        int limit = buffer.limit();
-        final ByteBuffer strBuf = buffer.buf();
-        strBuf.limit(strBuf.position() + length);
-        final String string = cs.decode(strBuf).toString();
-        buffer.limit(limit); // Reset the limit
-        return string;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String readMultiByte(int length, String charSet) {
+    final Charset cs = Charset.forName(charSet);
+    int limit = buffer.limit();
+    final ByteBuffer strBuf = buffer.buf();
+    strBuf.limit(strBuf.position() + length);
+    final String string = cs.decode(strBuf).toString();
+    buffer.limit(limit); // Reset the limit
+    return string;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public Object readObject() {
-        return Deserializer.deserialize(input, Object.class);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public Object readObject() {
+    return Deserializer.deserialize(input, Object.class);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public short readShort() {
-        return buffer.getShort();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public short readShort() {
+    return buffer.getShort();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public int readUnsignedByte() {
-        return buffer.getUnsigned();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public int readUnsignedByte() {
+    return buffer.getUnsigned();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public long readUnsignedInt() {
-        return buffer.getUnsignedInt();
-    }
+  /** {@inheritDoc} */
+  @Override
+  public long readUnsignedInt() {
+    return buffer.getUnsignedInt();
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public int readUnsignedShort() {
-        return buffer.getShort() & 0xffff;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public int readUnsignedShort() {
+    return buffer.getShort() & 0xffff;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public String readUTF() {
-        int length = buffer.getShort() & 0xffff;
-        return readUTFBytes(length);
-    }
+  /** {@inheritDoc} */
+  @Override
+  public String readUTF() {
+    int length = buffer.getShort() & 0xffff;
+    return readUTFBytes(length);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public String readUTFBytes(int length) {
-        int limit = buffer.limit();
-        final ByteBuffer strBuf = buffer.buf();
-        strBuf.limit(strBuf.position() + length);
-        final String string = AMF.CHARSET.decode(strBuf).toString();
-        buffer.limit(limit); // Reset the limit
-        return string;
-    }
-
+  /** {@inheritDoc} */
+  @Override
+  public String readUTFBytes(int length) {
+    int limit = buffer.limit();
+    final ByteBuffer strBuf = buffer.buf();
+    strBuf.limit(strBuf.position() + length);
+    final String string = AMF.CHARSET.decode(strBuf).toString();
+    buffer.limit(limit); // Reset the limit
+    return string;
+  }
 }

@@ -7,24 +7,18 @@
 
 package org.red5.server.exception;
 
-/**
- * Client not found
- */
+/** Client not found */
 public class ClientNotFoundException extends RuntimeException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 3135070223941800751L;
+  /** */
+  private static final long serialVersionUID = 3135070223941800751L;
 
-    /**
-     * Create exception from given string message
-     *
-     * @param id
-     *            id
-     */
-    public ClientNotFoundException(String id) {
-        super("Client \"" + id + "\" not found.");
-    }
-
+  /**
+   * Create exception from given string message
+   *
+   * @param id id
+   */
+  public ClientNotFoundException(String id) {
+    super("Client \"" + id + "\" not found.");
+  }
 }

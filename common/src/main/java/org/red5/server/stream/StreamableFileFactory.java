@@ -10,49 +10,45 @@ package org.red5.server.stream;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.red5.server.api.service.IStreamableFileService;
 import org.red5.server.api.stream.IStreamableFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Creates streamable file services
- */
+/** Creates streamable file services */
 public class StreamableFileFactory implements IStreamableFileFactory {
 
-    // Initialize Logging
-    public static Logger logger = LoggerFactory.getLogger(StreamableFileFactory.class);
+  // Initialize Logging
+  public static Logger logger = LoggerFactory.getLogger(StreamableFileFactory.class);
 
-    private Set<IStreamableFileService> services = new HashSet<>();
+  private Set<IStreamableFileService> services = new HashSet<>();
 
-    /**
-     * Setter for services
-     *
-     * @param services
-     *            Set of streamable file services
-     */
-    public void setServices(Set<IStreamableFileService> services) {
-        logger.debug("StreamableFileFactory set services");
-        this.services = services;
+  /**
+   * Setter for services
+   *
+   * @param services Set of streamable file services
+   */
+  public void setServices(Set<IStreamableFileService> services) {
+    logger.debug("StreamableFileFactory set services");
+    this.services = services;
+  }
+
+  /** {@inheritDoc} */
+  public IStreamableFileService getService(File fp) {
+    logger.debug("Get service for file: {}", fp.getName());
+    // Return first service that can handle the passed file
+    for (IStreamableFileService service : this.services) {
+      if (service.canHandle(fp)) {
+        logger.debug("Found service");
+        return service;
+      }
     }
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    public IStreamableFileService getService(File fp) {
-        logger.debug("Get service for file: {}", fp.getName());
-        // Return first service that can handle the passed file
-        for (IStreamableFileService service : this.services) {
-            if (service.canHandle(fp)) {
-                logger.debug("Found service");
-                return service;
-            }
-        }
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    public Set<IStreamableFileService> getServices() {
-        logger.debug("StreamableFileFactory get services");
-        return services;
-    }
+  /** {@inheritDoc} */
+  public Set<IStreamableFileService> getServices() {
+    logger.debug("StreamableFileFactory get services");
+    return services;
+  }
 }

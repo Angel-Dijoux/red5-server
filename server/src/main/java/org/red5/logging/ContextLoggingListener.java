@@ -7,25 +7,23 @@
 
 package org.red5.logging;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.selector.ContextSelector;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
 import org.slf4j.Logger;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.selector.ContextSelector;
-
 /**
- * A servlet context listener that puts this contexts LoggerContext into a static map of logger contexts within an overall singleton log context selector.
+ * A servlet context listener that puts this contexts LoggerContext into a static map of logger
+ * contexts within an overall singleton log context selector.
  *
- * To use it, add the following line to a web.xml file
+ * <p>To use it, add the following line to a web.xml file
  *
  * <pre>
  * 	&lt;listener&gt;
@@ -37,54 +35,64 @@ import ch.qos.logback.classic.selector.ContextSelector;
  */
 public class ContextLoggingListener implements ServletContextListener {
 
-    public void contextInitialized(ServletContextEvent event) {
-        ServletContext servletContext = event.getServletContext();
-        String contextName = servletContext.getContextPath().replaceAll("/", "");
-        if ("".equals(contextName)) {
-            contextName = "root";
-        }
-        System.out.printf("Context init: %s%n", contextName);
-        ConfigurableWebApplicationContext appctx = (ConfigurableWebApplicationContext) servletContext.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-        if (appctx != null) {
-            System.out.printf("ConfigurableWebApplicationContext is not null in ContextLoggingListener for: %s, this indicates a misconfiguration or load order problem%n", contextName);
-        }
-        try {
-            // get the selector
-            ContextSelector selector = Red5LoggerFactory.getContextSelector();
-            // get the logger context for this servlet / app context by name
-            URL url = servletContext.getResource(String.format("/WEB-INF/classes/logback-%s.xml", contextName));
-            if (url != null && Files.exists(Paths.get(url.toURI()))) {
-                System.out.printf("Context logger config found: %s%n", url.toURI());
-            } else {
-                url = servletContext.getResource("/WEB-INF/classes/logback.xml");
-                if (url != null && Files.exists(Paths.get(url.toURI()))) {
-                    System.out.printf("Context logger config found: %s%n", url.toURI());
-                }
-            }
-            // get the logger context for the servlet context
-            LoggerContext loggerContext = url != null ? ((LoggingContextSelector) selector).getLoggerContext(contextName, url) : selector.getLoggerContext(contextName);
-            // set the logger context for use elsewhere in the servlet context
-            servletContext.setAttribute(Red5LoggerFactory.LOGGER_CONTEXT_ATTRIBUTE, loggerContext);
-            // get the root logger for this context
-            Logger logger = Red5LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME, contextName);
-            logger.info("Starting up context: {}", contextName);
-        } catch (Exception e) {
-            System.err.printf("LoggingContextSelector is not the correct type: %s%n", e.getMessage());
-            e.printStackTrace();
-        }
+  public void contextInitialized(ServletContextEvent event) {
+    ServletContext servletContext = event.getServletContext();
+    String contextName = servletContext.getContextPath().replaceAll("/", "");
+    if ("".equals(contextName)) {
+      contextName = "root";
     }
-
-    public void contextDestroyed(ServletContextEvent event) {
-        ServletContext servletContext = event.getServletContext();
-        LoggerContext context = (LoggerContext) servletContext.getAttribute(Red5LoggerFactory.LOGGER_CONTEXT_ATTRIBUTE);
-        if (context != null) {
-            Logger logger = context.getLogger(Logger.ROOT_LOGGER_NAME);
-            logger.debug("Shutting down context {}", context.getName());
-            context.reset();
-            context.stop();
-        } else {
-            System.err.printf("No logger context found for %s%n", event.getServletContext().getContextPath());
-        }
+    System.out.printf("Context init: %s%n", contextName);
+    ConfigurableWebApplicationContext appctx =
+        (ConfigurableWebApplicationContext)
+            servletContext.getAttribute(
+                WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
+    if (appctx != null) {
+      System.out.printf(
+          "ConfigurableWebApplicationContext is not null in ContextLoggingListener for: %s, this indicates a misconfiguration or load order problem%n",
+          contextName);
     }
+    try {
+      // get the selector
+      ContextSelector selector = Red5LoggerFactory.getContextSelector();
+      // get the logger context for this servlet / app context by name
+      URL url =
+          servletContext.getResource(String.format("/WEB-INF/classes/logback-%s.xml", contextName));
+      if (url != null && Files.exists(Paths.get(url.toURI()))) {
+        System.out.printf("Context logger config found: %s%n", url.toURI());
+      } else {
+        url = servletContext.getResource("/WEB-INF/classes/logback.xml");
+        if (url != null && Files.exists(Paths.get(url.toURI()))) {
+          System.out.printf("Context logger config found: %s%n", url.toURI());
+        }
+      }
+      // get the logger context for the servlet context
+      LoggerContext loggerContext =
+          url != null
+              ? ((LoggingContextSelector) selector).getLoggerContext(contextName, url)
+              : selector.getLoggerContext(contextName);
+      // set the logger context for use elsewhere in the servlet context
+      servletContext.setAttribute(Red5LoggerFactory.LOGGER_CONTEXT_ATTRIBUTE, loggerContext);
+      // get the root logger for this context
+      Logger logger = Red5LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME, contextName);
+      logger.info("Starting up context: {}", contextName);
+    } catch (Exception e) {
+      System.err.printf("LoggingContextSelector is not the correct type: %s%n", e.getMessage());
+      e.printStackTrace();
+    }
+  }
 
+  public void contextDestroyed(ServletContextEvent event) {
+    ServletContext servletContext = event.getServletContext();
+    LoggerContext context =
+        (LoggerContext) servletContext.getAttribute(Red5LoggerFactory.LOGGER_CONTEXT_ATTRIBUTE);
+    if (context != null) {
+      Logger logger = context.getLogger(Logger.ROOT_LOGGER_NAME);
+      logger.debug("Shutting down context {}", context.getName());
+      context.reset();
+      context.stop();
+    } else {
+      System.err.printf(
+          "No logger context found for %s%n", event.getServletContext().getContextPath());
+    }
+  }
 }

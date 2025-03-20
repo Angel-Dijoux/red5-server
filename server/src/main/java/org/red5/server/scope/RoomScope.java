@@ -9,8 +9,7 @@ import org.red5.server.api.scope.ScopeType;
  */
 public class RoomScope extends Scope {
 
-    {
-        type = ScopeType.ROOM;
-    }
-
+  {
+    type = ScopeType.ROOM;
+  }
 }
