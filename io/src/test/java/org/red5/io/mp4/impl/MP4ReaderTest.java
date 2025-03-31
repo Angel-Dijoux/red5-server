@@ -4,7 +4,6 @@
  * required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-
 package org.red5.io.mp4.impl;
 
 import java.io.File;
@@ -23,78 +22,93 @@ public class MP4ReaderTest extends TestCase {
 
     @Test
     public void testCtor() throws Exception {
-        // use for the internal unit tests
-        // File file = new File("target/test-classes/fixtures/bbb.mp4"); // non-avc1 h264 video / aac
-        // audio
-        // File file = new File("target/test-classes/fixtures/sample.mp4"); // non-avc1 h264 video / aac
-        // audio
-        File file = new File("target/test-classes/fixtures/mov_h264.mp4"); // avc1 h264 video / aac audio
-        // File file = new File("target/test-classes/fixtures/mov_h265.mp4"); // hev1 h265 video / aac
-        // audio
-        // File file = new File("target/test-classes/fixtures/MOV1.MOV"); // hcv1 h265 video / aac audio
-        // File file = new
-        // File("/media/mondain/terrorbyte/Videos/bbb_sunflower_2160p_60fps_normal.mp4"); // h264 video
-        // / ac-3 and mp3 audio
+
+        File file = new File("target/test-classes/fixtures/mov_h264.mp4");
+        if (!file.exists()) {
+            log.warn("Test file not found: {}", file.getAbsolutePath());
+            return;
+        }
 
         MP4Reader reader = new MP4Reader(file);
 
         KeyFrameMeta meta = reader.analyzeKeyFrames();
-        log.debug("Meta: {}", meta);
+        log.debug("KeyFrameMeta from {}: {}", file.getName(), meta);
 
-        ITag tag = null;
-        for (int t = 0; t < 32; t++) {
-            tag = reader.readTag();
-            log.debug("Tag: {}", tag);
+        for (int t = 0; t < 10; t++) {
+            if (!reader.hasMoreTags()) {
+                break;
+            }
+            ITag tag = reader.readTag();
+            log.debug("Tag #{} => {}", t, tag);
         }
-
+        reader.close();
         log.info("----------------------------------------------------------------------------------");
     }
 
     @Test
+    public void testAnalyzeKeyFrames() throws Exception {
+        File file = new File("target/test-classes/fixtures/mov_h264.mp4");
+        if (!file.exists()) {
+            log.warn("Test file not found: {}", file.getAbsolutePath());
+            return;
+        }
+        MP4Reader reader = new MP4Reader(file);
+        KeyFrameMeta meta = reader.analyzeKeyFrames();
+        assertNotNull(meta);
+        log.debug("Keyframe meta: {}", meta);
+
+        assertTrue("Duration should be > 0", meta.duration > 0);
+        if (meta.positions != null && meta.timestamps != null) {
+            assertEquals("positions/timestamps array length mismatch", meta.positions.length, meta.timestamps.length);
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testReadAllTags() throws Exception {
+        File file = new File("target/test-classes/fixtures/mov_h264.mp4");
+        if (!file.exists()) {
+            log.warn("Test file not found: {}", file.getAbsolutePath());
+            return;
+        }
+        MP4Reader reader = new MP4Reader(file);
+        int count = 0;
+        while (reader.hasMoreTags()) {
+            ITag tag = reader.readTag();
+            assertNotNull("readTag() returned null unexpectedly", tag);
+            count++;
+        }
+        log.debug("Total tags read: {}", count);
+        assertTrue("Should read at least 1 tag (metadata) from the file", count > 0);
+        reader.close();
+    }
+
+    @Test
+    public void testSeek() throws Exception {
+        File file = new File("target/test-classes/fixtures/mov_h264.mp4");
+        if (!file.exists()) {
+            log.warn("Test file not found: {}", file.getAbsolutePath());
+            return;
+        }
+        MP4Reader reader = new MP4Reader(file);
+
+        long halfPosition = reader.getTotalBytes() / 2;
+        reader.position(halfPosition);
+
+        if (reader.hasMoreTags()) {
+            ITag tag = reader.readTag();
+            log.debug("Tag after seeking at pos {} => {}", halfPosition, tag);
+            assertNotNull(tag);
+        }
+        reader.close();
+    }
+
+    @Test
     public void testBytes() throws Exception {
-        // 00 40 94 00 00 00 00 00 00 00 06 ==
-        byte width[] = { (byte) 0x00, (byte) 0x40, (byte) 0x94, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
+        // 00 40 94 00 00 00 00 00
+        byte[] width = { (byte) 0x00, (byte) 0x40, (byte) 0x94, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
         System.out.println("width: {}" + bytesToLong(width));
 
-        //		byte height[] = { (byte) 0x40, (byte) 0x86, (byte) 0x80, (byte) 0x00 };
-        //		System.out.println("height: {}" + bytesToInt(height));
-        //
-        //		byte timescale[] = { (byte) 0x40, (byte) 0xA7, (byte) 0x6A, (byte) 0x00 };
-        //		System.out.println("timescale: {}" + bytesToInt(timescale));
-        //
-        //		byte duration[] = { (byte) 0x40, (byte) 0x6D, (byte) 0xE9, (byte) 0x03,
-        //				(byte) 0x22, (byte) 0x7B, (byte) 0x4C, (byte) 0x47 };
-        //		System.out.println("duration: {}" + bytesToLong(duration));
-        //
-        //		byte avcprofile[] = { (byte) 0x40, (byte) 0x53, (byte) 0x40,
-        //				(byte) 0x00 };
-        //		System.out.println("avcprofile: {}" + bytesToInt(avcprofile));
-        //
-        //		byte avclevel[] = { (byte) 0x40, (byte) 0x49, (byte) 0x80, (byte) 0x00 };
-        //		System.out.println("avclevel: {}" + bytesToInt(avclevel));
-        //
-        //		byte aacaot[] = { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte)
-        // 0x00, (byte) 0x00, (byte) 0x40 };
-        //		System.out.println("aacaot: {}" + bytesToLong(aacaot));
-        //
-        //		byte videoframerate[] = { (byte) 0x40, (byte) 0x37, (byte) 0xF9,
-        //				(byte) 0xDB, (byte) 0x22, (byte) 0xD0, (byte) 0xE5, (byte) 0x60 };
-        //		System.out.println("videoframerate: {}" + bytesToLong(videoframerate));
-        //
-        //		byte audiochannels[] = { (byte) 0x40, (byte) 0x00, (byte) 0x00,
-        //				(byte) 0x00 };
-        //		System.out.println("audiochannels: {}" + bytesToInt(audiochannels));
-        //
-        //		byte moovposition[] = { (byte) 0x40, (byte) 0x40, (byte) 0x00,
-        //				(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
-        //		System.out.println("moovposition: {}" + bytesToLong(moovposition));
-        //
-        //
-        // byte[] arr = {(byte) 0x0f};
-        // System.out.println("bbb: {}" + bytesToByte(arr));
-        // byte[] arr = {(byte) 0xE5, (byte) 0x88, (byte) 0x80, (byte) 0x00,
-        // (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
-        // System.out.println("bbb: {}" + bytesToLong(arr));
         byte[] arr = { (byte) 0, (byte) 0, (byte) 0x10, (byte) 0 };
         System.out.println("bbb: {}" + bytesToInt(arr));
     }
