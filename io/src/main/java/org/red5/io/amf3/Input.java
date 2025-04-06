@@ -69,15 +69,15 @@ public class Input extends org.red5.io.amf.Input {
     /**
      * Create new information about a class.
      *
-     * @param className class name
-     * @param type type
+     * @param className      class name
+     * @param type           type
      * @param attributeNames attributes
      */
     public ClassReference(String className, int type, List<String> attributeNames) {
       if (log.isDebugEnabled()) {
         log.debug(
             "Class reference - className: {} type: {} attributeNames: {}",
-            new Object[] {className, type, attributeNames});
+            new Object[] { className, type, attributeNames });
       }
       this.className = className;
       this.type = type;
@@ -86,7 +86,8 @@ public class Input extends org.red5.io.amf.Input {
   }
 
   /**
-   * Dummy class that is stored as reference for objects currently being deserialized that reference
+   * Dummy class that is stored as reference for objects currently being
+   * deserialized that reference
    * themselves.
    */
   protected static class PendingObject {
@@ -109,7 +110,7 @@ public class Input extends org.red5.io.amf.Input {
       PendingProperty(Object obj, Class<?> klass, String name) {
         if (log.isDebugEnabled()) {
           log.debug(
-              "Pending property - obj: {} class: {} name: {}", new Object[] {obj, klass, name});
+              "Pending property - obj: {} class: {} name: {}", new Object[] { obj, klass, name });
         }
         this.obj = obj;
         this.klass = klass;
@@ -148,7 +149,8 @@ public class Input extends org.red5.io.amf.Input {
   }
 
   /**
-   * Class used to collect AMF3 references. In AMF3 references should be collected through the whole
+   * Class used to collect AMF3 references. In AMF3 references should be collected
+   * through the whole
    * "body" (across several Input objects).
    */
   public static class RefStorage {
@@ -164,7 +166,10 @@ public class Input extends org.red5.io.amf.Input {
   /** Set to a value above 0 to enforce AMF3 decoding mode. */
   private int amf3_mode;
 
-  /** Stores references declared in this input of previous ones in the same message body */
+  /**
+   * Stores references declared in this input of previous ones in the same message
+   * body
+   */
   private RefStorage refStorage;
 
   /**
@@ -177,10 +182,11 @@ public class Input extends org.red5.io.amf.Input {
   }
 
   /**
-   * Creates Input object for AMF3 from byte buffer and initializes references from passed
+   * Creates Input object for AMF3 from byte buffer and initializes references
+   * from passed
    * RefStorage
    *
-   * @param buf buffer
+   * @param buf        buffer
    * @param refStorage ref storage
    */
   public Input(IoBuffer buf, RefStorage refStorage) {
@@ -471,11 +477,11 @@ public class Input extends org.red5.io.amf.Input {
    *
    * @return int Length of array
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public Object readArray(Type target) {
     int count = readInteger();
-    log.debug("Count: {} and {} ref {}", new Object[] {count, (count & 1), (count >> 1)});
+    log.debug("Count: {} and {} ref {}", new Object[] { count, (count & 1), (count >> 1) });
     if ((count & 1) == 0) {
       // Reference
       Object ref = getReference(count >> 1);
@@ -504,7 +510,7 @@ public class Input extends org.red5.io.amf.Input {
       }
       if (collection.isArray()) {
         log.debug("Using an array for key: {} count: {}", key, count);
-        nested = ArrayUtils.getGenericType(collection.getComponentType());
+        nested = new ArrayUtils().getGenericType(collection.getComponentType());
         result = Array.newInstance(nested, count);
         storeReference(result);
         for (int i = 0; i < count; i++) {
@@ -576,12 +582,12 @@ public class Input extends org.red5.io.amf.Input {
     return super.readMap();
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes", "null", "serial"})
+  @SuppressWarnings({ "unchecked", "rawtypes", "null", "serial" })
   @Override
   public Object readObject() {
     log.trace("readObject - amf3_mode: {}", amf3_mode);
     int type = readInteger();
-    log.debug("Type: {} and {} ref {}", new Object[] {type, (type & 1), (type >> 1)});
+    log.debug("Type: {} and {} ref {}", new Object[] { type, (type & 1), (type >> 1) });
     if ((type & 1) == 0) {
       // Reference
       Object ref = getReference(type >> 1);
@@ -620,20 +626,19 @@ public class Input extends org.red5.io.amf.Input {
       } else if (className.startsWith("flex")) {
         // set the attributes for messaging classes
         if (className.endsWith("CommandMessage")) {
-          attributes =
-              new LinkedList<String>() {
-                {
-                  add("timestamp");
-                  add("headers");
-                  add("operation");
-                  add("body");
-                  add("correlationId");
-                  add("messageId");
-                  add("timeToLive");
-                  add("clientId");
-                  add("destination");
-                }
-              };
+          attributes = new LinkedList<String>() {
+            {
+              add("timestamp");
+              add("headers");
+              add("operation");
+              add("body");
+              add("correlationId");
+              add("messageId");
+              add("timeToLive");
+              add("clientId");
+              add("destination");
+            }
+          };
         } else {
           log.debug("Attributes for {} were not set", className);
         }
@@ -693,7 +698,8 @@ public class Input extends org.red5.io.amf.Input {
         if (log.isDebugEnabled()) {
           log.debug("Detected: Object value type");
         }
-        // First, we should read typed (non-dynamic) properties ("sealed traits" according to AMF3
+        // First, we should read typed (non-dynamic) properties ("sealed traits"
+        // according to AMF3
         // specification).
         // Property names are stored in the beginning, then values are stored.
         count = type >> 2;

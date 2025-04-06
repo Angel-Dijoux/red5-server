@@ -10,9 +10,13 @@ package org.red5.io.utils;
 import java.lang.reflect.Array;
 import java.util.Collection;
 
-public final class ArrayUtils {
+public class ArrayUtils {
 
-  public static Object getArray(Class<?> type, int count) {
+  public ArrayUtils() {
+
+  }
+
+  public Object getArray(Class<?> type, int count) {
     if (byte.class.isAssignableFrom(type)) {
       return new byte[count];
     } else if (short.class.isAssignableFrom(type)) {
@@ -36,8 +40,8 @@ public final class ArrayUtils {
     }
   }
 
-  @SuppressWarnings({"rawtypes"})
-  public static Object fillArray(Class<?> type, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  public Object fillArray(Class<?> type, Collection collection) {
     if (byte.class.isAssignableFrom(type)) {
       return toByteArray(collection);
     } else if (short.class.isAssignableFrom(type)) {
@@ -59,8 +63,8 @@ public final class ArrayUtils {
     }
   }
 
-  @SuppressWarnings({"rawtypes"})
-  public static Object fillArray(Class<?> type, Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  public Object fillArray(Class<?> type, Object array, Collection collection) {
     if (byte.class.isAssignableFrom(type)) {
       return toByteArray(array, collection);
     } else if (short.class.isAssignableFrom(type)) {
@@ -82,13 +86,13 @@ public final class ArrayUtils {
     }
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toByteArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toByteArray(Collection collection) {
     return toByteArray(new byte[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toByteArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toByteArray(Object array, Collection collection) {
     byte[] ba = (byte[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -98,13 +102,13 @@ public final class ArrayUtils {
     return ba;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toShortArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toShortArray(Collection collection) {
     return toShortArray(new short[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toShortArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toShortArray(Object array, Collection collection) {
     short[] sa = (short[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -114,13 +118,13 @@ public final class ArrayUtils {
     return sa;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toIntegerArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toIntegerArray(Collection collection) {
     return toIntegerArray(new int[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toIntegerArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toIntegerArray(Object array, Collection collection) {
     int[] ia = (int[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -130,13 +134,13 @@ public final class ArrayUtils {
     return ia;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toLongArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toLongArray(Collection collection) {
     return toLongArray(new long[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toLongArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toLongArray(Object array, Collection collection) {
     long[] la = (long[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -146,13 +150,13 @@ public final class ArrayUtils {
     return la;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toFloatArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toFloatArray(Collection collection) {
     return toFloatArray(new float[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toFloatArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toFloatArray(Object array, Collection collection) {
     float[] fa = (float[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -162,13 +166,13 @@ public final class ArrayUtils {
     return fa;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toDoubleArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toDoubleArray(Collection collection) {
     return toDoubleArray(new double[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toDoubleArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toDoubleArray(Object array, Collection collection) {
     double[] da = (double[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -183,13 +187,13 @@ public final class ArrayUtils {
     return da;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toBooleanArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toBooleanArray(Collection collection) {
     return toBooleanArray(new boolean[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toBooleanArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toBooleanArray(Object array, Collection collection) {
     boolean[] ba = (boolean[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -199,13 +203,13 @@ public final class ArrayUtils {
     return ba;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toCharacterArray(Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toCharacterArray(Collection collection) {
     return toCharacterArray(new char[collection.size()], collection);
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toCharacterArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toCharacterArray(Object array, Collection collection) {
     char[] ca = (char[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -215,13 +219,13 @@ public final class ArrayUtils {
     return ca;
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static Object toObjectArray(Class<?> type, Collection collection) {
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private Object toObjectArray(Class<?> type, Collection collection) {
     return collection.toArray((Object[]) Array.newInstance(type, collection.size()));
   }
 
-  @SuppressWarnings({"rawtypes"})
-  private static Object toObjectArray(Object array, Collection collection) {
+  @SuppressWarnings({ "rawtypes" })
+  private Object toObjectArray(Object array, Collection collection) {
     Object[] oa = (Object[]) array;
     int i = 0;
     for (Object o : collection) {
@@ -230,7 +234,7 @@ public final class ArrayUtils {
     return oa;
   }
 
-  public static Class<?> getGenericType(Class<?> nested) {
+  public Class<?> getGenericType(Class<?> nested) {
     if (nested == byte.class) {
       nested = Byte.class;
     } else if (nested == short.class) {

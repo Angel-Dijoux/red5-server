@@ -52,14 +52,13 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
   protected Logger log = LoggerFactory.getLogger(this.getClass());
 
-  protected static Map<String, String> classAliases =
-      new HashMap<String, String>(3) {
-        {
-          put("DSA", "org.red5.compatibility.flex.messaging.messages.AsyncMessageExt");
-          put("DSC", "org.red5.compatibility.flex.messaging.messages.CommandMessageExt");
-          put("DSK", "org.red5.compatibility.flex.messaging.messages.AcknowledgeMessageExt");
-        }
-      };
+  protected static Map<String, String> classAliases = new HashMap<String, String>(3) {
+    {
+      put("DSA", "org.red5.compatibility.flex.messaging.messages.AsyncMessageExt");
+      put("DSC", "org.red5.compatibility.flex.messaging.messages.CommandMessageExt");
+      put("DSK", "org.red5.compatibility.flex.messaging.messages.AcknowledgeMessageExt");
+    }
+  };
 
   protected IoBuffer buf;
 
@@ -74,7 +73,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     super();
     this.buf = buf;
     // if (log.isTraceEnabled()) {
-    //    log.trace("Input: {}", Hex.encodeHexString(Arrays.copyOfRange(buf.array(), buf.position(),
+    // log.trace("Input: {}", Hex.encodeHexString(Arrays.copyOfRange(buf.array(),
+    // buf.position(),
     // buf.limit())));
     // }
   }
@@ -158,7 +158,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   }
 
   /**
-   * Reads a Number. In ActionScript 1 and 2 Number type represents all numbers, both floats and
+   * Reads a Number. In ActionScript 1 and 2 Number type represents all numbers,
+   * both floats and
    * integers.
    *
    * @return Number
@@ -258,8 +259,11 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   @Override
   public Date readDate() {
     /*
-     * Date: 0x0B T7 T6 .. T0 Z1 Z2 T7 to T0 form a 64 bit Big Endian number that specifies the number of nanoseconds that have passed since 1/1/1970 0:00 to the specified time. This
-     * format is UTC 1970. Z1 an Z0 for a 16 bit Big Endian number indicating the indicated time's timezone in minutes.
+     * Date: 0x0B T7 T6 .. T0 Z1 Z2 T7 to T0 form a 64 bit Big Endian number that
+     * specifies the number of nanoseconds that have passed since 1/1/1970 0:00 to
+     * the specified time. This
+     * format is UTC 1970. Z1 an Z0 for a 16 bit Big Endian number indicating the
+     * indicated time's timezone in minutes.
      */
     long ms = (long) buf.getDouble();
     // The timezone can be ignored as the date always is encoded in UTC
@@ -276,7 +280,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     Object result = null;
     int count = buf.getInt();
     log.debug("Count: {}", count);
-    // To conform to the Input API, we should convert the output into an Array if the Type asks us
+    // To conform to the Input API, we should convert the output into an Array if
+    // the Type asks us
     // to.
     Class<?> collection = Collection.class;
     if (target instanceof Class<?>) {
@@ -284,7 +289,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     }
     List<Object> resultCollection = new ArrayList<>(count);
     if (collection.isArray()) {
-      result = ArrayUtils.getArray(collection.getComponentType(), count);
+      result = new ArrayUtils().getArray(collection.getComponentType(), count);
     } else {
       result = resultCollection;
     }
@@ -294,7 +299,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
       resultCollection.add(Deserializer.deserialize(this, Object.class));
     }
     if (collection.isArray()) {
-      ArrayUtils.fillArray(collection.getComponentType(), result, resultCollection);
+      new ArrayUtils().fillArray(collection.getComponentType(), result, resultCollection);
     }
     return result;
   }
@@ -368,7 +373,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     log.debug("Loading class: {}", className);
     Object instance = null;
     Class<?> clazz = null;
-    if ("".equals(className) || className == null) return instance;
+    if ("".equals(className) || className == null)
+      return instance;
     try {
       // check for special DS class aliases
       if (className.length() == 3) {
@@ -409,7 +415,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
    * @param bean Input as bean
    * @return Decoded object
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   protected Object readBean(Object bean) {
     log.debug("readBean: {}", bean);
     storeReference(bean);
@@ -505,8 +511,9 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   /**
    * Returns a boolean stating whether there are more properties
    *
-   * @return boolean <code>true</code> if there are more properties to read, <code>false</code>
-   *     otherwise
+   * @return boolean <code>true</code> if there are more properties to read,
+   *         <code>false</code>
+   *         otherwise
    */
   public boolean hasMoreProperties() {
     if (buf.remaining() >= 3) {
@@ -578,7 +585,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   }
 
   /**
-   * Read Vector&lt;int&gt; object. This is not supported by the AMF0 deserializer.
+   * Read Vector&lt;int&gt; object. This is not supported by the AMF0
+   * deserializer.
    *
    * @return Vector&lt;Integer&gt; object
    */
@@ -588,7 +596,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   }
 
   /**
-   * Read Vector&lt;Long&gt; object. This is not supported by the AMF0 deserializer.
+   * Read Vector&lt;Long&gt; object. This is not supported by the AMF0
+   * deserializer.
    *
    * @return Vector&lt;Long&gt; object
    */
@@ -598,7 +607,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   }
 
   /**
-   * Read Vector&lt;Number&gt; object. This is not supported by the AMF0 deserializer.
+   * Read Vector&lt;Number&gt; object. This is not supported by the AMF0
+   * deserializer.
    *
    * @return Vector&lt;Double&gt; object
    */
@@ -608,7 +618,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
   }
 
   /**
-   * Read Vector&lt;Object&gt; object. This is not supported by the AMF0 deserializer.
+   * Read Vector&lt;Object&gt; object. This is not supported by the AMF0
+   * deserializer.
    *
    * @return Vector&lt;Object&gt; object
    */
@@ -645,8 +656,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
       try {
         BeanUtilsBean beanUtilsBean = BeanUtilsBean.getInstance();
         PropertyUtilsBean propertyUtils = beanUtilsBean.getPropertyUtils();
-        PropertyDescriptor propertyDescriptor =
-            propertyUtils.getPropertyDescriptor(instance, propertyName);
+        PropertyDescriptor propertyDescriptor = propertyUtils.getPropertyDescriptor(instance, propertyName);
         return propertyDescriptor.getReadMethod().getGenericReturnType();
       } catch (Exception e2) {
         // nothing
