@@ -7,143 +7,57 @@
 
 package org.red5.server.net.rtmp.event;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.codec.VideoCodec;
 import org.red5.io.ITag;
 import org.red5.io.IoConstants;
-import org.red5.server.api.stream.IStreamPacket;
-import org.red5.server.stream.IStreamData;
 
-/** Video data event */
-public class VideoData extends BaseEvent
-    implements IoConstants, IStreamData<VideoData>, IStreamPacket {
+/**
+ * Video data event
+ */
+public class VideoData extends MediaDataStreamEvent<VideoData> implements IoConstants {
 
   private static final long serialVersionUID = 5538859593815804830L;
 
-  /** Videoframe type */
-  public static enum FrameType {
-    UNKNOWN,
-    KEYFRAME,
-    INTERFRAME,
-    DISPOSABLE_INTERFRAME,
-    END_OF_SEQUENCE
+  public enum FrameType {
+    UNKNOWN, KEYFRAME, INTERFRAME, DISPOSABLE_INTERFRAME, END_OF_SEQUENCE
   }
 
-  /** Video data */
-  protected IoBuffer data;
+  private FrameType frameType = FrameType.UNKNOWN;
+  private VideoCodec codec;
+  private boolean config;
+  private boolean endOfSequence;
 
-  /** Data type */
-  private byte dataType = TYPE_VIDEO_DATA;
-
-  /** Frame type, unknown by default */
-  protected FrameType frameType = FrameType.UNKNOWN;
-
-  /** Video codec */
-  protected VideoCodec codec;
-
-  /** True if this is configuration data and false otherwise */
-  protected boolean config;
-
-  /** True if this indicates an end-of-sequence and false otherwise */
-  protected boolean endOfSequence;
-
-  /** Constructs a new VideoData. */
   public VideoData() {
-    this(IoBuffer.allocate(0).flip());
+    super(IoBuffer.allocate(0).flip(), TYPE_VIDEO_DATA);
   }
 
-  /**
-   * Create video data event with given data buffer
-   *
-   * @param data Video data
-   */
   public VideoData(IoBuffer data) {
-    super(Type.STREAM_DATA);
-    setData(data);
+    super(data, TYPE_VIDEO_DATA);
+    parseData(data);
   }
 
-  /**
-   * Create video data event with given data buffer
-   *
-   * @param data Video data
-   * @param copy true to use a copy of the data or false to use reference
-   */
   public VideoData(IoBuffer data, boolean copy) {
-    super(Type.STREAM_DATA);
-    if (copy) {
-      byte[] array = new byte[data.remaining()];
-      data.mark();
-      data.get(array);
-      data.reset();
-      setData(array);
-    } else {
-      setData(data);
-    }
+    super(data, TYPE_VIDEO_DATA, copy);
+    parseData(this.data);
   }
 
-  /** {@inheritDoc} */
   @Override
-  public byte getDataType() {
-    return dataType;
-  }
-
-  public void setDataType(byte dataType) {
-    this.dataType = dataType;
-  }
-
-  /** {@inheritDoc} */
-  public IoBuffer getData() {
-    return data;
-  }
-
   public void setData(IoBuffer data) {
-    this.data = data;
-    if (data != null && data.limit() > 0) {
-      data.mark();
-      int firstByte = data.get(0) & 0xff;
-      codec = VideoCodec.valueOfById(firstByte & ITag.MASK_VIDEO_CODEC);
-      // determine by codec whether or not frame / sequence types are included
-      if (VideoCodec.getConfigured().contains(codec)) {
-        int secondByte = data.get(1) & 0xff;
-        config = (secondByte == 0);
-        endOfSequence = (secondByte == 2);
-      }
-      data.reset();
-      int frameType = (firstByte & MASK_VIDEO_FRAMETYPE) >> 4;
-      if (frameType == FLAG_FRAMETYPE_KEYFRAME) {
-        this.frameType = FrameType.KEYFRAME;
-      } else if (frameType == FLAG_FRAMETYPE_INTERFRAME) {
-        this.frameType = FrameType.INTERFRAME;
-      } else if (frameType == FLAG_FRAMETYPE_DISPOSABLE) {
-        this.frameType = FrameType.DISPOSABLE_INTERFRAME;
-      } else {
-        this.frameType = FrameType.UNKNOWN;
-      }
-    }
+    super.setData(data);
+    parseData(data);
   }
 
-  public void setData(byte[] data) {
-    setData(IoBuffer.wrap(data));
-  }
-
-  /**
-   * Getter for frame type
-   *
-   * @return Type of video frame
-   */
   public FrameType getFrameType() {
     return frameType;
   }
 
   public int getCodecId() {
-    return codec.getId();
+    return codec != null ? codec.getId() : -1;
   }
 
   public boolean isConfig() {
@@ -152,19 +66,6 @@ public class VideoData extends BaseEvent
 
   public boolean isEndOfSequence() {
     return endOfSequence;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void releaseInternal() {
-    if (data != null) {
-      final IoBuffer localData = data;
-      // null out the data first so we don't accidentally
-      // return a valid reference first
-      data = null;
-      localData.clear();
-      localData.free();
-    }
   }
 
   @Override
@@ -181,57 +82,45 @@ public class VideoData extends BaseEvent
   public void writeExternal(ObjectOutput out) throws IOException {
     super.writeExternal(out);
     out.writeObject(frameType);
-    if (data != null) {
-      if (data.hasArray()) {
-        out.writeObject(data.array());
-      } else {
-        byte[] array = new byte[data.remaining()];
-        data.mark();
-        data.get(array);
-        data.reset();
-        out.writeObject(array);
-      }
-    } else {
-      out.writeObject(null);
-    }
+    out.writeObject(data != null ? data.array() : null);
   }
 
-  /**
-   * Duplicate this message / event.
-   *
-   * @return duplicated event
-   */
-  public VideoData duplicate() throws IOException, ClassNotFoundException {
-    VideoData result = new VideoData();
-    // serialize
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    writeExternal(oos);
-    oos.close();
-    // convert to byte array
-    byte[] buf = baos.toByteArray();
-    baos.close();
-    // create input streams
-    ByteArrayInputStream bais = new ByteArrayInputStream(buf);
-    ObjectInputStream ois = new ObjectInputStream(bais);
-    // deserialize
-    result.readExternal(ois);
-    ois.close();
-    bais.close();
-    // clone the header if there is one
-    if (header != null) {
-      result.setHeader(header.clone());
-    }
-    result.setSourceType(sourceType);
-    result.setSource(source);
-    result.setTimestamp(timestamp);
-    return result;
-  }
-
-  /** {@inheritDoc} */
   @Override
-  public String toString() {
-    return String.format(
-        "Video - ts: %s length: %s", getTimestamp(), (data != null ? data.limit() : '0'));
+  protected VideoData createInstance() {
+    return new VideoData();
   }
+
+  private void parseData(IoBuffer data) {
+    if (data == null || data.limit() <= 0) {
+      return;
+    }
+
+    data.mark();
+
+    int firstByte = data.get(0) & 0xFF;
+    codec = VideoCodec.valueOfById(firstByte & ITag.MASK_VIDEO_CODEC);
+
+    if (VideoCodec.getConfigured().contains(codec) && data.limit() > 1) {
+      int secondByte = data.get(1) & 0xFF;
+      config = (secondByte == 0);
+      endOfSequence = (secondByte == 2);
+    }
+
+    switch ((firstByte & MASK_VIDEO_FRAMETYPE) >> 4) {
+      case FLAG_FRAMETYPE_KEYFRAME:
+        frameType = FrameType.KEYFRAME;
+        break;
+      case FLAG_FRAMETYPE_INTERFRAME:
+        frameType = FrameType.INTERFRAME;
+        break;
+      case FLAG_FRAMETYPE_DISPOSABLE:
+        frameType = FrameType.DISPOSABLE_INTERFRAME;
+        break;
+      default:
+        frameType = FrameType.UNKNOWN;
+    }
+
+    data.reset();
+  }
+
 }

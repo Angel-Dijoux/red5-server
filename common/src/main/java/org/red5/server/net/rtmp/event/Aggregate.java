@@ -7,26 +7,19 @@
 
 package org.red5.server.net.rtmp.event;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import java.util.LinkedList;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.IoConstants;
 import org.red5.io.utils.IOUtils;
-import org.red5.server.api.stream.IStreamPacket;
 import org.red5.server.net.rtmp.message.Header;
-import org.red5.server.stream.IStreamData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Aggregate data event */
-public class Aggregate extends BaseEvent
-    implements IoConstants, IStreamData<Aggregate>, IStreamPacket {
+public class Aggregate extends MediaDataStreamEvent<Aggregate> implements IoConstants {
 
   private static final long serialVersionUID = 5538859593815804830L;
 
@@ -35,12 +28,9 @@ public class Aggregate extends BaseEvent
   /** Data */
   protected IoBuffer data;
 
-  /** Data type */
-  private byte dataType = TYPE_AGGREGATE;
-
   /** Constructs a new Aggregate. */
   public Aggregate() {
-    this(IoBuffer.allocate(0).flip());
+    super(IoBuffer.allocate(0).flip(), TYPE_AGGREGATE);
   }
 
   /**
@@ -49,8 +39,7 @@ public class Aggregate extends BaseEvent
    * @param data data
    */
   public Aggregate(IoBuffer data) {
-    super(Type.STREAM_DATA);
-    setData(data);
+    super(data, TYPE_AGGREGATE);
   }
 
   /**
@@ -60,31 +49,7 @@ public class Aggregate extends BaseEvent
    * @param copy true to use a copy of the data or false to use reference
    */
   public Aggregate(IoBuffer data, boolean copy) {
-    super(Type.STREAM_DATA);
-    if (copy) {
-      byte[] array = new byte[data.remaining()];
-      data.mark();
-      data.get(array);
-      data.reset();
-      setData(array);
-    } else {
-      setData(data);
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public byte getDataType() {
-    return dataType;
-  }
-
-  public void setDataType(byte dataType) {
-    this.dataType = dataType;
-  }
-
-  /** {@inheritDoc} */
-  public IoBuffer getData() {
-    return data;
+    super(data, TYPE_AGGREGATE, copy);
   }
 
   public void setData(IoBuffer data) {
@@ -97,7 +62,8 @@ public class Aggregate extends BaseEvent
   }
 
   /**
-   * Breaks-up the aggregate into its individual parts and returns them as a list. The parts are
+   * Breaks-up the aggregate into its individual parts and returns them as a list.
+   * The parts are
    * returned based on the ordering of the aggregate itself.
    *
    * @return list of IRTMPEvent objects
@@ -189,26 +155,6 @@ public class Aggregate extends BaseEvent
     return parts;
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public String toString() {
-    return String.format(
-        "Aggregate - ts: %s length: %s", getTimestamp(), (data != null ? data.limit() : '0'));
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void releaseInternal() {
-    if (data != null) {
-      final IoBuffer localData = data;
-      // null out the data first so we don't accidentally
-      // return a valid reference first
-      data = null;
-      localData.clear();
-      localData.free();
-    }
-  }
-
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     super.readExternal(in);
@@ -230,35 +176,9 @@ public class Aggregate extends BaseEvent
     }
   }
 
-  /**
-   * Duplicate this message / event.
-   *
-   * @return duplicated event
-   */
-  public Aggregate duplicate() throws IOException, ClassNotFoundException {
-    Aggregate result = new Aggregate();
-    // serialize
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    writeExternal(oos);
-    oos.close();
-    // convert to byte array
-    byte[] buf = baos.toByteArray();
-    baos.close();
-    // create input streams
-    ByteArrayInputStream bais = new ByteArrayInputStream(buf);
-    ObjectInputStream ois = new ObjectInputStream(bais);
-    // deserialize
-    result.readExternal(ois);
-    ois.close();
-    bais.close();
-    // clone the header if there is one
-    if (header != null) {
-      result.setHeader(header.clone());
-    }
-    result.setSourceType(sourceType);
-    result.setSource(source);
-    result.setTimestamp(timestamp);
-    return result;
+  @Override
+  protected Aggregate createInstance() {
+    return new Aggregate();
   }
+
 }
