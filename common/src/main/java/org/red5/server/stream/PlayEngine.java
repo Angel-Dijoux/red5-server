@@ -333,29 +333,29 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
     IScope thisScope = subscriberStream.getScope();
     final String itemName = item.getName();
     // check for input and type
-    IProviderService.INPUT_TYPE sourceType =
+    IProviderService.InputKind sourceType =
         providerService.lookupProviderInput(thisScope, itemName, type);
     boolean sendNotifications = true;
     // decision: 0 for Live, 1 for File, 2 for Wait, 3 for N/A
     switch (type) {
       case -2:
-        if (sourceType == IProviderService.INPUT_TYPE.LIVE) {
+        if (sourceType == IProviderService.InputKind.LIVE) {
           playDecision = 0;
-        } else if (sourceType == IProviderService.INPUT_TYPE.VOD) {
+        } else if (sourceType == IProviderService.InputKind.VOD) {
           playDecision = 1;
-        } else if (sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT) {
+        } else if (sourceType == IProviderService.InputKind.LIVE_WAIT) {
           playDecision = 2;
         }
         break;
       case -1:
-        if (sourceType == IProviderService.INPUT_TYPE.LIVE) {
+        if (sourceType == IProviderService.InputKind.LIVE) {
           playDecision = 0;
-        } else if (sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT) {
+        } else if (sourceType == IProviderService.InputKind.LIVE_WAIT) {
           playDecision = 2;
         }
         break;
       default:
-        if (sourceType == IProviderService.INPUT_TYPE.VOD) {
+        if (sourceType == IProviderService.InputKind.VOD) {
           playDecision = 1;
         }
         break;

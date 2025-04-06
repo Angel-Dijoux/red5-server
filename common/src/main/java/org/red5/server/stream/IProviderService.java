@@ -19,7 +19,7 @@ public interface IProviderService extends IScopeService {
 
   public static final String BEAN_NAME = "providerService";
 
-  enum INPUT_TYPE {
+  enum InputKind {
     NOT_FOUND,
     LIVE,
     LIVE_WAIT,
@@ -36,7 +36,7 @@ public interface IProviderService extends IScopeService {
    * @param type Type of video stream
    * @return LIVE if live, VOD if VOD, and LIVE_WAIT otherwise
    */
-  INPUT_TYPE lookupProviderInput(IScope scope, String name, int type);
+  InputKind lookupProviderInput(IScope scope, String name, int type);
 
   /**
    * Get a named provider as the source of input. Live stream first, VOD stream second.
