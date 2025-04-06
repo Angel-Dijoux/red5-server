@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -316,11 +317,14 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
     }
     // Play type determination
     // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStream.html#play()
-    // The start time, in seconds. Allowed values are -2, -1, 0, or a positive number.
-    // The default value is -2, which looks for a live stream, then a recorded stream,
+    // The start time, in seconds. Allowed values are -2, -1, 0, or a positive
+    // number.
+    // The default value is -2, which looks for a live stream, then a recorded
+    // stream,
     // and if it finds neither, opens a live stream.
     // If -1, plays only a live stream.
-    // If 0 or a positive number, plays a recorded stream, beginning start seconds in.
+    // If 0 or a positive number, plays a recorded stream, beginning start seconds
+    // in.
     //
     // -2: live then recorded, -1: live, >=0: recorded
     int type = (int) (item.getStart() / 1000);
@@ -591,14 +595,12 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
       releasePendingMessage();
     }
     sendVODInitCM(currentItem.get());
-    // Don't use pullAndPush to detect IOExceptions prior to sending NetStream.Play.Start
+    // Don't use pullAndPush to detect IOExceptions prior to sending
+    // NetStream.Play.Start
     int start = (int) currentItem.get().getStart();
     if (start > 0) {
-      streamOffset = sendVODSeekCM(start);
-      // We seeked to the nearest keyframe so use real timestamp now
-      if (streamOffset == -1) {
-        streamOffset = start;
-      }
+      Optional<Integer> maybeSendVod = sendVODSeekCM(start);
+      streamOffset = maybeSendVod.isPresent() ? maybeSendVod.get() : start;
     }
     IMessageInput in = msgInReference.get();
     msg = in.pullMessage();
@@ -1307,9 +1309,9 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
    *
    * @param msgIn Message input
    * @param position Playlist item
-   * @return Out-of-band control message call result or -1 on failure
+   * @return Maybe integer is not out-of-bound
    */
-  private int sendVODSeekCM(int position) {
+  private Optional<Integer> sendVODSeekCM(int position) {
     OOBControlMessage oobCtrlMsg = new OOBControlMessage();
     oobCtrlMsg.setTarget(ISeekableProvider.KEY);
     oobCtrlMsg.setServiceName("seek");
@@ -1318,9 +1320,9 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
     oobCtrlMsg.setServiceParamMap(paramMap);
     msgInReference.get().sendOOBControlMessage(this, oobCtrlMsg);
     if (oobCtrlMsg.getResult() instanceof Integer) {
-      return (Integer) oobCtrlMsg.getResult();
+      return Optional.of((Integer) oobCtrlMsg.getResult());
     } else {
-      return -1;
+      return Optional.empty();
     }
   }
 
@@ -1432,8 +1434,10 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
           return;
         }
         if (body instanceof VideoData && body.getSourceType() == Constants.SOURCE_TYPE_LIVE) {
-          // We only want to drop packets from a live stream. VOD streams we let it buffer.
-          // We don't want a user watching a movie to see a choppy video due to low bandwidth.
+          // We only want to drop packets from a live stream. VOD streams we let it
+          // buffer.
+          // We don't want a user watching a movie to see a choppy video due to low
+          // bandwidth.
           if (msgIn instanceof IBroadcastScope) {
             IBroadcastStream stream =
                 (IBroadcastStream) ((IBroadcastScope) msgIn).getClientBroadcastStream();
@@ -1455,12 +1459,16 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
                   }
                   return;
                 }
-                // Implement some sort of back-pressure on video streams. When the client is on a
+                // Implement some sort of back-pressure on video streams. When the client is on
+                // a
                 // congested
-                // connection, Red5 cannot send packets fast enough. Mina puts these packets into an
-                // unbounded queue. If we generate video packets fast enough, the queue would get
+                // connection, Red5 cannot send packets fast enough. Mina puts these packets
+                // into an
+                // unbounded queue. If we generate video packets fast enough, the queue would
+                // get
                 // large
-                // which may trigger an OutOfMemory exception. To mitigate this, we check the size
+                // which may trigger an OutOfMemory exception. To mitigate this, we check the
+                // size
                 // of
                 // pending video messages and drop video packets until the queue is below the
                 // threshold.
@@ -1768,11 +1776,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
       sendReset();
       sendSeekStatus(currentItem.get(), position);
       sendStartStatus(currentItem.get());
-      int seekPos = sendVODSeekCM(position);
-      // we seeked to the nearest keyframe so use real timestamp now
-      if (seekPos == -1) {
-        seekPos = position;
-      }
+      Optional<Integer> maybeSendVod = sendVODSeekCM(position);
+      int seekPos = maybeSendVod.isPresent() ? maybeSendVod.get() : position;
       // what should our start be?
       log.trace("Current playback start: {}", playbackStart);
       playbackStart = System.currentTimeMillis() - seekPos;
@@ -1831,7 +1836,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
       }
       if (!messageSent && subscriberStream.getState() == StreamState.PLAYING) {
         boolean isRTMPTPlayback = subscriberStream.getConnection().getProtocol().equals("rtmpt");
-        // send all frames from last keyframe up to requested position and fill client buffer
+        // send all frames from last keyframe up to requested position and fill client
+        // buffer
         if (sendCheckVideoCM()) {
           final long clientBuffer = subscriberStream.getClientBufferDuration();
           IMessage msg = null;
