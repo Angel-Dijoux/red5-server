@@ -1,3 +1,9 @@
+---
+title: "Rapport partie 2 GL"
+author: "Angel Dijoux Turpin <angel.turpin.etu@univ-lille.fr>"
+date: 2025-06-04
+---
+
 > **Note**  
 > Les modifications ont été apportées dans l'ensemble du projet red-5-server, même si nous avions fait notre analyse dans `common` pour la partie 1. En effet, à force de modifier le code, tester et naviguer, j'ai trouvé plein de choses à modifier.
 
