@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public interface WriteModeStrategy {
-  void initialize(RandomAccessFile file, File originalFile) throws IOException;
+    void initialize(RandomAccessFile file, File originalFile) throws IOException;
 
-  void finalizeWrite(RandomAccessFile file, File originalFile) throws IOException;
+    void finalizeWrite(RandomAccessFile file, File originalFile) throws IOException;
 }

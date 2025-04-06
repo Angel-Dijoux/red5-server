@@ -20,52 +20,53 @@ import org.slf4j.LoggerFactory;
 
 public class WebmWriter implements Closeable, TagConsumer {
 
-  private static Logger log = LoggerFactory.getLogger(WebmWriter.class);
+    private static Logger log = LoggerFactory.getLogger(WebmWriter.class);
 
-  private RandomAccessFile dataFile;
-  private File file;
-  private WriteModeStrategy writeMode;
+    private RandomAccessFile dataFile;
 
-  public WebmWriter(File file, WriteModeStrategy modeStrategy) {
-    this.file = file;
-    this.writeMode = modeStrategy;
-    try {
-      this.dataFile = new RandomAccessFile(
-          modeStrategy instanceof AppendWriteMode ? file : new File(file.getAbsolutePath() + ".ser"), "rws");
-      modeStrategy.initialize(dataFile, file);
-    } catch (Exception e) {
-      log.error("Failed to initialize WebmWriter", e);
+    private File file;
+
+    private WriteModeStrategy writeMode;
+
+    public WebmWriter(File file, WriteModeStrategy modeStrategy) {
+        this.file = file;
+        this.writeMode = modeStrategy;
+        try {
+            this.dataFile = new RandomAccessFile(modeStrategy instanceof AppendWriteMode ? file : new File(file.getAbsolutePath() + ".ser"), "rws");
+            modeStrategy.initialize(dataFile, file);
+        } catch (Exception e) {
+            log.error("Failed to initialize WebmWriter", e);
+        }
     }
-  }
 
-  public void writeHeader() throws IOException, ConverterException {
-    if (writeMode instanceof AppendWriteMode)
-      return;
-    CompoundTag ebml = EBMLHeaderBuilder.build();
-    byte[] headerBytes = ebml.encode();
-    dataFile.write(headerBytes);
-  }
-
-  public void writeTag(Tag tag) throws IOException {
-    byte[] encoded = tag.encode();
-    dataFile.write(encoded);
-  }
-
-  @Override
-  public void close() throws IOException {
-    if (dataFile != null) {
-      writeMode.finalizeWrite(dataFile, file);
-      try {
-        dataFile.close();
-      } catch (Throwable t) {
-        // nothing
-      }
-      dataFile = null;
+    public void writeHeader() throws IOException, ConverterException {
+        if (writeMode instanceof AppendWriteMode)
+            return;
+        CompoundTag ebml = EBMLHeaderBuilder.build();
+        byte[] headerBytes = ebml.encode();
+        dataFile.write(headerBytes);
     }
-  }
 
-  @Override
-  public void consume(Tag tag) throws IOException {
-    writeTag(tag);
-  }
+    public void writeTag(Tag tag) throws IOException {
+        byte[] encoded = tag.encode();
+        dataFile.write(encoded);
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (dataFile != null) {
+            writeMode.finalizeWrite(dataFile, file);
+            try {
+                dataFile.close();
+            } catch (Throwable t) {
+                // nothing
+            }
+            dataFile = null;
+        }
+    }
+
+    @Override
+    public void consume(Tag tag) throws IOException {
+        writeTag(tag);
+    }
 }

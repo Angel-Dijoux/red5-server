@@ -21,122 +21,118 @@ import org.red5.io.sctp.packet.chunks.Init;
 
 public class Association implements IAssociationControl {
 
-  @SuppressWarnings("unused")
-  private Timestamp creationTimestamp;
+    @SuppressWarnings("unused")
+    private Timestamp creationTimestamp;
 
-  private int verificationTagSource;
+    private int verificationTagSource;
 
-  private int verificationTagDestination;
+    private int verificationTagDestination;
 
-  private int initialTSNSource;
+    private int initialTSNSource;
 
-  @SuppressWarnings("unused")
-  private int initialTSNDestination;
+    @SuppressWarnings("unused")
+    private int initialTSNDestination;
 
-  private State state;
+    private State state;
 
-  private DatagramSocket source;
+    private DatagramSocket source;
 
-  private InetSocketAddress destination;
+    private InetSocketAddress destination;
 
-  private Random random;
+    private Random random;
 
-  public Association(
-      final Random random, InetSocketAddress sourceAddress, int initialTSN, int verificationTag)
-      throws SocketException {
-    this.random = random;
-    setState(State.CLOSED);
-    setVerificationTagItself(random.nextInt());
-    source = new DatagramSocket(sourceAddress);
-    creationTimestamp = new Timestamp(System.currentTimeMillis());
-  }
-
-  public Association(final Random random, InetSocketAddress sourceAddress) throws SocketException {
-    this.random = random;
-    setState(State.CLOSED);
-    setVerificationTagItself(random.nextInt());
-    source = new DatagramSocket(sourceAddress);
-    creationTimestamp = new Timestamp(System.currentTimeMillis());
-  }
-
-  public boolean setUp(InetSocketAddress address)
-      throws IOException, SctpException, InvalidKeyException, NoSuchAlgorithmException {
-    destination = address;
-
-    // initialize association and send INIT
-    initialTSNSource = random.nextInt();
-    Init initChunk = new Init(verificationTagSource, initialTSNSource);
-    SctpPacket packet =
-        new SctpPacket((short) source.getLocalPort(), (short) destination.getPort(), 0, initChunk);
-    byte[] data = packet.getBytes();
-    source.send(new DatagramPacket(data, data.length, destination));
-    state = State.COOKIE_WAIT;
-
-    // wait & receive INIT_ACK
-    byte[] buffer = new byte[1024];
-    DatagramPacket udpPacket = new DatagramPacket(buffer, buffer.length);
-    source.receive(udpPacket);
-    try {
-      packet = new SctpPacket(buffer, 0, udpPacket.getLength());
-    } catch (SctpException e) {
-      e.printStackTrace();
+    public Association(final Random random, InetSocketAddress sourceAddress, int initialTSN, int verificationTag) throws SocketException {
+        this.random = random;
+        setState(State.CLOSED);
+        setVerificationTagItself(random.nextInt());
+        source = new DatagramSocket(sourceAddress);
+        creationTimestamp = new Timestamp(System.currentTimeMillis());
     }
 
-    // handle INIT ACK packet - send COOKIE ECHO
-    packet.apply(this);
-
-    // handle COOKIE ACK
-    source.receive(udpPacket);
-    try {
-      packet = new SctpPacket(buffer, 0, udpPacket.getLength());
-    } catch (SctpException e) {
-      e.printStackTrace();
+    public Association(final Random random, InetSocketAddress sourceAddress) throws SocketException {
+        this.random = random;
+        setState(State.CLOSED);
+        setVerificationTagItself(random.nextInt());
+        source = new DatagramSocket(sourceAddress);
+        creationTimestamp = new Timestamp(System.currentTimeMillis());
     }
-    packet.apply(this);
 
-    return state == State.ESTABLISHED;
-  }
+    public boolean setUp(InetSocketAddress address) throws IOException, SctpException, InvalidKeyException, NoSuchAlgorithmException {
+        destination = address;
 
-  @Override
-  public State getState() {
-    return state;
-  }
+        // initialize association and send INIT
+        initialTSNSource = random.nextInt();
+        Init initChunk = new Init(verificationTagSource, initialTSNSource);
+        SctpPacket packet = new SctpPacket((short) source.getLocalPort(), (short) destination.getPort(), 0, initChunk);
+        byte[] data = packet.getBytes();
+        source.send(new DatagramPacket(data, data.length, destination));
+        state = State.COOKIE_WAIT;
 
-  public void setSource(DatagramSocket source) {
-    this.source = source;
-  }
+        // wait & receive INIT_ACK
+        byte[] buffer = new byte[1024];
+        DatagramPacket udpPacket = new DatagramPacket(buffer, buffer.length);
+        source.receive(udpPacket);
+        try {
+            packet = new SctpPacket(buffer, 0, udpPacket.getLength());
+        } catch (SctpException e) {
+            e.printStackTrace();
+        }
 
-  @Override
-  public int getVerificationTag() {
-    return verificationTagDestination;
-  }
+        // handle INIT ACK packet - send COOKIE ECHO
+        packet.apply(this);
 
-  public int getVerificationTagItself() {
-    return verificationTagSource;
-  }
+        // handle COOKIE ACK
+        source.receive(udpPacket);
+        try {
+            packet = new SctpPacket(buffer, 0, udpPacket.getLength());
+        } catch (SctpException e) {
+            e.printStackTrace();
+        }
+        packet.apply(this);
 
-  public void setVerificationTagItself(int verificationTagItself) {
-    this.verificationTagSource = verificationTagItself;
-  }
+        return state == State.ESTABLISHED;
+    }
 
-  @Override
-  public void setState(State state) {
-    this.state = state;
-  }
+    @Override
+    public State getState() {
+        return state;
+    }
 
-  @Override
-  public void sendPacket(SctpPacket packet) throws IOException {
-    byte[] data = packet.getBytes();
-    source.send(new DatagramPacket(data, data.length));
-  }
+    public void setSource(DatagramSocket source) {
+        this.source = source;
+    }
 
-  @Override
-  public int getDestinationPort() {
-    return destination.getPort();
-  }
+    @Override
+    public int getVerificationTag() {
+        return verificationTagDestination;
+    }
 
-  @Override
-  public int getSourcePort() {
-    return source.getLocalPort();
-  }
+    public int getVerificationTagItself() {
+        return verificationTagSource;
+    }
+
+    public void setVerificationTagItself(int verificationTagItself) {
+        this.verificationTagSource = verificationTagItself;
+    }
+
+    @Override
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    @Override
+    public void sendPacket(SctpPacket packet) throws IOException {
+        byte[] data = packet.getBytes();
+        source.send(new DatagramPacket(data, data.length));
+    }
+
+    @Override
+    public int getDestinationPort() {
+        return destination.getPort();
+    }
+
+    @Override
+    public int getSourcePort() {
+        return source.getLocalPort();
+    }
 }

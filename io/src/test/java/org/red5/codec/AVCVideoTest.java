@@ -28,178 +28,178 @@ import org.slf4j.LoggerFactory;
 
 public class AVCVideoTest {
 
-  private static Logger log = LoggerFactory.getLogger(AVCVideoTest.class);
+    private static Logger log = LoggerFactory.getLogger(AVCVideoTest.class);
 
-  @Test
-  public void testCanHandleData() {
-    log.info("testCanHandleData");
-    IoBuffer data = IoBuffer.allocate(8);
-    data.put((byte) 0x17);
-    data.flip();
-    //
-    IoBuffer badData = IoBuffer.allocate(8);
-    badData.put((byte) 0x44);
-    badData.flip();
+    @Test
+    public void testCanHandleData() {
+        log.info("testCanHandleData");
+        IoBuffer data = IoBuffer.allocate(8);
+        data.put((byte) 0x17);
+        data.flip();
+        //
+        IoBuffer badData = IoBuffer.allocate(8);
+        badData.put((byte) 0x44);
+        badData.flip();
 
-    AVCVideo video = new AVCVideo();
-    assertTrue(video.canHandleData(data));
+        AVCVideo video = new AVCVideo();
+        assertTrue(video.canHandleData(data));
 
-    assertFalse(video.canHandleData(badData));
-    log.info("testCanHandleData end\n");
-  }
-
-  @Test
-  public void testSimpleFlow() {
-    log.info("testSimpleFlow");
-    IoBuffer data = IoBuffer.allocate(128);
-    data.put((byte) 0x17);
-    data.put((byte) 0x01);
-    data.put(RandomStringUtils.random(24).getBytes());
-    data.flip();
-
-    AVCVideo video = new AVCVideo();
-    assertTrue(video.canHandleData(data));
-    assertTrue(video.addData(data));
-    for (int i = 0; i < 10; i++) {
-      // interframe
-      IoBuffer inter = IoBuffer.allocate(128);
-      inter.put((byte) 0x27);
-      inter.put((byte) 0x01);
-      inter.put(RandomStringUtils.random(24).getBytes());
-      inter.flip();
-      // add it
-      assertTrue(video.addData(inter));
+        assertFalse(video.canHandleData(badData));
+        log.info("testCanHandleData end\n");
     }
-    log.info("testSimpleFlow end\n");
-  }
 
-  @Test
-  public void testSimpleFlowNoInterframeBuffer() {
-    log.info("testSimpleFlowNoInterframeBuffer");
-    IoBuffer data = IoBuffer.allocate(128);
-    data.put((byte) 0x17);
-    data.put((byte) 0x01);
-    data.put(RandomStringUtils.random(24).getBytes());
-    data.flip();
+    @Test
+    public void testSimpleFlow() {
+        log.info("testSimpleFlow");
+        IoBuffer data = IoBuffer.allocate(128);
+        data.put((byte) 0x17);
+        data.put((byte) 0x01);
+        data.put(RandomStringUtils.random(24).getBytes());
+        data.flip();
 
-    AVCVideo video = new AVCVideo();
-    video.setBufferInterframes(false);
-    assertTrue(video.canHandleData(data));
-    assertTrue(video.addData(data));
-    for (int i = 0; i < 10; i++) {
-      // interframe
-      IoBuffer inter = IoBuffer.allocate(128);
-      inter.put((byte) 0x27);
-      inter.put((byte) 0x01);
-      inter.put(RandomStringUtils.random(24).getBytes());
-      inter.flip();
-      // add it
-      assertTrue(video.addData(inter));
-    }
-    assertTrue(video.getNumInterframes() == 0);
-    log.info("testSimpleFlowNoInterframeBuffer end\n");
-  }
-
-  @Test
-  public void testRealisticFlow() {
-    log.info("testRealisticFlow");
-    IoBuffer data = IoBuffer.allocate(128);
-    data.put((byte) 0x17);
-    data.put((byte) 0x01);
-    data.put(RandomStringUtils.random(24).getBytes());
-    data.flip();
-
-    AVCVideo video = new AVCVideo();
-    assertTrue(video.canHandleData(data));
-    assertTrue(video.addData(data));
-    if (!video.isBufferInterframes()) {
-      log.warn("Skipping interframe test, interframe buffering is disabled");
-      return;
-    }
-    for (int i = 0; i < 10; i++) {
-      // interframe
-      IoBuffer inter = IoBuffer.allocate(128);
-      inter.put((byte) 0x27);
-      inter.put((byte) 0x01);
-      inter.putInt(i); // store our counter for testing
-      inter.put(RandomStringUtils.random(24).getBytes());
-      inter.flip();
-      // add it
-      assertTrue(video.addData(inter));
-    }
-    // there is no interframe at 0
-    FrameData fd = null;
-    assertNull(fd);
-    // verify
-    for (int i = 0; i < 10; i++) {
-      // read them out to verify
-      fd = video.getInterframe(i);
-      assertNotNull(fd);
-      IoBuffer buf = fd.getFrame();
-      buf.skip(2);
-      assertEquals(buf.getInt(), i);
-    }
-    // non-existent
-    fd = video.getInterframe(10);
-    assertNull(fd);
-    // re-add the key
-    assertTrue(video.addData(data));
-    for (int i = 0; i < 4; i++) {
-      // interframe
-      IoBuffer inter = IoBuffer.allocate(128);
-      inter.put((byte) 0x27);
-      inter.put((byte) 0x01);
-      inter.putInt(i + 10); // store our counter for testing
-      inter.put(RandomStringUtils.random(24).getBytes());
-      inter.flip();
-      // add it
-      assertTrue(video.addData(inter));
-    }
-    // verify
-    for (int i = 0; i < 4; i++) {
-      // read them out to verify
-      fd = video.getInterframe(i);
-      assertNotNull(fd);
-      IoBuffer buf = fd.getFrame();
-      buf.skip(2);
-      assertEquals(buf.getInt(), i + 10);
-    }
-    // non-existent
-    fd = video.getInterframe(4);
-    assertNull(fd);
-    log.info("testRealisticFlow end\n");
-  }
-
-  @Test
-  public void testA7SliceBug() {
-    log.info("\n testA7SliceBug");
-    Path path = Paths.get("target/test-classes/fixtures/ipadmini-A7.flv");
-    try {
-      File file = path.toFile();
-      log.info("Reading: {}", file.getName());
-      FLVReader reader = new FLVReader(file, true);
-      ITag tag = null;
-      AVCVideo video = new AVCVideo();
-      while (reader.hasMoreTags()) {
-        tag = reader.readTag();
-        int timestamp = tag.getTimestamp();
-        log.debug("Tag: {} timestamp: {}", tag.getDataType(), timestamp);
-        if (tag.getDataType() == 9) {
-          IoBuffer buf = tag.getBody();
-          if (video.canHandleData(buf)) {
-            video.addData(buf, tag.getTimestamp());
-          }
+        AVCVideo video = new AVCVideo();
+        assertTrue(video.canHandleData(data));
+        assertTrue(video.addData(data));
+        for (int i = 0; i < 10; i++) {
+            // interframe
+            IoBuffer inter = IoBuffer.allocate(128);
+            inter.put((byte) 0x27);
+            inter.put((byte) 0x01);
+            inter.put(RandomStringUtils.random(24).getBytes());
+            inter.flip();
+            // add it
+            assertTrue(video.addData(inter));
         }
-        // when the audio comes in for ts 2176, check for the 2 proceeding sliced keyframes
-        if (timestamp == 2176) {
-          assertTrue(video.getKeyframes().length == 2);
-        }
-      }
-      reader.close();
-      log.info("Finished reading: {}\n", file.getName());
-    } catch (IOException e) {
-      e.printStackTrace();
+        log.info("testSimpleFlow end\n");
     }
-    log.info("testA7SliceBug end\n");
-  }
+
+    @Test
+    public void testSimpleFlowNoInterframeBuffer() {
+        log.info("testSimpleFlowNoInterframeBuffer");
+        IoBuffer data = IoBuffer.allocate(128);
+        data.put((byte) 0x17);
+        data.put((byte) 0x01);
+        data.put(RandomStringUtils.random(24).getBytes());
+        data.flip();
+
+        AVCVideo video = new AVCVideo();
+        video.setBufferInterframes(false);
+        assertTrue(video.canHandleData(data));
+        assertTrue(video.addData(data));
+        for (int i = 0; i < 10; i++) {
+            // interframe
+            IoBuffer inter = IoBuffer.allocate(128);
+            inter.put((byte) 0x27);
+            inter.put((byte) 0x01);
+            inter.put(RandomStringUtils.random(24).getBytes());
+            inter.flip();
+            // add it
+            assertTrue(video.addData(inter));
+        }
+        assertTrue(video.getNumInterframes() == 0);
+        log.info("testSimpleFlowNoInterframeBuffer end\n");
+    }
+
+    @Test
+    public void testRealisticFlow() {
+        log.info("testRealisticFlow");
+        IoBuffer data = IoBuffer.allocate(128);
+        data.put((byte) 0x17);
+        data.put((byte) 0x01);
+        data.put(RandomStringUtils.random(24).getBytes());
+        data.flip();
+
+        AVCVideo video = new AVCVideo();
+        assertTrue(video.canHandleData(data));
+        assertTrue(video.addData(data));
+        if (!video.isBufferInterframes()) {
+            log.warn("Skipping interframe test, interframe buffering is disabled");
+            return;
+        }
+        for (int i = 0; i < 10; i++) {
+            // interframe
+            IoBuffer inter = IoBuffer.allocate(128);
+            inter.put((byte) 0x27);
+            inter.put((byte) 0x01);
+            inter.putInt(i); // store our counter for testing
+            inter.put(RandomStringUtils.random(24).getBytes());
+            inter.flip();
+            // add it
+            assertTrue(video.addData(inter));
+        }
+        // there is no interframe at 0
+        FrameData fd = null;
+        assertNull(fd);
+        // verify
+        for (int i = 0; i < 10; i++) {
+            // read them out to verify
+            fd = video.getInterframe(i);
+            assertNotNull(fd);
+            IoBuffer buf = fd.getFrame();
+            buf.skip(2);
+            assertEquals(buf.getInt(), i);
+        }
+        // non-existent
+        fd = video.getInterframe(10);
+        assertNull(fd);
+        // re-add the key
+        assertTrue(video.addData(data));
+        for (int i = 0; i < 4; i++) {
+            // interframe
+            IoBuffer inter = IoBuffer.allocate(128);
+            inter.put((byte) 0x27);
+            inter.put((byte) 0x01);
+            inter.putInt(i + 10); // store our counter for testing
+            inter.put(RandomStringUtils.random(24).getBytes());
+            inter.flip();
+            // add it
+            assertTrue(video.addData(inter));
+        }
+        // verify
+        for (int i = 0; i < 4; i++) {
+            // read them out to verify
+            fd = video.getInterframe(i);
+            assertNotNull(fd);
+            IoBuffer buf = fd.getFrame();
+            buf.skip(2);
+            assertEquals(buf.getInt(), i + 10);
+        }
+        // non-existent
+        fd = video.getInterframe(4);
+        assertNull(fd);
+        log.info("testRealisticFlow end\n");
+    }
+
+    @Test
+    public void testA7SliceBug() {
+        log.info("\n testA7SliceBug");
+        Path path = Paths.get("target/test-classes/fixtures/ipadmini-A7.flv");
+        try {
+            File file = path.toFile();
+            log.info("Reading: {}", file.getName());
+            FLVReader reader = new FLVReader(file, true);
+            ITag tag = null;
+            AVCVideo video = new AVCVideo();
+            while (reader.hasMoreTags()) {
+                tag = reader.readTag();
+                int timestamp = tag.getTimestamp();
+                log.debug("Tag: {} timestamp: {}", tag.getDataType(), timestamp);
+                if (tag.getDataType() == 9) {
+                    IoBuffer buf = tag.getBody();
+                    if (video.canHandleData(buf)) {
+                        video.addData(buf, tag.getTimestamp());
+                    }
+                }
+                // when the audio comes in for ts 2176, check for the 2 proceeding sliced keyframes
+                if (timestamp == 2176) {
+                    assertTrue(video.getKeyframes().length == 2);
+                }
+            }
+            reader.close();
+            log.info("Finished reading: {}\n", file.getName());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        log.info("testA7SliceBug end\n");
+    }
 }

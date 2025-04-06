@@ -25,90 +25,84 @@ import org.slf4j.LoggerFactory;
 
 public class WebmTest {
 
-  private static Logger log = LoggerFactory.getLogger(WebmTest.class);
+    private static Logger log = LoggerFactory.getLogger(WebmTest.class);
 
-  private static final String WEBM_FILE_PROPERTY = "webm.file.path";
+    private static final String WEBM_FILE_PROPERTY = "webm.file.path";
 
-  private static String webmTestFilePath;
+    private static String webmTestFilePath;
 
-  /**
-   * This check will cancel further tests in case there is no system property "webm.file.path"
-   * specified with path to the test web file.
-   */
-  @Before
-  public void before() {
-    webmTestFilePath = System.getProperty(WEBM_FILE_PROPERTY, "target/webm_sample.webm");
-  }
-
-  /**
-   * This test checks if test webm file can be read till the end with no exceptions
-   *
-   * @throws IOException - in case of any IO exception
-   * @throws ConverterException - in case of any conversion exception
-   */
-  @Test
-  public void crawl() throws IOException, ConverterException {
-    final TagHandler logHandle =
-        new TagHandler() {
-          @Override
-          public void handle(Tag tag, InputStream input) throws IOException, ConverterException {
-            log.debug("Tag found: " + tag.getName());
-          }
-        };
-    TagCrawler crawler =
-        new TagCrawler() {
-          @Override
-          public TagHandler getHandler(Tag tag) {
-            return logHandle;
-          }
-        };
-    File webmF = new File(webmTestFilePath);
-    if (webmF.exists() && webmF.isFile()) {
-      try (FileInputStream fis = new FileInputStream(webmF)) {
-        crawler.process(fis);
-        assertEquals("Zero bytes should remain in file", 0, fis.available());
-      }
+    /**
+     * This check will cancel further tests in case there is no system property "webm.file.path"
+     * specified with path to the test web file.
+     */
+    @Before
+    public void before() {
+        webmTestFilePath = System.getProperty(WEBM_FILE_PROPERTY, "target/webm_sample.webm");
     }
-  }
 
-  /**
-   * This test checks if test webm file can be read and then be written with no exceptions
-   *
-   * @throws IOException - in case of any IO exception
-   * @throws ConverterException - in case of any conversion exception
-   */
-  @Test
-  public void testReaderWriter() throws IOException, ConverterException {
-    File webmF = new File(webmTestFilePath);
-    assertTrue("Invalid webM file is specified", webmF.exists() && webmF.isFile());
-    File out = File.createTempFile("webmwriter", ".webm");
-    try (WebmWriter w = new WebmWriter(out, new OverwriteWriteMode());
-        WebmReader r = new WebmReader(webmF, w); ) {
-      r.process();
-    }
-    log.debug("Temporary file was created: " + out.getAbsolutePath());
-    assertEquals("", webmF.length(), out.length());
-  }
-
-  @Test
-  public void testReader() throws IOException, ConverterException {
-    // https://www.matroska.org/technical/tagging.html
-    // File webmF = new File("/media/mondain/terrorbyte/Videos/bbb-fullhd.webm");
-    File webmF = new File("/media/mondain/terrorbyte/Videos/BladeRunner2049.webm");
-    assertTrue("Invalid webM file is specified", webmF.exists() && webmF.isFile());
-    File out = File.createTempFile("webmwriter", ".webm");
-    try (WebmReader r =
-        new WebmReader(
-            webmF,
-            new TagConsumer() {
-              @Override
-              public void consume(Tag tag) {
+    /**
+     * This test checks if test webm file can be read till the end with no exceptions
+     *
+     * @throws IOException - in case of any IO exception
+     * @throws ConverterException - in case of any conversion exception
+     */
+    @Test
+    public void crawl() throws IOException, ConverterException {
+        final TagHandler logHandle = new TagHandler() {
+            @Override
+            public void handle(Tag tag, InputStream input) throws IOException, ConverterException {
                 log.debug("Tag found: " + tag.getName());
-              }
-            }); ) {
-      r.process();
+            }
+        };
+        TagCrawler crawler = new TagCrawler() {
+            @Override
+            public TagHandler getHandler(Tag tag) {
+                return logHandle;
+            }
+        };
+        File webmF = new File(webmTestFilePath);
+        if (webmF.exists() && webmF.isFile()) {
+            try (FileInputStream fis = new FileInputStream(webmF)) {
+                crawler.process(fis);
+                assertEquals("Zero bytes should remain in file", 0, fis.available());
+            }
+        }
     }
-    log.debug("Temporary file was created: " + out.getAbsolutePath());
-    assertEquals("", webmF.length(), out.length());
-  }
+
+    /**
+     * This test checks if test webm file can be read and then be written with no exceptions
+     *
+     * @throws IOException - in case of any IO exception
+     * @throws ConverterException - in case of any conversion exception
+     */
+    @Test
+    public void testReaderWriter() throws IOException, ConverterException {
+        File webmF = new File(webmTestFilePath);
+        assertTrue("Invalid webM file is specified", webmF.exists() && webmF.isFile());
+        File out = File.createTempFile("webmwriter", ".webm");
+        try (WebmWriter w = new WebmWriter(out, new OverwriteWriteMode()); WebmReader r = new WebmReader(webmF, w);) {
+            r.process();
+        }
+        log.debug("Temporary file was created: " + out.getAbsolutePath());
+        assertEquals("", webmF.length(), out.length());
+    }
+
+    @Test
+    public void testReader() throws IOException, ConverterException {
+        // https://www.matroska.org/technical/tagging.html
+        // File webmF = new File("/media/mondain/terrorbyte/Videos/bbb-fullhd.webm");
+        File webmF = new File("/media/mondain/terrorbyte/Videos/BladeRunner2049.webm");
+        assertTrue("Invalid webM file is specified", webmF.exists() && webmF.isFile());
+        File out = File.createTempFile("webmwriter", ".webm");
+        try (WebmReader r = new WebmReader(webmF, new TagConsumer() {
+            @Override
+            public void consume(Tag tag) {
+                log.debug("Tag found: " + tag.getName());
+            }
+        });) {
+            r.process();
+        }
+        log.debug("Temporary file was created: " + out.getAbsolutePath());
+        assertEquals("", webmF.length(), out.length());
+    }
 }

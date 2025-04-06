@@ -26,135 +26,129 @@ import org.slf4j.LoggerFactory;
  */
 public class Deserializer {
 
-  private static final Logger log = LoggerFactory.getLogger(Deserializer.class);
+    private static final Logger log = LoggerFactory.getLogger(Deserializer.class);
 
-  private static Set<String> BLACK_LIST = Collections.emptySet();
+    private static Set<String> BLACK_LIST = Collections.emptySet();
 
-  private Deserializer() {}
-
-  public static synchronized void loadBlackList() throws IOException {
-    try (InputStream is =
-        Deserializer.class
-            .getClassLoader()
-            .getResourceAsStream("org/red5/io/object/black-list.properties")) {
-      Properties bl = new Properties();
-      bl.load(is);
-      Set<String> set = new HashSet<>();
-      for (Entry<?, ?> e : bl.entrySet()) {
-        set.add((String) e.getKey());
-      }
-      BLACK_LIST = Collections.unmodifiableSet(set);
+    private Deserializer() {
     }
-  }
 
-  /**
-   * Deserializes the input parameter and returns an Object which must then be cast to a core data
-   * type
-   *
-   * @param <T> type
-   * @param in input
-   * @param target target
-   * @return Object object
-   */
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public static <T> T deserialize(Input in, Type target) {
-    if (BLACK_LIST == null) {
-      // log.info("Black list is not yet initialized");
-      try {
-        loadBlackList();
-      } catch (IOException e) {
-        throw new RuntimeException("Failed to init black-list");
-      }
-    }
-    byte type = in.readDataType();
-    if (log.isTraceEnabled()) {
-      log.trace(
-          "Type {}: {} target: {}",
-          type,
-          DataTypes.toStringValue(type),
-          (target != null ? target.toString() : "Target not specified"));
-    }
-    Object result = null;
-    switch (type) {
-      case DataTypes.CORE_NULL:
-        result = in.readNull();
-        break;
-      case DataTypes.CORE_BOOLEAN:
-        result = in.readBoolean();
-        break;
-      case DataTypes.CORE_NUMBER:
-        result = in.readNumber();
-        break;
-      case DataTypes.CORE_STRING:
-        try {
-          if (target != null && ((Class) target).isEnum()) {
-            log.warn("Enum target specified");
-            String name = in.readString();
-            result = Enum.valueOf((Class) target, name);
-          } else {
-            result = in.readString();
-          }
-        } catch (RuntimeException e) {
-          log.error("failed to deserialize {}", target, e);
-          throw e;
+    public static synchronized void loadBlackList() throws IOException {
+        try (InputStream is = Deserializer.class.getClassLoader().getResourceAsStream("org/red5/io/object/black-list.properties")) {
+            Properties bl = new Properties();
+            bl.load(is);
+            Set<String> set = new HashSet<>();
+            for (Entry<?, ?> e : bl.entrySet()) {
+                set.add((String) e.getKey());
+            }
+            BLACK_LIST = Collections.unmodifiableSet(set);
         }
-        break;
-      case DataTypes.CORE_DATE:
-        result = in.readDate();
-        break;
-      case DataTypes.CORE_ARRAY:
-        result = in.readArray(target);
-        break;
-      case DataTypes.CORE_MAP:
-        result = in.readMap();
-        break;
-      case DataTypes.CORE_XML:
-        result = in.readXML();
-        break;
-      case DataTypes.CORE_OBJECT:
-        result = in.readObject();
-        break;
-      case DataTypes.CORE_BYTEARRAY:
-        result = in.readByteArray();
-        break;
-      case DataTypes.CORE_VECTOR_INT:
-        result = in.readVectorInt();
-        break;
-      case DataTypes.CORE_VECTOR_UINT:
-        result = in.readVectorUInt();
-        break;
-      case DataTypes.CORE_VECTOR_NUMBER:
-        result = in.readVectorNumber();
-        break;
-      case DataTypes.CORE_VECTOR_OBJECT:
-        result = in.readVectorObject();
-        break;
-      case DataTypes.OPT_REFERENCE:
-        result = in.readReference();
-        break;
-      case DataTypes.CORE_END_OBJECT:
-        // end-of-object returned, not sure that we should ever get here
-        log.debug("End-of-object detected");
-        break;
-      default:
-        result = in.readCustom();
-        break;
     }
-    return (T) result;
-  }
 
-  /**
-   * Checks to see if a given class is blacklisted or not.
-   *
-   * @param className class name/package
-   * @return true if not blacklisted and false if it is blacklisted
-   */
-  public static boolean classAllowed(String className) {
-    for (String name : BLACK_LIST) {
-      if (className.startsWith(name)) {
-        return false;
-      }
+    /**
+     * Deserializes the input parameter and returns an Object which must then be cast to a core data
+     * type
+     *
+     * @param <T> type
+     * @param in input
+     * @param target target
+     * @return Object object
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <T> T deserialize(Input in, Type target) {
+        if (BLACK_LIST == null) {
+            // log.info("Black list is not yet initialized");
+            try {
+                loadBlackList();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to init black-list");
+            }
+        }
+        byte type = in.readDataType();
+        if (log.isTraceEnabled()) {
+            log.trace("Type {}: {} target: {}", type, DataTypes.toStringValue(type), (target != null ? target.toString() : "Target not specified"));
+        }
+        Object result = null;
+        switch (type) {
+            case DataTypes.CORE_NULL:
+                result = in.readNull();
+                break;
+            case DataTypes.CORE_BOOLEAN:
+                result = in.readBoolean();
+                break;
+            case DataTypes.CORE_NUMBER:
+                result = in.readNumber();
+                break;
+            case DataTypes.CORE_STRING:
+                try {
+                    if (target != null && ((Class) target).isEnum()) {
+                        log.warn("Enum target specified");
+                        String name = in.readString();
+                        result = Enum.valueOf((Class) target, name);
+                    } else {
+                        result = in.readString();
+                    }
+                } catch (RuntimeException e) {
+                    log.error("failed to deserialize {}", target, e);
+                    throw e;
+                }
+                break;
+            case DataTypes.CORE_DATE:
+                result = in.readDate();
+                break;
+            case DataTypes.CORE_ARRAY:
+                result = in.readArray(target);
+                break;
+            case DataTypes.CORE_MAP:
+                result = in.readMap();
+                break;
+            case DataTypes.CORE_XML:
+                result = in.readXML();
+                break;
+            case DataTypes.CORE_OBJECT:
+                result = in.readObject();
+                break;
+            case DataTypes.CORE_BYTEARRAY:
+                result = in.readByteArray();
+                break;
+            case DataTypes.CORE_VECTOR_INT:
+                result = in.readVectorInt();
+                break;
+            case DataTypes.CORE_VECTOR_UINT:
+                result = in.readVectorUInt();
+                break;
+            case DataTypes.CORE_VECTOR_NUMBER:
+                result = in.readVectorNumber();
+                break;
+            case DataTypes.CORE_VECTOR_OBJECT:
+                result = in.readVectorObject();
+                break;
+            case DataTypes.OPT_REFERENCE:
+                result = in.readReference();
+                break;
+            case DataTypes.CORE_END_OBJECT:
+                // end-of-object returned, not sure that we should ever get here
+                log.debug("End-of-object detected");
+                break;
+            default:
+                result = in.readCustom();
+                break;
+        }
+        return (T) result;
     }
-    return true;
-  }
+
+    /**
+     * Checks to see if a given class is blacklisted or not.
+     *
+     * @param className class name/package
+     * @return true if not blacklisted and false if it is blacklisted
+     */
+    public static boolean classAllowed(String className) {
+        for (String name : BLACK_LIST) {
+            if (className.startsWith(name)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

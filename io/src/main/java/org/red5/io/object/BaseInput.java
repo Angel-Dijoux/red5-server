@@ -19,61 +19,61 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class BaseInput {
 
-  // protected static Logger log = LoggerFactory.getLogger(BaseInput.class);
+    // protected static Logger log = LoggerFactory.getLogger(BaseInput.class);
 
-  /** References map */
-  protected ConcurrentMap<Integer, Object> refMap = new ConcurrentHashMap<>();
+    /** References map */
+    protected ConcurrentMap<Integer, Object> refMap = new ConcurrentHashMap<>();
 
-  /** References id */
-  protected AtomicInteger refId = new AtomicInteger(0);
+    /** References id */
+    protected AtomicInteger refId = new AtomicInteger(0);
 
-  /**
-   * Store an object into a map.
-   *
-   * @param obj Object to store
-   * @return reference id
-   */
-  protected int storeReference(Object obj) {
-    int newRefId = refId.getAndIncrement();
-    // log.trace("storeReference - ref id: {} obj: {}", newRefId, obj);
-    refMap.put(Integer.valueOf(newRefId), obj);
-    return newRefId;
-  }
+    /**
+     * Store an object into a map.
+     *
+     * @param obj Object to store
+     * @return reference id
+     */
+    protected int storeReference(Object obj) {
+        int newRefId = refId.getAndIncrement();
+        // log.trace("storeReference - ref id: {} obj: {}", newRefId, obj);
+        refMap.put(Integer.valueOf(newRefId), obj);
+        return newRefId;
+    }
 
-  /**
-   * Replace a referenced object with another one. This is used by the AMF3 deserializer to handle
-   * circular references.
-   *
-   * @param refId reference id
-   * @param newRef replacement object
-   */
-  protected void storeReference(int refId, Object newRef) {
-    refMap.put(Integer.valueOf(refId), newRef);
-  }
+    /**
+     * Replace a referenced object with another one. This is used by the AMF3 deserializer to handle
+     * circular references.
+     *
+     * @param refId reference id
+     * @param newRef replacement object
+     */
+    protected void storeReference(int refId, Object newRef) {
+        refMap.put(Integer.valueOf(refId), newRef);
+    }
 
-  /** Clears the map */
-  public void clearReferences() {
-    refMap.clear();
-    refId.set(0);
-  }
+    /** Clears the map */
+    public void clearReferences() {
+        refMap.clear();
+        refId.set(0);
+    }
 
-  /**
-   * Returns the object with the parameters id
-   *
-   * @param id Object reference id
-   * @return Object Object reference with given id
-   */
-  protected Object getReference(int id) {
-    return refMap.get(Integer.valueOf(id));
-  }
+    /**
+     * Returns the object with the parameters id
+     *
+     * @param id Object reference id
+     * @return Object Object reference with given id
+     */
+    protected Object getReference(int id) {
+        return refMap.get(Integer.valueOf(id));
+    }
 
-  /**
-   * Checks the deserializer to see if a given class is blacklisted or not.
-   *
-   * @param className class name/package
-   * @return true if not blacklisted and false if it is blacklisted
-   */
-  protected static boolean classAllowed(String className) {
-    return Deserializer.classAllowed(className);
-  }
+    /**
+     * Checks the deserializer to see if a given class is blacklisted or not.
+     *
+     * @param className class name/package
+     * @return true if not blacklisted and false if it is blacklisted
+     */
+    protected static boolean classAllowed(String className) {
+        return Deserializer.classAllowed(className);
+    }
 }

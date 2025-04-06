@@ -17,26 +17,26 @@ import org.apache.mina.core.buffer.IoBuffer;
  */
 public class ULAWAudio extends AbstractAudio {
 
-  static final String CODEC_NAME = "PCM uLaw";
+    static final String CODEC_NAME = "PCM uLaw";
 
-  {
-    codec = AudioCodec.PCM_MULAW;
-  }
-
-  @Override
-  public String getName() {
-    return CODEC_NAME;
-  }
-
-  @Override
-  public boolean canHandleData(IoBuffer data) {
-    if (data.limit() == 0) {
-      // Empty buffer
-      return false;
+    {
+        codec = AudioCodec.PCM_MULAW;
     }
-    byte first = data.get();
-    boolean result = (((first & 0xf0) >> 4) == AudioCodec.PCM_MULAW.getId());
-    data.rewind();
-    return result;
-  }
+
+    @Override
+    public String getName() {
+        return CODEC_NAME;
+    }
+
+    @Override
+    public boolean canHandleData(IoBuffer data) {
+        if (data.limit() == 0) {
+            // Empty buffer
+            return false;
+        }
+        byte first = data.get();
+        boolean result = (((first & 0xf0) >> 4) == AudioCodec.PCM_MULAW.getId());
+        data.rewind();
+        return result;
+    }
 }

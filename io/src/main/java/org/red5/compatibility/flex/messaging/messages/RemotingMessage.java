@@ -18,49 +18,49 @@ package org.red5.compatibility.flex.messaging.messages;
  */
 public class RemotingMessage extends RPCMessage {
 
-  private static final long serialVersionUID = 1491092800943415719L;
+    private static final long serialVersionUID = 1491092800943415719L;
 
-  /** Method to execute. */
-  public String operation;
+    /** Method to execute. */
+    public String operation;
 
-  /** Value of the <code>source</code> attribute of mx:RemoteObject that sent the message. */
-  public String source;
+    /** Value of the <code>source</code> attribute of mx:RemoteObject that sent the message. */
+    public String source;
 
-  private Object[] parameters;
+    private Object[] parameters;
 
-  public String getOperation() {
-    return operation;
-  }
+    public String getOperation() {
+        return operation;
+    }
 
-  public void setOperation(String operation) {
-    this.operation = operation;
-  }
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
 
-  public String getSource() {
-    return source;
-  }
+    public String getSource() {
+        return source;
+    }
 
-  public void setSource(String source) {
-    this.source = source;
-  }
+    public void setSource(String source) {
+        this.source = source;
+    }
 
-  public Object[] getParameters() {
-    return parameters;
-  }
+    public Object[] getParameters() {
+        return parameters;
+    }
 
-  public void setParameters(Object... params) {
-    this.parameters = params;
-  }
+    public void setParameters(Object... params) {
+        this.parameters = params;
+    }
 
-  /** {@inheritDoc} */
-  @Override
-  protected void addParameters(StringBuilder result) {
-    super.addParameters(result);
-    result.append(",source=");
-    result.append(source);
-    result.append(",operation=");
-    result.append(operation);
-    result.append(",parameters=");
-    result.append(parameters);
-  }
+    /** {@inheritDoc} */
+    @Override
+    protected void addParameters(StringBuilder result) {
+        super.addParameters(result);
+        result.append(",source=");
+        result.append(source);
+        result.append(",operation=");
+        result.append(operation);
+        result.append(",parameters=");
+        result.append(parameters);
+    }
 }

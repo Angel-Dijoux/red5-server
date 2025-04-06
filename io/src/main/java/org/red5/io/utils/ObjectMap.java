@@ -19,5 +19,5 @@ import java.util.LinkedHashMap;
  */
 public class ObjectMap<K, V> extends LinkedHashMap<K, V> {
 
-  private static final long serialVersionUID = 5146266119400305646L;
+    private static final long serialVersionUID = 5146266119400305646L;
 }

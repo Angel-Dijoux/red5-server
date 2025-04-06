@@ -28,164 +28,164 @@ import org.red5.io.amf3.IExternalizable;
  */
 public class ObjectProxy<T, V> implements Map<T, V>, IExternalizable {
 
-  private String uid;
+    private String uid;
 
-  private Object type;
+    private Object type;
 
-  /** The proxied object. */
-  private Map<T, V> item;
+    /** The proxied object. */
+    private Map<T, V> item;
 
-  /** Create new empty proxy. */
-  public ObjectProxy() {
-    this(new HashMap<T, V>());
-  }
+    /** Create new empty proxy. */
+    public ObjectProxy() {
+        this(new HashMap<T, V>());
+    }
 
-  /**
-   * Create proxy for given object.
-   *
-   * @param item object to proxy
-   */
-  public ObjectProxy(Map<T, V> item) {
-    this.item = new HashMap<T, V>(item);
-  }
+    /**
+     * Create proxy for given object.
+     *
+     * @param item object to proxy
+     */
+    public ObjectProxy(Map<T, V> item) {
+        this.item = new HashMap<T, V>(item);
+    }
 
-  /** {@inheritDoc} */
-  @Override
-  @SuppressWarnings("unchecked")
-  public void readExternal(IDataInput input) {
-    item = (Map<T, V>) input.readObject();
-  }
+    /** {@inheritDoc} */
+    @Override
+    @SuppressWarnings("unchecked")
+    public void readExternal(IDataInput input) {
+        item = (Map<T, V>) input.readObject();
+    }
 
-  /** {@inheritDoc} */
-  @Override
-  public void writeExternal(IDataOutput output) {
-    output.writeObject(item);
-  }
+    /** {@inheritDoc} */
+    @Override
+    public void writeExternal(IDataOutput output) {
+        output.writeObject(item);
+    }
 
-  /**
-   * Return string representation of the proxied object.
-   *
-   * @return string
-   */
-  @Override
-  public String toString() {
-    return item.toString();
-  }
+    /**
+     * Return string representation of the proxied object.
+     *
+     * @return string
+     */
+    @Override
+    public String toString() {
+        return item.toString();
+    }
 
-  @Override
-  public void clear() {
-    item.clear();
-  }
+    @Override
+    public void clear() {
+        item.clear();
+    }
 
-  /**
-   * Check if proxied object has a given property.
-   *
-   * @param name name
-   * @return boolean
-   */
-  @Override
-  public boolean containsKey(Object name) {
-    return item.containsKey(name);
-  }
+    /**
+     * Check if proxied object has a given property.
+     *
+     * @param name name
+     * @return boolean
+     */
+    @Override
+    public boolean containsKey(Object name) {
+        return item.containsKey(name);
+    }
 
-  @Override
-  public boolean containsValue(Object value) {
-    return item.containsValue(value);
-  }
+    @Override
+    public boolean containsValue(Object value) {
+        return item.containsValue(value);
+    }
 
-  @Override
-  public Set<Entry<T, V>> entrySet() {
-    return Collections.unmodifiableSet(item.entrySet());
-  }
+    @Override
+    public Set<Entry<T, V>> entrySet() {
+        return Collections.unmodifiableSet(item.entrySet());
+    }
 
-  /**
-   * Return the value of a property.
-   *
-   * @param name name
-   * @return value
-   */
-  @Override
-  public V get(Object name) {
-    return item.get(name);
-  }
+    /**
+     * Return the value of a property.
+     *
+     * @param name name
+     * @return value
+     */
+    @Override
+    public V get(Object name) {
+        return item.get(name);
+    }
 
-  @Override
-  public boolean isEmpty() {
-    return item.isEmpty();
-  }
+    @Override
+    public boolean isEmpty() {
+        return item.isEmpty();
+    }
 
-  @Override
-  public Set<T> keySet() {
-    return item.keySet();
-  }
+    @Override
+    public Set<T> keySet() {
+        return item.keySet();
+    }
 
-  /**
-   * Change a property of the proxied object.
-   *
-   * @param name name
-   * @param value value
-   * @return old value
-   */
-  @Override
-  public V put(T name, V value) {
-    return item.put(name, value);
-  }
+    /**
+     * Change a property of the proxied object.
+     *
+     * @param name name
+     * @param value value
+     * @return old value
+     */
+    @Override
+    public V put(T name, V value) {
+        return item.put(name, value);
+    }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  @Override
-  public void putAll(Map values) {
-    item.putAll(values);
-  }
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public void putAll(Map values) {
+        item.putAll(values);
+    }
 
-  /**
-   * Remove a property from the proxied object.
-   *
-   * @param name name
-   * @return old value
-   */
-  @Override
-  public V remove(Object name) {
-    return item.remove(name);
-  }
+    /**
+     * Remove a property from the proxied object.
+     *
+     * @param name name
+     * @return old value
+     */
+    @Override
+    public V remove(Object name) {
+        return item.remove(name);
+    }
 
-  @Override
-  public int size() {
-    return item.size();
-  }
+    @Override
+    public int size() {
+        return item.size();
+    }
 
-  @Override
-  public Collection<V> values() {
-    return Collections.unmodifiableCollection(item.values());
-  }
+    @Override
+    public Collection<V> values() {
+        return Collections.unmodifiableCollection(item.values());
+    }
 
-  /**
-   * @return the uid
-   */
-  public String getUid() {
-    return uid;
-  }
+    /**
+     * @return the uid
+     */
+    public String getUid() {
+        return uid;
+    }
 
-  /**
-   * @param uid the uid to set
-   */
-  public void setUid(String uid) {
-    this.uid = uid;
-  }
+    /**
+     * @param uid the uid to set
+     */
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 
-  /**
-   * @return the type
-   */
-  public Object getType() {
-    return type;
-  }
+    /**
+     * @return the type
+     */
+    public Object getType() {
+        return type;
+    }
 
-  /**
-   * @param type the type to set
-   */
-  public void setType(Object type) {
-    this.type = type;
-  }
+    /**
+     * @param type the type to set
+     */
+    public void setType(Object type) {
+        this.type = type;
+    }
 
-  // TODO: implement other ObjectProxy methods
+    // TODO: implement other ObjectProxy methods
 
 }

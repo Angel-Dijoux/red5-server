@@ -18,30 +18,31 @@ import org.red5.io.amf3.IExternalizable;
  */
 public class AsyncMessageExt extends AsyncMessage implements IExternalizable {
 
-  private static final long serialVersionUID = -5371460213241777011L;
+    private static final long serialVersionUID = -5371460213241777011L;
 
-  private AsyncMessage message;
+    private AsyncMessage message;
 
-  public AsyncMessageExt() {}
-
-  public AsyncMessageExt(AsyncMessage message) {
-    this.setMessage(message);
-  }
-
-  public void setMessage(AsyncMessage message) {
-    this.message = message;
-  }
-
-  public AsyncMessage getMessage() {
-    return message;
-  }
-
-  @Override
-  public void writeExternal(IDataOutput output) {
-    if (this.message != null) {
-      this.message.writeExternal(output);
-    } else {
-      super.writeExternal(output);
+    public AsyncMessageExt() {
     }
-  }
+
+    public AsyncMessageExt(AsyncMessage message) {
+        this.setMessage(message);
+    }
+
+    public void setMessage(AsyncMessage message) {
+        this.message = message;
+    }
+
+    public AsyncMessage getMessage() {
+        return message;
+    }
+
+    @Override
+    public void writeExternal(IDataOutput output) {
+        if (this.message != null) {
+            this.message.writeExternal(output);
+        } else {
+            super.writeExternal(output);
+        }
+    }
 }
