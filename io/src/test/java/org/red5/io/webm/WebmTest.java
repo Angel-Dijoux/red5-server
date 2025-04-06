@@ -82,7 +82,7 @@ public class WebmTest {
     File webmF = new File(webmTestFilePath);
     assertTrue("Invalid webM file is specified", webmF.exists() && webmF.isFile());
     File out = File.createTempFile("webmwriter", ".webm");
-    try (WebmWriter w = new WebmWriter(out, false);
+    try (WebmWriter w = new WebmWriter(out, new OverwriteWriteMode());
         WebmReader r = new WebmReader(webmF, w); ) {
       r.process();
     }
