@@ -52,8 +52,10 @@ public class ConversionUtils {
     private static Map<Class<?>, Class<?>> wrapperMap = new HashMap<Class<?>, Class<?>>();
 
     /**
-     * Mapping from wrapper class to appropriate parameter types (in order) Each entry is an array of
-     * Classes, the last of which is either null (for no chaining) or the next class to try
+     * Mapping from wrapper class to appropriate parameter types (in order) Each
+     * entry is an array of
+     * Classes, the last of which is either null (for no chaining) or the next class
+     * to try
      */
     private static Map<Class<?>, Class<?>[]> parameterMap = new HashMap<Class<?>, Class<?>[]>();
 
@@ -100,7 +102,6 @@ public class ConversionUtils {
             }
             return source;
         } else if ((source instanceof Float && ((Float) source).isNaN()) || (source instanceof Double && ((Double) source).isNaN())) {
-            // Don't convert NaN values
             return source;
         }
         final Class<?> sourceClass = source.getClass();
@@ -133,17 +134,15 @@ public class ConversionUtils {
                 return Arrays.stream((Object[]) source).collect(Collectors.toCollection(ArrayList::new));
             } else if (Set.class.isAssignableFrom(target)) {
                 log.debug("Source: {} to target set: {}", source, target);
-                // special handling for sets when the source is a list
-                if (source instanceof List) {
-                    return ((List<?>) source).stream().collect(Collectors.toCollection(HashSet::new));
-                }
                 return Arrays.stream((Object[]) source).collect(Collectors.toCollection(HashSet::new));
             }
+        } else if (source instanceof List && Set.class.isAssignableFrom(target)) {
+            log.debug("Converting List to Set");
+            return ((List<?>) source).stream().collect(Collectors.toCollection(HashSet::new));
         }
         if (Map.class.isAssignableFrom(sourceClass)) {
             return convertMapToBean((Map) source, target);
         }
-        // handle immutable collections
         final String sourceClassName = sourceClass.getName();
         if (sourceClassName.equals("java.util.ImmutableCollections$ListN")) {
             if (Set.class.isAssignableFrom(target)) {
@@ -202,7 +201,7 @@ public class ConversionUtils {
     /**
      * Convert to wrapped primitive
      *
-     * @param source Source object
+     * @param source  Source object
      * @param wrapper Primitive wrapper type
      * @return Converted object
      */
@@ -233,7 +232,7 @@ public class ConversionUtils {
     /**
      * Convert string to primitive wrapper like Boolean or Float
      *
-     * @param str String to convert
+     * @param str     String to convert
      * @param wrapper Primitive wrapper type
      * @return Converted object
      */
@@ -262,7 +261,7 @@ public class ConversionUtils {
     /**
      * Convert number to primitive wrapper like Boolean or Float
      *
-     * @param num Number to conver
+     * @param num     Number to conver
      * @param wrapper Primitive wrapper type
      * @return Converted object
      */
@@ -305,7 +304,8 @@ public class ConversionUtils {
     }
 
     /**
-     * Convert parameters using methods of this utility class. Special handling is afforded to classes
+     * Convert parameters using methods of this utility class. Special handling is
+     * afforded to classes
      * that implement IConnection.
      *
      * @param source Array of source object
