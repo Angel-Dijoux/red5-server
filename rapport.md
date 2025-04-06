@@ -35,7 +35,7 @@
 **Note**
 
 > IIl y a eu une tentative présente de suppression de code mort dans la classe `PlaylistSubscriberStream` avec la méthode `getCurrentTimestamp`, qui ne semblait pas être appelée. Mais c'était en fait lié à l'abstraction mise en place, j'ai donc dû annuler le changement.
-> ![[Pasted image 20250406205228.png]]
+> ![image](https://github.com/user-attachments/assets/9fda9473-b786-496c-8420-6b990ca38daa)
 
 - **Commit :** [e69e5d31851e6f5cfa0acf6510635f0c187718f0](https://github.com/Angel-Dijoux/red5-server/commit/e69e5d31851e6f5cfa0acf6510635f0c187718f0)
 - **Situation existante :** Présence de variable non-utilisé.
