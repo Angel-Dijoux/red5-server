@@ -28,128 +28,124 @@ import org.slf4j.LoggerFactory;
  */
 public class MP4 implements IMP4 {
 
-    protected static Logger log = LoggerFactory.getLogger(MP4.class);
+  protected static Logger log = LoggerFactory.getLogger(MP4.class);
 
-    private File file;
+  private File file;
 
-    private IMetaService metaService;
+  private IMetaService metaService;
 
-    private IMetaData<?, ?> metaData;
+  private IMetaData<?, ?> metaData;
 
-    /** Default constructor, used by Spring so that parameters may be injected. */
-    public MP4() {
-    }
+  /** Default constructor, used by Spring so that parameters may be injected. */
+  public MP4() {}
 
-    /**
-     * Create MP4 from given file source.
-     *
-     * @param file File source
+  /**
+   * Create MP4 from given file source.
+   *
+   * @param file File source
+   */
+  public MP4(File file) {
+    this.file = file;
+    /*
+     * try { MP4Reader reader = new MP4Reader(this.file); ITag tag = reader.createFileMeta(); if (metaService == null) { metaService = new MetaService(this.file); } metaData =
+     * metaService.readMetaData(tag.getBody()); reader.close(); } catch (Exception e) { log.error("An error occurred looking for metadata:", e); }
      */
-    public MP4(File file) {
-        this.file = file;
-        /*
-         * try { MP4Reader reader = new MP4Reader(this.file); ITag tag = reader.createFileMeta(); if (metaService == null) { metaService = new MetaService(this.file); } metaData =
-         * metaService.readMetaData(tag.getBody()); reader.close(); } catch (Exception e) { log.error("An error occurred looking for metadata:", e); }
-         */
-    }
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean hasMetaData() {
-        return metaData != null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean hasMetaData() {
+    return metaData != null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public IMetaData<?, ?> getMetaData() throws FileNotFoundException {
-        metaService.setFile(file);
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public IMetaData<?, ?> getMetaData() throws FileNotFoundException {
+    metaService.setFile(file);
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean hasKeyFrameData() {
-        return false;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean hasKeyFrameData() {
+    return false;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setKeyFrameData(Map<?, ?> keyframedata) {
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void setKeyFrameData(Map<?, ?> keyframedata) {}
 
-    /** {@inheritDoc} */
-    @Override
-    public Map<?, ?> getKeyFrameData() {
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public Map<?, ?> getKeyFrameData() {
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void refreshHeaders() throws IOException {
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void refreshHeaders() throws IOException {}
 
-    /** {@inheritDoc} */
-    @Override
-    public void flushHeaders() throws IOException {
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void flushHeaders() throws IOException {}
 
-    /** {@inheritDoc} */
-    @Override
-    public ITagReader getReader() throws IOException {
-        MP4Reader reader = null;
-        String fileName = file.getName();
-        if (file.exists()) {
-            log.debug("File name: {} size: {}", fileName, file.length());
-            reader = new MP4Reader(file);
-        } else {
-            log.info("Creating new file: {}", file);
-            file.createNewFile();
-        }
-        return reader;
+  /** {@inheritDoc} */
+  @Override
+  public ITagReader getReader() throws IOException {
+    MP4Reader reader = null;
+    String fileName = file.getName();
+    if (file.exists()) {
+      log.debug("File name: {} size: {}", fileName, file.length());
+      reader = new MP4Reader(file);
+    } else {
+      log.info("Creating new file: {}", file);
+      file.createNewFile();
     }
+    return reader;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public ITagReader readerFromNearestKeyFrame(int seekPoint) {
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public ITagReader readerFromNearestKeyFrame(int seekPoint) {
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public ITagWriter getWriter() throws IOException {
-        log.info("getWriter: {}", file);
-        // return new MP4Writer(file.toPath(), false);
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public ITagWriter getWriter() throws IOException {
+    log.info("getWriter: {}", file);
+    // return new MP4Writer(file.toPath(), false);
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public ITagWriter writerFromNearestKeyFrame(int seekPoint) {
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public ITagWriter writerFromNearestKeyFrame(int seekPoint) {
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setMetaData(IMetaData<?, ?> meta) throws IOException {
-        if (metaService == null) {
-            metaService = new MetaService(file);
-        }
-        // if the file is not checked the write may produce an NPE
-        if (metaService.getFile() == null) {
-            metaService.setFile(file);
-        }
-        metaService.write(meta);
-        metaData = meta;
+  /** {@inheritDoc} */
+  @Override
+  public void setMetaData(IMetaData<?, ?> meta) throws IOException {
+    if (metaService == null) {
+      metaService = new MetaService(file);
     }
+    // if the file is not checked the write may produce an NPE
+    if (metaService.getFile() == null) {
+      metaService.setFile(file);
+    }
+    metaService.write(meta);
+    metaData = meta;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setMetaService(IMetaService service) {
-        metaService = service;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void setMetaService(IMetaService service) {
+    metaService = service;
+  }
 
-    @Override
-    public ITagWriter getAppendWriter() throws IOException {
-        return null;
-    }
+  @Override
+  public ITagWriter getAppendWriter() throws IOException {
+    return null;
+  }
 }

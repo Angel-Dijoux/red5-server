@@ -17,24 +17,24 @@ import org.apache.mina.core.buffer.IoBuffer;
  */
 public class MP3Audio extends AbstractAudio {
 
-    {
-        codec = AudioCodec.MP3;
-    }
+  {
+    codec = AudioCodec.MP3;
+  }
 
-    @Override
-    public String getName() {
-        return codec.name();
-    }
+  @Override
+  public String getName() {
+    return codec.name();
+  }
 
-    @Override
-    public boolean canHandleData(IoBuffer data) {
-        if (data.limit() == 0) {
-            // Empty buffer
-            return false;
-        }
-        byte first = data.get();
-        boolean result = (((first & 0xf0) >> 4) == AudioCodec.MP3.getId());
-        data.rewind();
-        return result;
+  @Override
+  public boolean canHandleData(IoBuffer data) {
+    if (data.limit() == 0) {
+      // Empty buffer
+      return false;
     }
+    byte first = data.get();
+    boolean result = (((first & 0xf0) >> 4) == AudioCodec.MP3.getId());
+    data.rewind();
+    return result;
+  }
 }

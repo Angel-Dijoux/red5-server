@@ -23,10 +23,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DeclareProtected {
 
-    /**
-     * Permission required to execute method.
-     *
-     * @return permission required
-     */
-    String permission();
+  /**
+   * Permission required to execute method.
+   *
+   * @return permission required
+   */
+  String permission();
 }

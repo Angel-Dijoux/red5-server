@@ -18,31 +18,30 @@ import org.red5.io.amf3.IExternalizable;
  */
 public class AcknowledgeMessageExt extends AcknowledgeMessage implements IExternalizable {
 
-    private static final long serialVersionUID = -8764729006642310394L;
+  private static final long serialVersionUID = -8764729006642310394L;
 
-    private AcknowledgeMessage message;
+  private AcknowledgeMessage message;
 
-    public AcknowledgeMessageExt() {
+  public AcknowledgeMessageExt() {}
+
+  public AcknowledgeMessageExt(AcknowledgeMessage message) {
+    this.setMessage(message);
+  }
+
+  public void setMessage(AcknowledgeMessage message) {
+    this.message = message;
+  }
+
+  public AcknowledgeMessage getMessage() {
+    return message;
+  }
+
+  @Override
+  public void writeExternal(IDataOutput output) {
+    if (this.message != null) {
+      this.message.writeExternal(output);
+    } else {
+      super.writeExternal(output);
     }
-
-    public AcknowledgeMessageExt(AcknowledgeMessage message) {
-        this.setMessage(message);
-    }
-
-    public void setMessage(AcknowledgeMessage message) {
-        this.message = message;
-    }
-
-    public AcknowledgeMessage getMessage() {
-        return message;
-    }
-
-    @Override
-    public void writeExternal(IDataOutput output) {
-        if (this.message != null) {
-            this.message.writeExternal(output);
-        } else {
-            super.writeExternal(output);
-        }
-    }
+  }
 }

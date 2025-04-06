@@ -18,40 +18,51 @@ import java.util.Map;
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public enum VideoCodec {
-    JPEG((byte) 0x01), H263((byte) 0x02), SCREEN_VIDEO((byte) 0x03), VP6((byte) 0x04), VP6a((byte) 0x05), SCREEN_VIDEO2((byte) 0x06), AVC((byte) 0x07), VP8((byte) 0x08), VP9((byte) 0x09), AV1((byte) 0x0a), MPEG1((byte) 0x0b), HEVC((byte) 0x0c);
+  JPEG((byte) 0x01),
+  H263((byte) 0x02),
+  SCREEN_VIDEO((byte) 0x03),
+  VP6((byte) 0x04),
+  VP6a((byte) 0x05),
+  SCREEN_VIDEO2((byte) 0x06),
+  AVC((byte) 0x07),
+  VP8((byte) 0x08),
+  VP9((byte) 0x09),
+  AV1((byte) 0x0a),
+  MPEG1((byte) 0x0b),
+  HEVC((byte) 0x0c);
 
-    /** Codecs which have private / config data or frame type identifiers included. */
-    private static final EnumSet<VideoCodec> configured = EnumSet.of(AVC, HEVC, VP8, VP9, AV1);
+  /** Codecs which have private / config data or frame type identifiers included. */
+  private static final EnumSet<VideoCodec> configured = EnumSet.of(AVC, HEVC, VP8, VP9, AV1);
 
-    private static final Map<Byte, VideoCodec> map = new HashMap<>();
+  private static final Map<Byte, VideoCodec> map = new HashMap<>();
 
-    private byte id;
+  private byte id;
 
-    static {
-        for (VideoCodec codec : VideoCodec.values()) {
-            map.put(codec.id, codec);
-        }
+  static {
+    for (VideoCodec codec : VideoCodec.values()) {
+      map.put(codec.id, codec);
     }
+  }
 
-    private VideoCodec(byte id) {
-        this.id = id;
-    }
+  private VideoCodec(byte id) {
+    this.id = id;
+  }
 
-    /**
-     * Returns back a numeric id for this codec, that happens to correspond to the numeric identifier
-     * that FLV will use for this codec.
-     *
-     * @return the codec id
-     */
-    public byte getId() {
-        return id;
-    }
+  /**
+   * Returns back a numeric id for this codec, that happens to correspond to the numeric identifier
+   * that FLV will use for this codec.
+   *
+   * @return the codec id
+   */
+  public byte getId() {
+    return id;
+  }
 
-    public static VideoCodec valueOfById(int id) {
-        return (VideoCodec) map.get((byte) id);
-    }
+  public static VideoCodec valueOfById(int id) {
+    return (VideoCodec) map.get((byte) id);
+  }
 
-    public static EnumSet<VideoCodec> getConfigured() {
-        return configured;
-    }
+  public static EnumSet<VideoCodec> getConfigured() {
+    return configured;
+  }
 }

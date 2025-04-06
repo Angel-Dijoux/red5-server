@@ -11,10 +11,10 @@ import java.io.Serializable;
 
 public class TestVO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof TestVO;
-    }
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof TestVO;
+  }
 }

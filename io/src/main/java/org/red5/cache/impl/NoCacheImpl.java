@@ -26,116 +26,112 @@ import org.springframework.context.ApplicationContextAware;
  */
 public class NoCacheImpl implements ICacheStore, ApplicationContextAware {
 
-    protected static Logger log = LoggerFactory.getLogger(NoCacheImpl.class);
+  protected static Logger log = LoggerFactory.getLogger(NoCacheImpl.class);
 
-    private static NoCacheImpl instance = new NoCacheImpl();
+  private static NoCacheImpl instance = new NoCacheImpl();
 
-    /** Do not instantiate NoCacheImpl. */
-    /*
-     * This constructor helps to ensure that we are singleton.
-     */
-    private NoCacheImpl() {
-    }
+  /** Do not instantiate NoCacheImpl. */
+  /*
+   * This constructor helps to ensure that we are singleton.
+   */
+  private NoCacheImpl() {}
 
-    /**
-     * Returns the instance of this class.
-     *
-     * @return class instance
-     */
-    public static NoCacheImpl getInstance() {
-        return instance;
-    }
+  /**
+   * Returns the instance of this class.
+   *
+   * @return class instance
+   */
+  public static NoCacheImpl getInstance() {
+    return instance;
+  }
 
-    // We store the application context in a ThreadLocal so we can access it
-    // later.
-    private static ApplicationContext applicationContext = null;
+  // We store the application context in a ThreadLocal so we can access it
+  // later.
+  private static ApplicationContext applicationContext = null;
 
-    /** {@inheritDoc} */
-    @SuppressWarnings("null")
-    @Override
-    public void setApplicationContext(ApplicationContext context) throws BeansException {
-        NoCacheImpl.applicationContext = context;
-    }
+  /** {@inheritDoc} */
+  @SuppressWarnings("null")
+  @Override
+  public void setApplicationContext(ApplicationContext context) throws BeansException {
+    NoCacheImpl.applicationContext = context;
+  }
 
-    /**
-     * Getter for property 'applicationContext'.
-     *
-     * @return Value for property 'applicationContext'.
-     */
-    public static ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
+  /**
+   * Getter for property 'applicationContext'.
+   *
+   * @return Value for property 'applicationContext'.
+   */
+  public static ApplicationContext getApplicationContext() {
+    return applicationContext;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public Iterator<String> getObjectNames() {
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public Iterator<String> getObjectNames() {
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public Iterator<SoftReference<? extends ICacheable>> getObjects() {
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public Iterator<SoftReference<? extends ICacheable>> getObjects() {
+    return null;
+  }
 
-    public boolean offer(String key, IoBuffer obj) {
-        return false;
-    }
+  public boolean offer(String key, IoBuffer obj) {
+    return false;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean offer(String name, Object obj) {
-        return false;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean offer(String name, Object obj) {
+    return false;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void put(String name, Object obj) {
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void put(String name, Object obj) {}
 
-    /** {@inheritDoc} */
-    @Override
-    public ICacheable get(String name) {
-        return null;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public ICacheable get(String name) {
+    return null;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean remove(ICacheable obj) {
-        return false;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean remove(ICacheable obj) {
+    return false;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean remove(String name) {
-        return false;
-    }
+  /** {@inheritDoc} */
+  @Override
+  public boolean remove(String name) {
+    return false;
+  }
 
-    /**
-     * Getter for property 'cacheHit'.
-     *
-     * @return Value for property 'cacheHit'.
-     */
-    public static long getCacheHit() {
-        return 0;
-    }
+  /**
+   * Getter for property 'cacheHit'.
+   *
+   * @return Value for property 'cacheHit'.
+   */
+  public static long getCacheHit() {
+    return 0;
+  }
 
-    /**
-     * Getter for property 'cacheMiss'.
-     *
-     * @return Value for property 'cacheMiss'.
-     */
-    public static long getCacheMiss() {
-        return 0;
-    }
+  /**
+   * Getter for property 'cacheMiss'.
+   *
+   * @return Value for property 'cacheMiss'.
+   */
+  public static long getCacheMiss() {
+    return 0;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setMaxEntries(int max) {
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void setMaxEntries(int max) {}
 
-    /** {@inheritDoc} */
-    @Override
-    public void destroy() {
-    }
+  /** {@inheritDoc} */
+  @Override
+  public void destroy() {}
 }

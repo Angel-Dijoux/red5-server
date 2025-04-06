@@ -9,5 +9,4 @@ package org.red5.io.sctp;
 
 import java.net.SocketOption;
 
-public interface SctpSocketOption<T> extends SocketOption<T> {
-}
+public interface SctpSocketOption<T> extends SocketOption<T> {}

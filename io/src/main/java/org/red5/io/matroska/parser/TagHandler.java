@@ -14,5 +14,5 @@ import org.red5.io.matroska.dtd.Tag;
 
 /** Any class able to handle {@link Tag} using {@link InputStream} given */
 public interface TagHandler {
-    void handle(Tag tag, InputStream input) throws IOException, ConverterException;
+  void handle(Tag tag, InputStream input) throws IOException, ConverterException;
 }

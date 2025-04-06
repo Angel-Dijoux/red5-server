@@ -19,118 +19,118 @@ import org.slf4j.LoggerFactory;
  */
 public class OpusAudio extends AbstractAudio {
 
-    private static Logger log = LoggerFactory.getLogger(OpusAudio.class);
+  private static Logger log = LoggerFactory.getLogger(OpusAudio.class);
 
-    /**
-     * Sample rates:
-     *
-     * <pre>
-     * Abbreviation            Audio bandwidth     Effective sample rate
-     * NB (narrowband)         4 kHz               8 kHz
-     * MB (medium-band)        6 kHz               12 kHz
-     * WB (wideband)           8 kHz               16 kHz
-     * SWB (super-wideband)    12 kHz              24 kHz
-     * FB (fullband)           20 kHz[nb 2]        48 kHz
-     * </pre>
-     */
-    public static final int[] OPUS_SAMPLERATES = { 48000, 24000, 16000, 12000, 8000 };
+  /**
+   * Sample rates:
+   *
+   * <pre>
+   * Abbreviation            Audio bandwidth     Effective sample rate
+   * NB (narrowband)         4 kHz               8 kHz
+   * MB (medium-band)        6 kHz               12 kHz
+   * WB (wideband)           8 kHz               16 kHz
+   * SWB (super-wideband)    12 kHz              24 kHz
+   * FB (fullband)           20 kHz[nb 2]        48 kHz
+   * </pre>
+   */
+  public static final int[] OPUS_SAMPLERATES = {48000, 24000, 16000, 12000, 8000};
 
-    static final String CODEC_NAME = "Opus";
+  static final String CODEC_NAME = "Opus";
 
-    // default to 48kHz and stereo
-    private int index = 0, channels = 2;
+  // default to 48kHz and stereo
+  private int index = 0, channels = 2;
 
-    // ensure we store at least one config chunk; default is false, since Opus doesnt require
-    // configuration
-    // 48k stereo is the default configuration.
-    private volatile boolean needConfig;
+  // ensure we store at least one config chunk; default is false, since Opus doesnt require
+  // configuration
+  // 48k stereo is the default configuration.
+  private volatile boolean needConfig;
 
-    {
-        codec = AudioCodec.OPUS;
+  {
+    codec = AudioCodec.OPUS;
+  }
+
+  @Override
+  public String getName() {
+    return CODEC_NAME;
+  }
+
+  @Override
+  public boolean canHandleData(IoBuffer data) {
+    if (data.limit() == 0) {
+      // Empty buffer
+      return false;
     }
+    byte first = data.get();
+    boolean result = (((first & 0xf0) >> 4) == AudioCodec.OPUS.getId());
+    data.rewind();
+    return result;
+  }
 
-    @Override
-    public String getName() {
-        return CODEC_NAME;
-    }
-
-    @Override
-    public boolean canHandleData(IoBuffer data) {
-        if (data.limit() == 0) {
-            // Empty buffer
-            return false;
+  /** {@inheritDoc} */
+  @Override
+  public boolean addData(IoBuffer data, int timestamp, boolean amf) {
+    log.trace("addData timestamp: {} remaining: {} amf? {}", timestamp, data.remaining(), amf);
+    if (data.hasRemaining()) {
+      // mark starting position
+      int start = data.position();
+      // are we amf?
+      if (!amf) {
+        int remaining = data.remaining();
+        // if we're not amf, figure out how to proceed based on data contents
+        // slice-out the existing data
+        IoBuffer slice = data.getSlice(start, remaining);
+        // prefix the data with amf markers (two bytes)
+        data.put((byte) (AudioCodec.OPUS.getId() << 4));
+        // determine if we need to add config data (frequency and channels)
+        if (needConfig) {
+          // expand the data to hold the amf markers
+          data.expand(remaining + 4);
+          data.put(new byte[] {(byte) 0, (byte) OPUS_SAMPLERATES[index], (byte) channels});
+          // flip config flag
+          needConfig = false;
+        } else {
+          data.expand(remaining + 2);
+          data.put((byte) 0x01);
         }
-        byte first = data.get();
-        boolean result = (((first & 0xf0) >> 4) == AudioCodec.OPUS.getId());
-        data.rewind();
-        return result;
+        // drop the slice in behind the prefix
+        data.put(slice);
+        // flip it
+        data.flip();
+        // reset start (which technically will be the same position)
+        start = data.position();
+        // jump back to the starting pos
+        data.position(start);
+      }
     }
+    return true;
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean addData(IoBuffer data, int timestamp, boolean amf) {
-        log.trace("addData timestamp: {} remaining: {} amf? {}", timestamp, data.remaining(), amf);
-        if (data.hasRemaining()) {
-            // mark starting position
-            int start = data.position();
-            // are we amf?
-            if (!amf) {
-                int remaining = data.remaining();
-                // if we're not amf, figure out how to proceed based on data contents
-                // slice-out the existing data
-                IoBuffer slice = data.getSlice(start, remaining);
-                // prefix the data with amf markers (two bytes)
-                data.put((byte) (AudioCodec.OPUS.getId() << 4));
-                // determine if we need to add config data (frequency and channels)
-                if (needConfig) {
-                    // expand the data to hold the amf markers
-                    data.expand(remaining + 4);
-                    data.put(new byte[] { (byte) 0, (byte) OPUS_SAMPLERATES[index], (byte) channels });
-                    // flip config flag
-                    needConfig = false;
-                } else {
-                    data.expand(remaining + 2);
-                    data.put((byte) 0x01);
-                }
-                // drop the slice in behind the prefix
-                data.put(slice);
-                // flip it
-                data.flip();
-                // reset start (which technically will be the same position)
-                start = data.position();
-                // jump back to the starting pos
-                data.position(start);
-            }
-        }
-        return true;
-    }
+  @Override
+  public IoBuffer getDecoderConfiguration() {
+    return IoBuffer.wrap(new byte[] {(byte) OPUS_SAMPLERATES[index], (byte) channels});
+  }
 
-    @Override
-    public IoBuffer getDecoderConfiguration() {
-        return IoBuffer.wrap(new byte[] { (byte) OPUS_SAMPLERATES[index], (byte) channels });
-    }
+  public int getIndex() {
+    return index;
+  }
 
-    public int getIndex() {
-        return index;
-    }
+  public void setIndex(int index) {
+    this.index = index;
+  }
 
-    public void setIndex(int index) {
-        this.index = index;
-    }
+  public int getChannels() {
+    return channels;
+  }
 
-    public int getChannels() {
-        return channels;
-    }
+  public void setChannels(int channels) {
+    this.channels = channels;
+  }
 
-    public void setChannels(int channels) {
-        this.channels = channels;
-    }
+  public boolean isNeedConfig() {
+    return needConfig;
+  }
 
-    public boolean isNeedConfig() {
-        return needConfig;
-    }
-
-    public void setNeedConfig(boolean needConfig) {
-        this.needConfig = needConfig;
-    }
+  public void setNeedConfig(boolean needConfig) {
+    this.needConfig = needConfig;
+  }
 }

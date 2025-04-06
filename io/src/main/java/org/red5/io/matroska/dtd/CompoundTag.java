@@ -19,104 +19,105 @@ import org.red5.io.matroska.ParserUtils;
 import org.red5.io.matroska.VINT;
 
 public class CompoundTag extends Tag {
-    private Map<String, Tag> subElements = new HashMap<>();
+  private Map<String, Tag> subElements = new HashMap<>();
 
-    /**
-     * Constructor
-     *
-     * @see Tag#Tag(String, VINT)
-     * @param name - the name of tag to be created
-     * @param id - the id of tag to be created
-     * @throws IOException - in case of IO error
-     */
-    public CompoundTag(String name, VINT id) throws IOException {
-        super(name, id);
-    }
+  /**
+   * Constructor
+   *
+   * @see Tag#Tag(String, VINT)
+   * @param name - the name of tag to be created
+   * @param id - the id of tag to be created
+   * @throws IOException - in case of IO error
+   */
+  public CompoundTag(String name, VINT id) throws IOException {
+    super(name, id);
+  }
 
-    /**
-     * Constructor
-     *
-     * @see Tag#Tag(String, VINT, VINT, InputStream)
-     * @param name - the name of tag to be created
-     * @param id - the id of tag to be created
-     * @param size - the size of tag to be created
-     * @param inputStream - stream to read tag data from
-     * @throws IOException - in case of IO error
-     */
-    public CompoundTag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
-        super(name, id, size, inputStream);
-    }
+  /**
+   * Constructor
+   *
+   * @see Tag#Tag(String, VINT, VINT, InputStream)
+   * @param name - the name of tag to be created
+   * @param id - the id of tag to be created
+   * @param size - the size of tag to be created
+   * @param inputStream - stream to read tag data from
+   * @throws IOException - in case of IO error
+   */
+  public CompoundTag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    super(name, id, size, inputStream);
+  }
 
-    /**
-     * @see Tag#readData(InputStream)
-     * @param inputStream - stream to read tag data from
-     * @throws IOException - in case of any IO errors
-     */
-    @Override
-    public void readData(InputStream inputStream) throws IOException {
-        // we save RAM here
-        return;
-    }
+  /**
+   * @see Tag#readData(InputStream)
+   * @param inputStream - stream to read tag data from
+   * @throws IOException - in case of any IO errors
+   */
+  @Override
+  public void readData(InputStream inputStream) throws IOException {
+    // we save RAM here
+    return;
+  }
 
-    /**
-     * @see Tag#parse(InputStream)
-     */
-    @Override
-    public void parse(InputStream inputStream) throws IOException, ConverterException {
-        for (Tag tag : ParserUtils.parseMasterElement(inputStream, (int) getSize())) {
-            subElements.put(tag.getName(), tag);
-        }
+  /**
+   * @see Tag#parse(InputStream)
+   */
+  @Override
+  public void parse(InputStream inputStream) throws IOException, ConverterException {
+    for (Tag tag : ParserUtils.parseMasterElement(inputStream, (int) getSize())) {
+      subElements.put(tag.getName(), tag);
     }
+  }
 
-    @Override
-    public int totalSize() {
-        return (int) (id.getLength() + size.getLength() + (!subElements.isEmpty() ? size.getValue() : 0));
-    }
+  @Override
+  public int totalSize() {
+    return (int)
+        (id.getLength() + size.getLength() + (!subElements.isEmpty() ? size.getValue() : 0));
+  }
 
-    /**
-     * @see Tag#putValue(ByteBuffer)
-     */
-    @Override
-    protected void putValue(ByteBuffer bb) throws IOException {
-        for (Tag tag : subElements.values()) {
-            bb.put(tag.encode());
-        }
+  /**
+   * @see Tag#putValue(ByteBuffer)
+   */
+  @Override
+  protected void putValue(ByteBuffer bb) throws IOException {
+    for (Tag tag : subElements.values()) {
+      bb.put(tag.encode());
     }
+  }
 
-    /**
-     * method to add child tag to this {@link CompoundTag}, updates the size on add
-     *
-     * @param ch - child {@link Tag} to be added
-     * @return - this for chaining
-     */
-    public CompoundTag add(Tag ch) {
-        subElements.put(ch.getName(), ch);
-        long sz = getSize() + ch.totalSize();
-        byte length = 1;
-        long v = (sz + 1) >> BIT_IN_BYTE;
-        while (v > 0) {
-            length++;
-            v = v >> BIT_IN_BYTE;
-        }
-        size = new VINT(0L, length, sz);
-        return this;
+  /**
+   * method to add child tag to this {@link CompoundTag}, updates the size on add
+   *
+   * @param ch - child {@link Tag} to be added
+   * @return - this for chaining
+   */
+  public CompoundTag add(Tag ch) {
+    subElements.put(ch.getName(), ch);
+    long sz = getSize() + ch.totalSize();
+    byte length = 1;
+    long v = (sz + 1) >> BIT_IN_BYTE;
+    while (v > 0) {
+      length++;
+      v = v >> BIT_IN_BYTE;
     }
+    size = new VINT(0L, length, sz);
+    return this;
+  }
 
-    public int getNumberOfSubElements() {
-        return subElements.size();
-    }
+  public int getNumberOfSubElements() {
+    return subElements.size();
+  }
 
-    public Tag get(String tagName) {
-        return subElements.get(tagName);
-    }
+  public Tag get(String tagName) {
+    return subElements.get(tagName);
+  }
 
-    /** method to get "pretty" represented {@link Tag} */
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder(super.toString() + "\n");
-        for (Tag tag : subElements.values()) {
-            result.append("\t" + tag + "\n");
-        }
-        return result.toString();
+  /** method to get "pretty" represented {@link Tag} */
+  @Override
+  public String toString() {
+    StringBuilder result = new StringBuilder(super.toString() + "\n");
+    for (Tag tag : subElements.values()) {
+      result.append("\t" + tag + "\n");
     }
+    return result.toString();
+  }
 }

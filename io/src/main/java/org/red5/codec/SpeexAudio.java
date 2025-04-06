@@ -17,26 +17,26 @@ import org.apache.mina.core.buffer.IoBuffer;
  */
 public class SpeexAudio extends AbstractAudio {
 
-    static final String CODEC_NAME = "Speex";
+  static final String CODEC_NAME = "Speex";
 
-    {
-        codec = AudioCodec.SPEEX;
-    }
+  {
+    codec = AudioCodec.SPEEX;
+  }
 
-    @Override
-    public String getName() {
-        return CODEC_NAME;
-    }
+  @Override
+  public String getName() {
+    return CODEC_NAME;
+  }
 
-    @Override
-    public boolean canHandleData(IoBuffer data) {
-        if (data.limit() == 0) {
-            // Empty buffer
-            return false;
-        }
-        byte first = data.get();
-        boolean result = (((first & 0xf0) >> 4) == AudioCodec.SPEEX.getId());
-        data.rewind();
-        return result;
+  @Override
+  public boolean canHandleData(IoBuffer data) {
+    if (data.limit() == 0) {
+      // Empty buffer
+      return false;
     }
+    byte first = data.get();
+    boolean result = (((first & 0xf0) >> 4) == AudioCodec.SPEEX.getId());
+    data.rewind();
+    return result;
+  }
 }
