@@ -151,18 +151,18 @@ public class StreamService implements IStreamService {
    *
    * <pre>
    * public void streamBroadcastStart(IBroadcastStream stream) {
-   *     super.streamBroadcastStart(stream);
-   *     if (stream instanceof IClientBroadcastStream) {
-   *         int publishedStreamId = ((ClientBroadcastStream) stream).getStreamId();
-   *         Red5.getConnectionLocal().setAttribute(PUBLISHED_STREAM_ID_ATTRIBUTE, publishedStreamId);
-   *     }
+   *   super.streamBroadcastStart(stream);
+   *   if (stream instanceof IClientBroadcastStream) {
+   *     int publishedStreamId = ((ClientBroadcastStream) stream).getStreamId();
+   *     Red5.getConnectionLocal().setAttribute(PUBLISHED_STREAM_ID_ATTRIBUTE, publishedStreamId);
+   *   }
    * }
    * </pre>
    *
    * <pre>
    * public void streamPlaylistItemPlay(IPlaylistSubscriberStream stream, IPlayItem item, boolean isLive) {
-   *     super.streamPlaylistItemPlay(stream, item, isLive);
-   *     Red5.getConnectionLocal().setAttribute(WATCHED_STREAM_ID_ATTRIBUTE, stream.getStreamId());
+   *   super.streamPlaylistItemPlay(stream, item, isLive);
+   *   Red5.getConnectionLocal().setAttribute(WATCHED_STREAM_ID_ATTRIBUTE, stream.getStreamId());
    * }
    * </pre>
    *
@@ -260,7 +260,8 @@ public class StreamService implements IStreamService {
       IClientStream stream = streamConn.getStreamById(streamId);
       if (stream != null && stream instanceof ISubscriberStream) {
         ISubscriberStream subscriberStream = (ISubscriberStream) stream;
-        // pausePlayback can be "null" if "pause" is called without any parameters from flash
+        // pausePlayback can be "null" if "pause" is called without any parameters from
+        // flash
         if (pausePlayback == null) {
           pausePlayback = !subscriberStream.isPaused();
         }
@@ -309,7 +310,8 @@ public class StreamService implements IStreamService {
             play(name, start, length, false);
             break;
           case 2:
-            // maintains the playlist and returns all stream messages at once, rather than at
+            // maintains the playlist and returns all stream messages at once, rather than
+            // at
             // intervals
 
             break;
@@ -496,18 +498,11 @@ public class StreamService implements IStreamService {
    *
    * @param oldStreamName old
    * @param start start pos
-   * @param transition type of transition
    * @param length length to play
    * @param offset offset
    * @param streamName stream name
    */
-  public void play2(
-      String oldStreamName,
-      int start,
-      String transition,
-      int length,
-      double offset,
-      String streamName) {
+  public void play2(String oldStreamName, int start, int length, double offset, String streamName) {
     Map<String, Object> playOptions = new HashMap<String, Object>();
     playOptions.put("oldStreamName", oldStreamName);
     playOptions.put("streamName", streamName);
@@ -566,20 +561,21 @@ public class StreamService implements IStreamService {
    *      SWITCH : String = "switch" - Switches from playing one stream to another stream, typically with streams of the same content.
    * </pre>
    *
-   * @see <a
-   *     href="http://www.adobe.com/devnet/flashmediaserver/articles/dynstream_actionscript.html">ActionScript
+   * @see <a href=
+   *     "http://www.adobe.com/devnet/flashmediaserver/articles/dynstream_actionscript.html">ActionScript
    *     guide to dynamic streaming</a>
-   * @see <a
-   *     href="http://www.adobe.com/devnet/flashmediaserver/articles/dynstream_advanced_pt1.html">Dynamic
+   * @see <a href=
+   *     "http://www.adobe.com/devnet/flashmediaserver/articles/dynstream_advanced_pt1.html">Dynamic
    *     streaming in Flash Media Server - Part 1: Overview of the new capabilities</a>
-   * @see <a
-   *     href="http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStreamPlayTransitions.html">NetStreamPlayTransitions</a>
+   * @see <a href=
+   *     "http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStreamPlayTransitions.html">NetStreamPlayTransitions</a>
    * @param playOptions play options
    */
   public void play2(Map<String, ?> playOptions) {
     log.debug("play2 options: {}", playOptions.toString());
     /*
-     * { streamName=streams/new.flv, oldStreamName=streams/old.flv, start=0, len=-1, offset=12.195, transition=switch }
+     * { streamName=streams/new.flv, oldStreamName=streams/old.flv, start=0, len=-1,
+     * offset=12.195, transition=switch }
      */
     // get the transition type
     String transition = (String) playOptions.get("transition");
@@ -657,7 +653,8 @@ public class StreamService implements IStreamService {
 
   /** {@inheritDoc} */
   public void publish(Boolean dontStop) {
-    // null is as good as false according to Boolean.valueOf() so if null, interpret as false
+    // null is as good as false according to Boolean.valueOf() so if null, interpret
+    // as false
     if (dontStop == null || !dontStop) {
       IConnection conn = Red5.getConnectionLocal();
       if (conn instanceof IStreamCapableConnection) {
@@ -791,7 +788,8 @@ public class StreamService implements IStreamService {
           bs.setParameters(params);
         }
         if (nameAliasingEnabled) {
-          // if aliasing, check for requested subscribe-side aliases before generating random names
+          // if aliasing, check for requested subscribe-side aliases before generating
+          // random names
           if (params != null && params.containsKey("aliases")) {
             // comma separated
             Stream.of(params.get("aliases").split(",")).forEach(alias -> bs.addAlias(alias));
